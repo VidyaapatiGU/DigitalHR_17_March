@@ -1,136 +1,63 @@
 <style scoped>
-.main {
-  margin-top: 0px;
-}
-
-.edit-button {
-  margin-right: 2px;
-}
-
-.varify-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 11px rgba(0, 0, 0, 0.5);
-  box-shadow: 0 -8px -11px rgba(0, 0, 0, 0.5);
-  color: white;
-  border-radius: 5px;
-}
-
-.profile-image {
-  width: 20vw;
-  height: 20vw;
-  object-fit: cover;
-}
-@media (max-width: 1199px) {
-  .profile-image {
-    width: 30vw;
-    height: 30vw;
-    object-fit: cover;
-  }
-}
-
-@media (max-width: 600px) {
-  .profile-image {
-    width: 40vw;
-    height: 40vw;
-    object-fit: cover;
-  }
-}
-
-@media (max-width: 400px) {
-  .profile-image {
-    width: 60vw;
-    height: 60vw;
-    object-fit: cover;
-  }
-}
+.account-page { padding: 2rem; min-height: 100vh; }
+.account-header { margin-bottom: 2rem; }
+.account-header h4 { font-weight: 700; color: var(--text-primary); margin: 0; }
+.account-header p { color: var(--text-secondary); margin: 0.25rem 0 0; font-size: 0.9rem; }
+.profile-card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); overflow: hidden; height: 100%; }
+.profile-card-header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); padding: 2rem 1.5rem 3rem; }
+.profile-card-body { padding: 1.5rem; text-align: center; margin-top: -2.5rem; }
+.profile-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: var(--shadow-md); background: #fff; }
+.profile-name { font-weight: 600; color: var(--text-primary); margin-top: 0.75rem; font-size: 1.15rem; }
+.details-card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); overflow: hidden; }
+.details-card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-primary); font-size: 1rem; }
+.details-card-body { padding: 1.5rem; }
+.info-group { margin-bottom: 1.25rem; }
+.info-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.35rem; }
+.info-group .form-control:disabled { background-color: var(--bg-body); border-color: var(--border-color); color: var(--text-primary); opacity: 1; }
+@media (max-width: 991px) { .account-page { padding: 1.25rem; } .profile-avatar { width: 100px; height: 100px; } }
 </style>
 
 <template>
-  <div v-auto-animate class="main min-vh-100">
-    <div class="main2">
-      <div class="container-xl px-4">
-        <div v-auto-animate class="row" style="padding-top: 5rem">
-          <div class="col-xl-4">
-            <div v-auto-animate class="card mb-4 mb-xl-0">
-              <div class="card-header">Profile Picture</div>
-              <div v-auto-animate class="card-body text-center scroll">
-                <img
-                  v-if="profile"
-                  class="img-account-profile profile-image rounded-circle mb-2"
-                  :src="profile"
-                  alt="Profile Picture"
-                />
-                <img
-                  v-else
-                  class="img-account-profile rounded-circle mb-2"
-                  src="../assets/profile-circle.svg"
-                  alt="Default Profile Picture"
-                />
-
-                <div class="small font-italic text-muted mb-4">
-                  <h5>{{ name }}</h5>
-                </div>
-              </div>
-            </div>
+  <div v-auto-animate class="account-page">
+    <div class="account-header scroll">
+      <h4>View User</h4>
+      <p>User account information</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-xl-4">
+        <div class="profile-card">
+          <div class="profile-card-header"></div>
+          <div class="profile-card-body scroll">
+            <img v-if="profile" class="profile-avatar" :src="profile" alt="Profile Picture" />
+            <img v-else class="profile-avatar" src="../assets/profile-circle.svg" alt="Default Profile Picture" />
+            <div class="profile-name">{{ name }}</div>
           </div>
-          <div class="col-xl-8">
-            <div class="card mb-4 scroll">
-              <div class="card-header">Account Details</div>
-              <div class="card-body">
-                <div v-auto-animate>
-                  <div class="mb-3">
-                    <label class="small mb-1" for="name">Name</label>
-                    <input
-                      :disabled="true"
-                      class="form-control"
-                      id="name"
-                      type="text"
-                      v-model="name"
-                    />
+        </div>
+      </div>
+      <div class="col-xl-8">
+        <div class="details-card scroll">
+          <div class="details-card-header">Account Details</div>
+          <div class="details-card-body">
+            <div v-auto-animate>
+              <div class="info-group">
+                <label for="name">Name</label>
+                <input :disabled="true" class="form-control" id="name" type="text" v-model="name" />
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="info-group">
+                    <label for="email">Email</label>
+                    <input :disabled="true" class="form-control" id="email" type="text" v-model="email" />
                   </div>
-                  <div class="row gx-3 mb3">
-                    <div class="col-md-6">
-                      <div class="mt-1">
-                        <div v-auto-animate class="row">
-                          <div class="col-2">
-                            <label class="small mb-1" for="email">Email</label>
-                          </div>
-
-                          <div class="col-4"></div>
-                        </div>
-                        <input
-                          :disabled="true"
-                          class="form-control"
-                          id="email"
-                          type="text"
-                          v-model="email"
-                        />
-                      </div>
-                      <div class="mt-2">
-                        <label class="small mb-1" for="mobile_no">Mobile Number</label>
-                        <input
-                          :disabled="true"
-                          class="form-control"
-                          id="mobile_no"
-                          type="text"
-                          v-model="mobile_no"
-                        />
-                      </div>
-                    </div>
-
-                    <!-- ///////////////////////////////// New colunn starts //////////////////////////////////// -->
-                    <div class="col-md-6">
-                      <div class="mt-2" v-if="whatsapp_status">
-                        <label class="small mb-1" for="mobile_no">mobile Number</label>
-                        <input
-                          class="form-control"
-                          id="mobile_no"
-                          type="text"
-                          name="birthday"
-                          v-model="mobile_no"
-                        />
-                      </div>
-                    </div>
+                  <div class="info-group">
+                    <label for="mobile_no">Mobile Number</label>
+                    <input :disabled="true" class="form-control" id="mobile_no" type="text" v-model="mobile_no" />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="info-group" v-if="whatsapp_status">
+                    <label for="mobile_no">WhatsApp Number</label>
+                    <input :disabled="true" class="form-control" id="mobile_no" type="text" v-model="mobile_no" />
                   </div>
                 </div>
               </div>

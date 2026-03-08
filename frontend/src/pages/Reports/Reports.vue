@@ -1,6 +1,7 @@
 <template>
-  <div class="reports-bg container-fluid mt-4" style="max-height: 90vh; overflow-y: auto; padding-right: 15px;">
-    <h1 class="reports-title mb-4">Download Reports</h1>
+  <div class="page-wrapper" style="max-height: 90vh; overflow-y: auto;">
+    <div class="page-header-bar"><h5>Download Reports</h5></div>
+    <div class="content-section">
 
     <!-- PDF Downloads Section -->
     <div class="reports-section mb-5">
@@ -146,6 +147,7 @@
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>
@@ -925,3 +927,89 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+}
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
+
+.content-section {
+  padding: 1.5rem;
+}
+
+.section-card {
+  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); padding: 1.5rem; margin-bottom: 1.25rem;
+}
+
+.section-card h5, .section-card h4 {
+  font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;
+}
+
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
+
+.btn-action {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
+  border-radius: var(--radius-md); border: 1px solid var(--border-color);
+  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
+}
+.btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
+
+.form-group label {
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
+}
+
+.customize-table {
+  --easy-table-border: none;
+  --easy-table-row-border: 1px solid #f1f5f9;
+  --easy-table-header-font-size: 13px;
+  --easy-table-header-font-color: #64748b;
+  --easy-table-header-background-color: #f8fafc;
+  --easy-table-header-height: 44px;
+  --easy-table-body-row-height: 52px;
+  --easy-table-body-row-font-size: 13px;
+  --easy-table-body-row-font-color: #334155;
+  --easy-table-body-row-hover-background-color: #f8fafc;
+  --easy-table-footer-background-color: #f8fafc;
+  --easy-table-footer-font-color: #64748b;
+  --easy-table-footer-font-size: 13px;
+  --easy-table-footer-height: 44px;
+}
+
+.table-container {
+  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); overflow: hidden;
+}
+
+.slip-container {
+  width: 100%; max-width: 1000px; margin: auto;
+  background: #fff; border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg); overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .content-section { padding: 1rem; }
+  .section-card { padding: 1rem; }
+}
+
+@media print {
+  .page-header-bar { display: none; }
+}
+</style>

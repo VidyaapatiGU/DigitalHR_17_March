@@ -1,69 +1,61 @@
 <style scoped>
-.main h-100 {
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
 .form-container {
-  width: 100%;
-  max-width: 1000px;
-  padding: 15px;
-  margin: auto;
-  background-color: #fff;
-  border-radius: 20px;
-  box-shadow: 20px 20px 60px #d9d9d9, -20px -20px 60px #ffffff;
+  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
 }
 
 .form-container2 {
-  width: 100%;
-  max-width: 700px;
-  padding: 15px;
-  margin: auto;
-  background-color: #fff;
-  border-radius: 20px;
-  box-shadow: 20px 20px 60px #d9d9d9, -20px -20px 60px #ffffff;
+  width: 100%; max-width: 700px; padding: 2rem; margin: auto;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
 }
 
-.form-control {
-  color: #333;
+.form-title {
+  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
 }
 
-.form-control:focus {
-  box-shadow: inset 2px 2px 5px #e9ecef, inset -2px -2px 5px #ffffff, 0 0 10px #007bff;
+.form-group label {
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
 }
+
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
 
 @media (max-width: 576px) {
-}
-
-@media (min-width: 576px) {
-}
-
-@media (min-width: 768px) {
-  .form-container {
-    padding: 30px;
-  }
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
+  .form-container, .form-container2 { padding: 1.25rem; }
 }
 </style>
 
 <template>
-  <div class="main h-100">
-    <div class="border-bottom px-4">
-      <h5 class="pt-2 hind-medium source-600 page-title">Client</h5>
+  <div class="page-wrapper">
+    <div class="page-header-bar">
+      <h5>Add Client</h5>
     </div>
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
         <div
           v-auto-animate
-          class="container h-100 py-3 d-flex justify-content-center align-items-start align-items-sm-center"
+          class="p-4 h-100 d-flex justify-content-center align-items-start align-items-sm-center"
         >
-          <form v-if="formPage == 1" v-auto-animate class="form-container border rounded-3">
+          <form v-if="formPage == 1" v-auto-animate class="form-container">
             <div class="d-flex justify-content-center">
               <div class="w-100">
-                <h4 class="text-center source-600 text-dark mb-4">Add Client</h4>
+                <h4 class="text-center form-title">Add Client</h4>
               </div>
             </div>
             <div class="row source-400">
@@ -229,7 +221,7 @@
                 v-if="formPage == 1 && userAdded == false"
                 @click="handleAddClient"
                 type="button"
-                class="btn btn-primary border-0 button_bg source-500 text-light mt-4 px-5"
+                class="btn-submit mt-4"
               >
                 Next
               </button>
@@ -237,7 +229,7 @@
                 v-if="formPage == 1 && userAdded == true"
                 @click="handleUpdateCreatedClient"
                 type="button"
-                class="btn btn-primary border-0 button_bg source-500 text-light mt-4 px-5"
+                class="btn-submit mt-4"
               >
                 Update
               </button>
@@ -245,13 +237,13 @@
           </form>
 
           <!-- /////////////////////////////////////////////////////////////////////// -->
-          <form v-if="formPage == 2" v-auto-animate class="form-container2 border rounded-3">
+          <form v-if="formPage == 2" v-auto-animate class="form-container2">
             <div class="d-flex justify-content-center">
               <div class="">
-                <i @click="formPage = 1" class="bi bi-arrow-left icon-font-2 pointer"></i>
+                <span class="back-btn" @click="formPage = 1"><i class="bi bi-arrow-left"></i></span>
               </div>
               <div class="w-100">
-                <h4 class="text-center source-600 text-dark mb-4">Add Details</h4>
+                <h4 class="text-center form-title">Add Details</h4>
               </div>
             </div>
 
@@ -360,7 +352,7 @@
                 v-if="formPage == 2"
                 @click="validateFormPage2"
                 type="button"
-                class="btn btn-primary border-0 button_bg source-500 text-light mt-4 px-5"
+                class="btn-submit mt-4"
               >
                 Next
               </button>
@@ -368,13 +360,13 @@
           </form>
 
           <!-- /////////////////////////////////////////////////////////////////////// -->
-          <form v-if="formPage == 3" v-auto-animate class="form-container2 border= rounded-3">
+          <form v-if="formPage == 3" v-auto-animate class="form-container2">
             <div class="d-flex justify-content-center">
               <div class="">
-                <i @click="formPage = 2" class="bi bi-arrow-left icon-font-2 pointer"></i>
+                <span class="back-btn" @click="formPage = 2"><i class="bi bi-arrow-left"></i></span>
               </div>
               <div class="w-100">
-                <h4 class="text-center source-600 text-dark mb-4">Add Contact</h4>
+                <h4 class="text-center form-title">Add Contact</h4>
               </div>
             </div>
 
@@ -434,7 +426,7 @@
                 v-if="formPage == 3"
                 @click="handleAddClientDetails"
                 type="button"
-                class="btn btn-primary border-0 button_bg source-500 text-light mt-4 px-5"
+                class="btn-submit mt-4"
               >
                 Add Client
               </button>

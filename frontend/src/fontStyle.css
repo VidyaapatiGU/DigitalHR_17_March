@@ -1,32 +1,33 @@
 body {
   min-height: 100vh;
+  font-family: 'Inter', 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 .hind-light {
-  font-family: 'Hind', sans-serif;
+  font-family: 'Inter', 'Hind', sans-serif;
   font-weight: 300;
   font-style: normal;
 }
 
 .hind-regular {
-  font-family: 'Hind', sans-serif;
+  font-family: 'Inter', 'Hind', sans-serif;
   font-weight: 400;
   font-style: normal;
 }
 
 .hind-medium {
-  font-family: 'Hind', sans-serif;
+  font-family: 'Inter', 'Hind', sans-serif;
   font-weight: 500;
   font-style: normal;
 }
 
 .hind-semibold {
-  font-family: 'Hind', sans-serif;
+  font-family: 'Inter', 'Hind', sans-serif;
   font-weight: 600;
   font-style: normal;
 }
 
 .hind-bold {
-  font-family: 'Hind', sans-serif;
+  font-family: 'Inter', 'Hind', sans-serif;
   font-weight: 700;
   font-style: normal;
 }
@@ -50,52 +51,49 @@ body {
 }
 
 .source-200 {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Inter', 'Source Sans 3', sans-serif;
   font-optical-sizing: auto;
   font-weight: 200;
   font-style: normal;
 }
 .source-300 {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Inter', 'Source Sans 3', sans-serif;
   font-optical-sizing: auto;
   font-weight: 300;
   font-style: normal;
 }
 .source-400 {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Inter', 'Source Sans 3', sans-serif;
   font-optical-sizing: auto;
-
   font-weight: 400;
   font-style: normal;
 }
 .source-500 {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Inter', 'Source Sans 3', sans-serif;
   font-optical-sizing: auto;
-
   font-weight: 500;
   font-style: normal;
 }
 .source-600 {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Inter', 'Source Sans 3', sans-serif;
   font-optical-sizing: auto;
-
   font-weight: 600;
   font-style: normal;
 }
 .source-700 {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Inter', 'Source Sans 3', sans-serif;
   font-optical-sizing: auto;
   font-weight: 700;
   font-style: normal;
 }
 .source-800 {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Inter', 'Source Sans 3', sans-serif;
   font-optical-sizing: auto;
   font-weight: 800;
   font-style: normal;
 }
 .source-900 {
-  font-family: 'Source Sans 3', sans-serif;
+  font-family: 'Inter', 'Source Sans 3', sans-serif;
   font-optical-sizing: auto;
   font-weight: 900;
   font-style: normal;
@@ -111,7 +109,7 @@ body {
 }
 
 .sub-heading {
-  color: rgb(43, 57, 106);
+  color: var(--primary);
 }
 
 .font12 {

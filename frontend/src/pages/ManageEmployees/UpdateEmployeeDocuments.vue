@@ -1,62 +1,97 @@
 <style scoped>
-.main h-100 {
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
 .form-container {
-  width: 100%;
-  max-width: 600px;
-  padding: 15px;
-  margin: auto;
-  background-color: #fff;
-  border-radius: 20px;
-  box-shadow: 20px 20px 60px #d9d9d9, -20px -20px 60px #ffffff;
+  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+}
+
+.form-title {
+  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
 }
 
 .form-group label {
-  color: #333;
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
 }
 
-.form-control {
-  background-color: #f8f9fa;
-  border: none;
-  border-radius: 10px;
-  box-shadow: inset 2px 2px 5px #e9ecef, inset -2px -2px 5px #ffffff;
-  color: #333;
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
+
+.doc-link {
+  color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500;
+}
+.doc-link:hover { text-decoration: underline; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.customize-table {
+  --easy-table-border: none;
+  --easy-table-row-border: 1px solid #f1f5f9;
+  --easy-table-header-font-size: 13px;
+  --easy-table-header-font-color: #64748b;
+  --easy-table-header-background-color: #f8fafc;
+  --easy-table-header-height: 44px;
+  --easy-table-body-row-height: 52px;
+  --easy-table-body-row-font-size: 13px;
+  --easy-table-body-row-font-color: #334155;
+  --easy-table-body-row-hover-background-color: #f8fafc;
+  --easy-table-footer-background-color: #f8fafc;
+  --easy-table-footer-font-color: #64748b;
+  --easy-table-footer-font-size: 13px;
+  --easy-table-footer-height: 44px;
 }
 
-.form-control:focus {
-  box-shadow: inset 2px 2px 5px #e9ecef, inset -2px -2px 5px #ffffff, 0 0 10px #007bff;
+.table-container {
+  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); overflow: hidden;
 }
+
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
+}
+.search-input { max-width: 280px; font-size: 0.875rem; border-radius: var(--radius-md) !important; }
+.action-buttons { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.btn-action {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
+  border-radius: var(--radius-md); border: 1px solid var(--border-color);
+  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
+}
+.btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
+.table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
+.table-icon:hover { background: #f1f5f9; }
 
 @media (max-width: 576px) {
-}
-
-@media (min-width: 576px) {
-}
-
-@media (min-width: 768px) {
-  .form-container {
-    padding: 30px;
-  }
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
+  .form-container { padding: 1.25rem; }
 }
 </style>
 
 <template>
-  <div class="main h-100">
-    <div class="border-bottom px-4">
-      <h5 class="pt-2 hind-medium source-500 page-title">Add Employee</h5>
+  <div class="page-wrapper">
+    <div class="page-header-bar">
+      <h5>Add Employee</h5>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto d-flex justify-content-center align-items-center">
-        <div class="container py-3">
-          <form v-auto-animate class="form-container border shadow-lg rounded-3">
+        <div class="p-4">
+          <form v-auto-animate class="form-container">
             <h5 v-if="formPage == 1" class="text-center source-600 text-dark mb-2">Add Details</h5>
 
             <div v-if="formPage == 1" class="row">
@@ -237,7 +272,7 @@
                 <button
                   @click="uploadFile"
                   type="button"
-                  class="btn btn-primary border-0 button_bg source-500 text-light mt-4 px-3"
+                  class="btn-submit"
                 >
                   <span v-if="documentUploaded == false">Update Document</span>
                   <span v-else>Add Another</span>
@@ -245,7 +280,7 @@
                 <router-link to="/manage/clients" v-if="documentUploaded == true">
                   <button
                     type="button"
-                    class="btn btn-primary border-0 button_bg source-500 text-light mt-4 px-3"
+                    class="btn-submit"
                   >
                     <span>Done</span>
                   </button>

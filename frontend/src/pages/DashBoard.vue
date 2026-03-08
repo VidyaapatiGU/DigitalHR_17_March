@@ -1,170 +1,164 @@
 <style scoped>
 ::-webkit-scrollbar {
-  width: 8px;
-  background: #f4f6fa;
+  width: 6px;
+  background: transparent;
 }
 ::-webkit-scrollbar-track {
-  background: #e9ecef;
-  border-radius: 8px;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #4f8cff 0%, #0c1526 100%);
-  border-radius: 8px;
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.dashboard-page {
+  background: var(--bg-body, #f1f5f9);
 }
 
 .dashboard-header {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #22223b;
-  letter-spacing: 1px;
+  color: var(--text-primary, #0f172a);
+  letter-spacing: -0.025em;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.dashboard-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  padding: 0 1.5rem;
   margin-bottom: 1.5rem;
-  text-shadow: 0 2px 8px rgba(79,140,255,0.08);
 }
 
 .dashboard-cards {
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+  padding: 0 1.5rem;
   margin-bottom: 2rem;
 }
+
 .dashboard-card {
-  background: linear-gradient(135deg, #f4f6fa 0%, #e9ecef 100%);
-  box-shadow: 0 4px 24px rgba(79,140,255,0.12);
-  border-radius: 18px;
-  min-width: 18rem;
-  max-width: 18rem;
-  min-height: 10rem;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
   padding: 1.5rem;
-  position: relative;
-  transition: box-shadow 0.2s;
-  overflow: visible;
-  word-break: break-word;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: all 200ms ease;
+  border: 1px solid var(--border-color, #e2e8f0);
 }
+
 .dashboard-card:hover {
-  box-shadow: 0 8px 32px rgba(79,140,255,0.18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
-.dashboard-card .card-title {
-  font-size: 1.2rem;
+
+.card-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-icon-wrapper.clients {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #2563eb;
+}
+
+.card-icon-wrapper.employees {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  color: #059669;
+}
+
+.card-icon-wrapper i {
+  font-size: 1.25rem;
+}
+
+.card-content {
+  flex-grow: 1;
+}
+
+.card-content .card-label {
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #0c1526;
-  margin-bottom: 0.5rem;
-  max-width: 99%;
-  text-align: center;
-  word-break: break-word;
-  white-space: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 0.25rem;
 }
-.dashboard-card .card-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  color: #4f8cff;
-}
-.dashboard-card .card-value {
-  font-size: 2.5rem;
+
+.card-content .card-value {
+  font-size: 1.75rem;
   font-weight: 700;
-  color: #22223b;
-  max-width: 99%;
-  text-align: center;
-  word-break: break-word;
-  white-space: normal;
+  color: var(--text-primary, #0f172a);
+  line-height: 1.2;
 }
-.dashboard-card .card-text {
-  font-size: 0.95rem;
-  color: #5e5e5e;
-  max-width: 99%;
-  text-align: center;
-  word-break: break-word;
-  white-space: normal;
-  overflow-wrap: break-word;
-  margin-top: 0.25rem;
+
+.card-content .card-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+  margin-top: 0.125rem;
 }
 
 @media (max-width: 768px) {
   .dashboard-cards {
-    flex-direction: column;
-    gap: 1.5rem;
-    align-items: stretch;
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
   }
-  .dashboard-card {
-    min-width: 100%;
-    max-width: 100%;
-    height: 8rem;
-    padding: 1rem;
+  .dashboard-header {
+    padding: 1rem 1rem 0;
+  }
+  .dashboard-subtitle {
+    padding: 0 1rem;
   }
 }
 </style>
 
 <template>
-  <div class="main source-400 pt-2 h-100">
-    <div class="dashboard-header px-3">Dashboard</div>
+  <div class="main source-400 pt-2 h-100 dashboard-page">
+    <div class="dashboard-header">Dashboard</div>
+    <div class="dashboard-subtitle">Welcome back! Here's an overview of your workspace.</div>
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="container py-3">
-          <div v-if="role == 'super_admin'" class="dashboard-cards">
-            <div class="dashboard-card">
-              <div class="card-icon">
-                <i class="fas fa-building"></i>
-              </div>
-              <div class="card-title">Clients</div>
+        <div v-if="role == 'super_admin'" class="dashboard-cards">
+          <div class="dashboard-card">
+            <div class="card-icon-wrapper clients">
+              <i class="fas fa-building"></i>
+            </div>
+            <div class="card-content">
+              <div class="card-label">Total Clients</div>
               <div class="card-value">{{ clients.length }}</div>
-              <div class="card-text">Total Registered</div>
+              <div class="card-desc">Registered organizations</div>
             </div>
-            <div class="dashboard-card">
-              <div class="card-icon">
-                <i class="fas fa-users"></i>
-              </div>
-              <div class="card-title">Employees</div>
+          </div>
+          <div class="dashboard-card">
+            <div class="card-icon-wrapper employees">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="card-content">
+              <div class="card-label">Total Employees</div>
               <div class="card-value">{{ employees.length }}</div>
-              <div class="card-text">Total Active</div>
+              <div class="card-desc">Active workforce</div>
             </div>
           </div>
+        </div>
 
-          <div v-if="role == 'client'" class="dashboard-cards">
-            <div class="dashboard-card">
-              <div class="card-icon">
-                <i class="fas fa-users"></i>
-              </div>
-              <div class="card-title">Employees</div>
+        <div v-if="role == 'client'" class="dashboard-cards">
+          <div class="dashboard-card">
+            <div class="card-icon-wrapper employees">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="card-content">
+              <div class="card-label">Employees</div>
               <div class="card-value">{{ employees.length }}</div>
-              <div class="card-text">Your Workforce</div>
+              <div class="card-desc">Your workforce</div>
             </div>
           </div>
-
-          <!--
-          <div class="d-flex flex-column flex-md-row gap-1">
-            <div
-              class="left scroll border d-flex justify-content-center align-items-center rounded-4 px-4"
-              id="bar_graph"
-            >
-              <BarGraph :propsChartData="graphData" />
-            </div>
-            <div
-              class="right scroll border d-flex justify-content-center align-items-center pb-4 rounded-4"
-              id="doughnut"
-            >
-              <DoughnutChart :propsChartData="pieData" />
-            </div>
-          </div>
-          <div class="d-flex flex-column flex-md-row gap-1 mt-3">
-            <div
-              class="left scroll border d-flex justify-content-center align-items-center rounded-4 px-4"
-              id="pie"
-            >
-              <PieChart :propsChartData="pieData" />
-            </div>
-            <div
-              class="right scroll px-3 border d-flex justify-content-center align-items-center pb-4 rounded-4"
-              id="line"
-            >
-              <LineChart :propsChartData="graphData" />
-            </div>
-          </div>
-          -->
         </div>
       </div>
     </div>

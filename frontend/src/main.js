@@ -14,7 +14,7 @@ import { autoAnimatePlugin } from '@formkit/auto-animate/vue';
 
 createApp(App)
   .use(router)
-  .use(Vue3EasyDataTable)
+  .component('EasyDataTable', Vue3EasyDataTable)
   .use(ElementPlus)
   .use(autoAnimatePlugin)
   .mount('#app');

@@ -1,16 +1,23 @@
 <style scoped>
-.main {
-  height: 100vh;
-  min-height: 100vh;
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+}
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
+.table-container {
+  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); overflow: hidden;
 }
 </style>
 
 <template>
-  <div class="main source-400 pt-2 vh-100">
-    <h1 class="text-center pt-2 source-500">Table</h1>
-    <div class="table vh-50 overflow-y-hidden border scroll">
-      <el-table
-        class="overflow-x-scroll overflow-x-md-hidden"
+  <div class="page-wrapper source-400">
+    <div class="page-header-bar"><h5>Data Table</h5></div>
+    <div class="p-4">
+      <div class="table-container vh-50 overflow-y-hidden scroll">
+        <el-table
+          class="overflow-x-scroll overflow-x-md-hidden"
         :data="items"
         :default-sort="[
           { prop: 'name', order: 'descending' },
@@ -52,12 +59,12 @@
             />
           </template>
           <template #default="scope">
-            <button type="button" class="btn btn-primary">Primary</button>
+            <button type="button" class="btn btn-primary btn-sm">Primary</button>
           </template>
         </el-table-column>
       </el-table>
-      <div>
-        <div class="w-100 d-flex justify-content-center align-items-center">
+      <div class="mt-4">
+        <div class="w-100 d-flex justify-content-center align-items-center gap-3">
           <div>
             <button type="button" @click="handlePreviousPage" class="btn btn-light btn-sm">
               <i class="bi bi-chevron-left"></i>
@@ -96,6 +103,7 @@
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <script>

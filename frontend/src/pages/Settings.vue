@@ -1,46 +1,47 @@
 <style scoped>
-/* Notice of Hours Modal Styles */
-.time-input {
-  width: 150px;
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+}
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
+.notification-badge { position: relative; cursor: pointer; padding: 0.25rem; }
+
+.time-input { width: 150px; }
+
+.table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
+.table-icon:hover { background: #f1f5f9; }
+
+.thumbs-down { color: rgb(235, 46, 21); }
+
+.animated_input { height: 3rem; max-width: 19rem; }
+
+.settings-table {
+  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); overflow: hidden;
 }
 
-.modal-content {
-  /* keep modal content layout default; additional styles can be added here */
+.btn-action {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
+  border-radius: var(--radius-md); border: 1px solid var(--border-color);
+  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
 }
+.btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
 
-.main {
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
 }
-.table-icon {
-}
-
-.animated_input {
-  height: 3rem;
-  max-width: 19rem;
-}
-
-.table-icon:hover {
-  transform: translateY(-2px) scale(1.15);
-  transition: transform 0.3s ease-out;
-}
-
-.thumbs-down {
-  color: rgb(235, 46, 21);
-}
-
-@media (max-width: 576px) {
-}
-
-@media (min-width: 576px) {
-}
-
-@media (min-width: 768px) {
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
-}
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
 </style>
 
 <template>
@@ -1150,33 +1151,29 @@
 
 
   <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
-  <div class="source-400 pt-2 h-100 scroll">
-    <div class="border-bottom px-4 d-flex justify-content-between align-items-center py-2">
-      <div>
-        <h5 class="source-500 page-title">Settings</h5>
-      </div>
-      <div class="">
-        <div class="position-relative" data-bs-toggle="modal" data-bs-target="#ModalNotification">
-          <i class="bi bi-bell-fill pointer text-danger" style="font-size: 1.2rem"></i>
-          <span
-            v-if="notifications.length > 0"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark"
-          >
-            {{ notifications.length }}
-          </span>
-          <span
-            v-if="notifications.length > 99"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark"
-          >
-            99+
-          </span>
-        </div>
+  <div class="page-wrapper source-400 scroll">
+    <div class="page-header-bar">
+      <h5>Settings</h5>
+      <div class="notification-badge" data-bs-toggle="modal" data-bs-target="#ModalNotification">
+        <i class="bi bi-bell-fill pointer" style="font-size: 1.1rem; color: var(--text-secondary)"></i>
+        <span
+          v-if="notifications.length > 0 && notifications.length <= 99"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+        >
+          {{ notifications.length }}
+        </span>
+        <span
+          v-if="notifications.length > 99"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+        >
+          99+
+        </span>
       </div>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="container py-3">
+        <div class="p-4">
           <div class="mt-5 mb-3 row justify-content-between">
             <table class="table table-bordered table-striped">
               <thead class="table-dark">

@@ -1,64 +1,52 @@
 <style scoped>
-/* //////////////////////////////////////////////////////////////////////////////////////////////////////// */
-
-::-webkit-scrollbar {
-  width: 10px; /* Set the width of the scrollbar */
-  height: 90vh; /* Set the height of the scrollbar */
-}
-::-webkit-scrollbar-track {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-
-  background: #c9c9c9;
-  border-radius: 5px;
-}
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(#000000, #5e5e5e);
-  border-radius: 5px;
-}
-
-.table-icon {
-}
-
-.animated_input {
-  height: 3rem;
-  max-width: 19rem;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .customize-table {
-  --easy-table-header-font-size: 1.1rem;
-  --easy-table-body-row-font-size: 1rem;
+  --easy-table-border: none;
+  --easy-table-row-border: 1px solid #f1f5f9;
+  --easy-table-header-font-size: 13px;
+  --easy-table-header-font-color: #64748b;
+  --easy-table-header-background-color: #f8fafc;
+  --easy-table-header-height: 44px;
+  --easy-table-body-row-height: 52px;
+  --easy-table-body-row-font-size: 13px;
+  --easy-table-body-row-font-color: #334155;
+  --easy-table-body-row-hover-background-color: #f8fafc;
+  --easy-table-footer-background-color: #f8fafc;
+  --easy-table-footer-font-color: #64748b;
+  --easy-table-footer-font-size: 13px;
+  --easy-table-footer-height: 44px;
 }
 
-/* .table-icon:hover {
-  transform: translateY(-2px) scale(1.15);
-  transition: transform 0.3s ease-out;
-} */
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+}
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
-.thumbs-down {
-  color: rgb(235, 46, 21);
+.table-container {
+  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); overflow: hidden;
 }
 
-@media (max-width: 576px) {
-  .table {
-    width: 98vw;
-  }
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
 }
-
-@media (min-width: 576px) {
-  .table {
-    width: 70vw;
-  }
+.search-input { max-width: 280px; font-size: 0.875rem; border-radius: var(--radius-md) !important; }
+.action-buttons { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.btn-action {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
+  border-radius: var(--radius-md); border: 1px solid var(--border-color);
+  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
 }
-
-@media (min-width: 768px) {
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
-}
+.btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
+.table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
+.table-icon:hover { background: #f1f5f9; }
 </style>
 
 <template>
@@ -186,40 +174,36 @@
   </div>
 
   <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
-  <div class="main source-400 pt-2 h-100 scroll">
-    <div class="border-bottom px-3">
-      <h5 class="source-600 page-title">Departments</h5>
-    </div>
+  <div class="page-wrapper main source-400 pt-2 h-100 scroll">
+    <div class="page-header-bar"><h5>Departments</h5></div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="container py-3">
+        <div class="p-4">
           <div class="d-flex justify-content-center">
             <div class="">
-              <div class="mt-5 mb-1 d-flex justify-content-between px-2 gap-2">
-                <div class="">
+              <div class="toolbar mb-4">
                   <input
                     type="text"
-                    class="form-control"
+                    class="form-control search-input"
                     placeholder="Search Department"
                     aria-label="Search Department"
                     aria-describedby="addon-wrapping"
                     v-model="search"
                   />
-                </div>
 
-                <div class="d-flex align-items-center">
+                <div class="action-buttons">
                   <button
                     data-bs-toggle="modal"
                     data-bs-target="#ModalAdd"
                     type="button"
-                    class="btn btn-primary border-0 button_bg btn-sm source-400"
+                    class="btn-action"
                   >
                     Add New
                   </button>
                 </div>
               </div>
-              <div class="table rounded">
+              <div class="table-container">
                 <div class="w-100">
                   <EasyDataTable
                     table-class-name="customize-table rounded"

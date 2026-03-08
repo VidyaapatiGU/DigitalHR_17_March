@@ -1,76 +1,96 @@
 <style scoped>
-/* //////////////////////////////////////////////////////////////////////////////////////////////////////// */
-
-::-webkit-scrollbar {
-  width: 10px; /* Set the width of the scrollbar */
-  height: 90vh; /* Set the height of the scrollbar */
-}
-::-webkit-scrollbar-track {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-
-  background: #c9c9c9;
-  border-radius: 5px;
-}
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(#000000, #5e5e5e);
-  border-radius: 5px;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .customize-table {
-  --easy-table-header-font-size: 1.1rem;
-  --easy-table-body-row-font-size: 1rem;
+  --easy-table-border: none;
+  --easy-table-row-border: 1px solid #f1f5f9;
+  --easy-table-header-font-size: 13px;
+  --easy-table-header-font-color: #64748b;
+  --easy-table-header-background-color: #f8fafc;
+  --easy-table-header-height: 44px;
+  --easy-table-body-row-height: 52px;
+  --easy-table-body-row-font-size: 13px;
+  --easy-table-body-row-font-color: #334155;
+  --easy-table-body-row-hover-background-color: #f8fafc;
+  --easy-table-footer-background-color: #f8fafc;
+  --easy-table-footer-font-color: #64748b;
+  --easy-table-footer-font-size: 13px;
+  --easy-table-footer-height: 44px;
 }
 
-.main {
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
-.table-icon {
-}
-h1 {
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
+.notification-badge { position: relative; cursor: pointer; padding: 0.25rem; }
+
+.table-container {
+  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); overflow: hidden;
 }
 
-.animated_input {
-  height: 3rem;
-  max-width: 19rem;
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
+}
+.search-input { max-width: 280px; font-size: 0.875rem; border-radius: var(--radius-md) !important; }
+.action-buttons { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.btn-action {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
+  border-radius: var(--radius-md); border: 1px solid var(--border-color);
+  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
+}
+.btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
+
+.form-container {
+  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
 }
 
-.table-icon:hover {
-  transform: translateY(-2px) scale(1.15);
-  transition: transform 0.3s ease-out;
+.form-title {
+  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
 }
 
-.thumbs-down {
-  color: rgb(235, 46, 21);
+.form-group label {
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
 }
+
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
+
+.table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
+.table-icon:hover { background: #f1f5f9; }
 
 @media (max-width: 576px) {
-}
-
-@media (min-width: 576px) {
-}
-
-@media (min-width: 768px) {
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
+  .form-container { padding: 1.25rem; }
 }
 </style>
 
 <template>
-  <div class="source-400 pt-2 h-100 scroll">
-    <div class="border-bottom px-4 d-flex justify-content-between align-items-center py-2">
+  <div class="page-wrapper source-400 scroll">
+    <div class="page-header-bar">
       <div>
-        <h5 class="source-500 page-title">Upload Excel</h5>
+        <h5>Upload Excel</h5>
       </div>
       <div class=""></div>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="container py-3 h-100">
+        <div class="p-4 h-100">
           <div class="w-100 h-100 d-flex justify-content-center gap-3">
             <span style="font-size: 14px; margin-top: 7px">
               <a href="https://technirmitisoftwares.com/employeeAttendanceFormat.xlsx">
@@ -111,7 +131,7 @@ h1 {
             </div>
 
             <div>
-              <button type="button" class="btn btn-primary border-0 button_bg" @click="uploadFile">
+              <button type="button" class="btn-submit" @click="uploadFile">
                 Upload
               </button>
             </div>

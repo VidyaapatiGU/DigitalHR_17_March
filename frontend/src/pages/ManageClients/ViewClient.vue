@@ -1,68 +1,56 @@
 <style scoped>
-.main h-100 {
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
 .form-container {
-  width: 100%;
-  max-width: 1000px;
-  padding: 15px;
-  margin: auto;
-  background-color: #fff;
-  border-radius: 20px;
-  box-shadow: 20px 20px 60px #d9d9d9, -20px -20px 60px #ffffff;
+  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+}
+
+.form-title {
+  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
 }
 
 .form-group label {
-  color: #333;
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
 }
 
-.form-control {
-  background-color: #f8f9fa;
-  border: none;
-  border-radius: 10px;
-  box-shadow: inset 2px 2px 5px #e9ecef, inset -2px -2px 5px #ffffff;
-  color: #333;
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
 }
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
 
-.form-control:focus {
-  box-shadow: inset 2px 2px 5px #e9ecef, inset -2px -2px 5px #ffffff, 0 0 10px #007bff;
+.doc-link {
+  color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500;
 }
-
-.btn-primary:hover {
-  background-color: #0056b3;
-  box-shadow: 2px 2px 5px #e9ecef, -2px -2px 5px #ffffff, 0 0 10px #0056b3;
-}
+.doc-link:hover { text-decoration: underline; }
 
 @media (max-width: 576px) {
-}
-
-@media (min-width: 576px) {
-}
-
-@media (min-width: 768px) {
-  .form-container {
-    padding: 30px;
-  }
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
+  .form-container { padding: 1.25rem; }
 }
 </style>
 
 <template>
-  <div class="main h-100">
-    <div class="border-bottom px-4">
-      <h5 class="pt-2 hind-medium source-500 page-title">View Client</h5>
+  <div class="page-wrapper">
+    <div class="page-header-bar">
+      <h5>View Client</h5>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto d-flex justify-content-center align-items-center">
         <div class="container" style="margin-top: 150px">
-          <form v-auto-animate class="form-container border shadow-lg rounded-3">
-            <h1 class="text-center source-600 text-dark mb-2">Client</h1>
+          <form v-auto-animate class="form-container">
+            <h4 class="text-center form-title">Client</h4>
             <div class="row">
               <div class="col-md-4"></div>
               <div class="col-md-4">
@@ -330,7 +318,7 @@
                 v-if="formPage == 1"
                 @click="handleUpdateClient(`update/client/${clientId}`)"
                 type="button"
-                class="btn bg-dark bg-gradient source-500 text-light mt-4 px-4"
+                class="btn-submit mt-4"
               >
                 <i class="bi bi-pen-fill"></i>
               </button>
@@ -338,7 +326,7 @@
                 v-if="formPage == 2"
                 @click="handleUpdateClient(`update/client/${clientId}`)"
                 type="button"
-                class="btn bg-dark bg-gradient source-500 text-light mt-4 px-4"
+                class="btn-submit mt-4"
               >
                 <i class="bi bi-pen-fill"></i>
               </button>

@@ -1,33 +1,8 @@
 <style scoped>
-ul {
-  list-style-type: none;
-}
-
-.offcanvas {
-  width: 15rem;
-  border: 1px solid black;
-}
-
-@media (max-width: 576px) {
-  .side_bar {
-    display: none;
-  }
-}
-
-@media (min-width: 576px) {
-  .side_bar {
-    display: block;
-  }
-}
-
-@media (min-width: 768px) {
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
-}
+ul { list-style-type: none; padding-left: 0; }
+.offcanvas { width: 280px; background: linear-gradient(180deg, #0f172a, #1a1f35); border: none; }
+@media (max-width: 576px) { .side_bar { display: none; } }
+@media (min-width: 576px) { .side_bar { display: block; } }
 </style>
 
 <template>

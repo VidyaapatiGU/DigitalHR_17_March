@@ -1,26 +1,27 @@
 <style scoped>
 ::-webkit-scrollbar {
-  width: 10px; /* Set the width of the scrollbar */
-  height: 90vh; /* Set the height of the scrollbar */
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-
-  background: #c9c9c9;
-  border-radius: 5px;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(#000000, #5e5e5e);
-  border-radius: 5px;
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .side_bar {
-  width: 18.5rem;
+  width: var(--sidebar-width, 260px);
+  flex-shrink: 0;
 }
 
-.shadow {
-  box-shadow: 0 0 10px rgba(56, 56, 56, 0.15);
+.content-area {
+  background: var(--bg-body, #f1f5f9);
+  min-height: 100vh;
 }
 
 @media (max-width: 576px) {
@@ -42,11 +43,11 @@
 <template>
   <div>
     <div class="d-flex vh-100 overflow-hidden">
-      <div class="side_bar vh-100 d-none d-sm-block bg-transaparent py-2 px-2">
-        <SideMenu class="shadow" />
+      <div class="side_bar vh-100 d-none d-sm-block py-0 px-0">
+        <SideMenu class="" />
       </div>
-      <div class="w-100 h-100 overflow-y-hidden pe-2 py-2">
-        <div class="rounded-3 h-100 border shadow">
+      <div class="content-area w-100 h-100 overflow-y-hidden">
+        <div class="h-100">
           <div class="h-100">
             <router-view class="h-100" />
           </div>

@@ -1,55 +1,45 @@
 <style scoped>
-.main {
-  margin-top: 0px;
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+}
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
+
+.form-container {
+  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
 }
 
-.edit-button {
-  margin-right: 2px;
+.form-title {
+  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
 }
 
-.varify-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 11px rgba(0, 0, 0, 0.5);
-  box-shadow: 0 -8px -11px rgba(0, 0, 0, 0.5);
-  color: white;
-  border-radius: 5px;
+.form-group label {
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
 }
 
-.profile-image {
-  width: 20vw;
-  height: 20vw;
-  object-fit: cover;
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
 }
-@media (max-width: 1199px) {
-  .profile-image {
-    width: 30vw;
-    height: 30vw;
-    object-fit: cover;
-  }
-}
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
 
-@media (max-width: 600px) {
-  .profile-image {
-    width: 40vw;
-    height: 40vw;
-    object-fit: cover;
-  }
-}
-
-@media (max-width: 400px) {
-  .profile-image {
-    width: 60vw;
-    height: 60vw;
-    object-fit: cover;
-  }
+@media (max-width: 576px) {
+  .form-container { padding: 1.25rem; }
 }
 </style>
 
 <template>
-  <div v-auto-animate class="main h-100">
-    <div class="border-bottom px-4 d-flex justify-content-between">
+  <div v-auto-animate class="page-wrapper">
+    <div class="page-header-bar">
       <div>
-        <h5 class="pt-2 source-500 page-title">Update Employee</h5>
+        <h5>Update Employee</h5>
       </div>
       <div class="d-flex align-items-center capitalize source-400">
         <div v-auto-animate class="border-end px-2">
@@ -77,7 +67,7 @@
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="container py-3">
+        <div class="p-4">
           <div class="main2">
             <div class="container-xl px-4">
               <div v-if="UpdateDocuments == false" v-auto-animate class="row">
@@ -526,14 +516,14 @@
                     <button
                       @click="handleUpdate"
                       type="button"
-                      class="btn-sm d-block d-sm-none btn btn-primary border-0 button_bg source-500 text-light mt-4 px-5"
+                      class="btn-sm d-block d-sm-none btn-submit mt-4"
                     >
                       Update
                     </button>
                     <button
                       @click="handleUpdate"
                       type="button"
-                      class="d-none d-sm-block btn btn-primary border-0 button_bg source-500 text-light mt-4 px-5"
+                      class="d-none d-sm-block btn-submit mt-4"
                     >
                       Update
                     </button>

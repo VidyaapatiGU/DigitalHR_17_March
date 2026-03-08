@@ -1,59 +1,152 @@
 <style scoped>
-/* //////////////////////////////////////////////////////////////////////////////////////////////////////// */
-
 ::-webkit-scrollbar {
-  width: 10px; /* Set the width of the scrollbar */
-  height: 90vh; /* Set the height of the scrollbar */
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-
-  background: #c9c9c9;
-  border-radius: 5px;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(#000000, #5e5e5e);
-  border-radius: 5px;
+  background: #cbd5e1;
+  border-radius: 3px;
 }
 
 .customize-table {
-  --easy-table-header-font-size: 1.1rem;
-  --easy-table-body-row-font-size: 1rem;
+  --easy-table-header-font-size: 0.8125rem;
+  --easy-table-header-font-color: #475569;
+  --easy-table-header-background-color: #f8fafc;
+  --easy-table-body-row-font-size: 0.875rem;
+  --easy-table-body-row-font-color: #1e293b;
+  --easy-table-body-row-hover-background-color: #eff6ff;
+  --easy-table-border-color: #e2e8f0;
+  --easy-table-row-border: 1px solid #f1f5f9;
+  --easy-table-footer-background-color: #f8fafc;
+  --easy-table-footer-font-color: #64748b;
+  --easy-table-footer-font-size: 0.8125rem;
 }
 
-.main {
+.page-wrapper {
+  background: var(--bg-body, #f1f5f9);
 }
+
+.page-header-bar {
+  padding: 1rem 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-header-bar h5 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.table-container {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-input {
+  max-width: 240px;
+  font-size: 0.8125rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-action {
+  background: var(--primary, #1e3a5f);
+  color: #ffffff;
+  border: none;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 150ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  text-decoration: none;
+}
+
+.btn-action:hover {
+  background: var(--primary-light, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.2);
+  color: #ffffff;
+}
+
+.format-link {
+  font-size: 0.75rem;
+  color: var(--primary-light, #2563eb);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.format-link:hover {
+  text-decoration: underline;
+}
+
 .table-icon {
-}
-
-.animated_input {
-  height: 3rem;
-  max-width: 19rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  transition: all 150ms ease;
+  color: var(--text-secondary, #64748b);
 }
 
 .table-icon:hover {
-  transform: translateY(-2px) scale(1.15);
-  transition: transform 0.3s ease-out;
+  background: var(--primary-50, #eff6ff);
+  color: var(--primary-light, #2563eb);
+}
+
+.table-icon.action_icon_color {
+  color: var(--primary, #1e3a5f);
 }
 
 .thumbs-down {
-  color: rgb(235, 46, 21);
+  color: var(--danger, #ef4444);
+}
+
+.notification-badge {
+  position: relative;
+  cursor: pointer;
+}
+
+.notification-badge .badge {
+  font-size: 0.625rem;
 }
 
 @media (max-width: 576px) {
-}
-
-@media (min-width: 576px) {
-}
-
-@media (min-width: 768px) {
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-input {
+    max-width: 100%;
+  }
 }
 </style>
 
@@ -326,66 +419,55 @@
   </div>
 
   <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
-  <div class="source-400 pt-2 h-100 scroll">
-    <div class="border-bottom px-4 d-flex justify-content-between align-items-center py-2">
-      <div>
-        <h5 class="source-500 page-title">Manage Clients</h5>
-      </div>
-      <div class="">
-        <div class="position-relative" data-bs-toggle="modal" data-bs-target="#ModalNotification">
-          <i class="bi bi-bell-fill pointer text-danger" style="font-size: 1.2rem"></i>
-          <span
-            v-if="notifications.length > 0"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark"
-          >
-            {{ notifications.length }}
-          </span>
-          <span
-            v-if="notifications.length > 99"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark"
-          >
-            99+
-          </span>
-        </div>
+  <div class="source-400 pt-0 h-100 scroll page-wrapper">
+    <div class="page-header-bar">
+      <h5>Manage Clients</h5>
+      <div class="notification-badge" data-bs-toggle="modal" data-bs-target="#ModalNotification">
+        <i class="bi bi-bell-fill pointer" style="font-size: 1.1rem; color: var(--text-secondary)"></i>
+        <span
+          v-if="notifications.length > 0 && notifications.length <= 99"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+        >
+          {{ notifications.length }}
+        </span>
+        <span
+          v-if="notifications.length > 99"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+        >
+          99+
+        </span>
       </div>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="container py-3">
-          <div class="mt-5 mb-3 row justify-content-between">
-            <div class="col-md-2">
-              <input
-                v-model="search"
-                class="border form-control form-control-sm"
-                size="small"
-                placeholder="Type to search"
-              />
-            </div>
-            <div class="col-md-2" style="text-align: end">
-              <span style="font-size: 12px; margin-top: 6px">
-                <a href="https://technirmitisoftwares.com/client_format.xlsx">Upload Format</a>
-              </span>
-            </div>
-            <div class="col-md-3">
-              <router-link
-                to="/upload/client/excel"
-                class="align-items-center text-decoration-none"
-              >
-                <button type="button" class="btn btn-primary border-0 button_bg source-400">
-                  Upload Client Excel
+        <div class="p-4">
+          <div class="toolbar mb-4">
+            <input
+              v-model="search"
+              class="form-control search-input"
+              size="small"
+              placeholder="Search clients..."
+            />
+            <div class="action-buttons">
+              <a href="https://technirmitisoftwares.com/client_format.xlsx" class="format-link">
+                Download Format
+              </a>
+              <router-link to="/upload/client/excel" class="text-decoration-none">
+                <button type="button" class="btn-action">
+                  <i class="bi bi-file-earmark-arrow-up"></i>
+                  Upload Excel
                 </button>
               </router-link>
-            </div>
-            <div class="col-md-3">
-              <router-link to="/add/client" class="align-items-center text-decoration-none">
-                <button type="button" class="btn btn-primary border-0 button_bg source-400">
+              <router-link to="/add/client" class="text-decoration-none">
+                <button type="button" class="btn-action">
+                  <i class="bi bi-plus-lg"></i>
                   Add Client
                 </button>
               </router-link>
             </div>
           </div>
-          <div class="table border rounded">
+          <div class="table-container">
             <div class="w-100">
               <EasyDataTable
                 table-class-name="customize-table"

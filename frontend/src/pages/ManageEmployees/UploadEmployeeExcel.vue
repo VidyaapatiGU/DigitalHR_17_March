@@ -1,76 +1,96 @@
 <style scoped>
-/* //////////////////////////////////////////////////////////////////////////////////////////////////////// */
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+}
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
-::-webkit-scrollbar {
-  width: 10px; /* Set the width of the scrollbar */
-  height: 90vh; /* Set the height of the scrollbar */
+.form-container {
+  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
 }
-::-webkit-scrollbar-track {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
 
-  background: #c9c9c9;
-  border-radius: 5px;
+.form-title {
+  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
 }
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(#000000, #5e5e5e);
-  border-radius: 5px;
+
+.form-group label {
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
 }
+
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
+
+.doc-link {
+  color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500;
+}
+.doc-link:hover { text-decoration: underline; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .customize-table {
-  --easy-table-header-font-size: 1.1rem;
-  --easy-table-body-row-font-size: 1rem;
+  --easy-table-border: none;
+  --easy-table-row-border: 1px solid #f1f5f9;
+  --easy-table-header-font-size: 13px;
+  --easy-table-header-font-color: #64748b;
+  --easy-table-header-background-color: #f8fafc;
+  --easy-table-header-height: 44px;
+  --easy-table-body-row-height: 52px;
+  --easy-table-body-row-font-size: 13px;
+  --easy-table-body-row-font-color: #334155;
+  --easy-table-body-row-hover-background-color: #f8fafc;
+  --easy-table-footer-background-color: #f8fafc;
+  --easy-table-footer-font-color: #64748b;
+  --easy-table-footer-font-size: 13px;
+  --easy-table-footer-height: 44px;
 }
 
-.main {
-}
-.table-icon {
-}
-h1 {
+.table-container {
+  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color); overflow: hidden;
 }
 
-.animated_input {
-  height: 3rem;
-  max-width: 19rem;
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
 }
-
-.table-icon:hover {
-  transform: translateY(-2px) scale(1.15);
-  transition: transform 0.3s ease-out;
+.search-input { max-width: 280px; font-size: 0.875rem; border-radius: var(--radius-md) !important; }
+.action-buttons { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.btn-action {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
+  border-radius: var(--radius-md); border: 1px solid var(--border-color);
+  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
 }
-
-.thumbs-down {
-  color: rgb(235, 46, 21);
-}
+.btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
+.table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
+.table-icon:hover { background: #f1f5f9; }
 
 @media (max-width: 576px) {
-}
-
-@media (min-width: 576px) {
-}
-
-@media (min-width: 768px) {
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
+  .form-container { padding: 1.25rem; }
 }
 </style>
 
 <template>
-  <div class="source-400 pt-2 h-100 scroll">
-    <div class="border-bottom px-4 d-flex justify-content-between align-items-center py-2">
-      <div>
-        <h5 class="source-500 page-title">Upload Employee Excel</h5>
-      </div>
-      <div class=""></div>
+  <div class="page-wrapper scroll">
+    <div class="page-header-bar">
+      <h5>Upload Employee Excel</h5>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="container py-3 h-100">
+        <div class="p-4 h-100">
           <div class="w-100 d-flex justify-content-center gap-3">
             <div class="row w-100">
               <div class="col-12 col-sm-6 col-md-3 d-flex align-items-center">
@@ -89,7 +109,7 @@ h1 {
           </div>
           <div
             v-if="employeesToSelect.length > 0 && showResponse == false"
-            class="table border rounded mt-3"
+            class="table-container mt-3"
           >
             <div class="w-100">
               <EasyDataTable
@@ -111,7 +131,7 @@ h1 {
               <button
                 v-if="showSpinner == false"
                 type="button"
-                class="btn btn-primary border-0 button_bg"
+                class="btn-submit"
                 @click="uploadFile"
               >
                 <span>Upload</span>
@@ -125,7 +145,7 @@ h1 {
           <div v-if="employeesNotToSelect.length > 0 && showResponse == false">
             <div class="p-2 mt-3 source-500">Employess With Required Feilds Missing</div>
 
-            <div class="table border rounded">
+            <div class="table-container">
               <div class="w-100">
                 <EasyDataTable
                   table-class-name="customize-table text-capitalize"
@@ -186,7 +206,7 @@ h1 {
           <div v-if="savedEmployees.length > 0 && showResponse == true">
             <div class="p-2 mt-3 source-500">Saved Employess</div>
 
-            <div class="table border rounded">
+            <div class="table-container">
               <div class="w-100">
                 <EasyDataTable
                   table-class-name="customize-table text-capitalize"
@@ -205,7 +225,7 @@ h1 {
           <div v-if="unSavedEmployees.length > 0 && showResponse == true">
             <div class="p-2 mt-3 source-500">Duplicate Entries</div>
 
-            <div class="table border rounded">
+            <div class="table-container">
               <div class="w-100">
                 <EasyDataTable
                   table-class-name="customize-table text-capitalize"
@@ -229,7 +249,7 @@ h1 {
 
               <div class="col-12 col-sm-6 col-md-3 d-flex align-items-center justify-content-end">
                 <router-link to="/manage/employees">
-                  <button type="button" class="btn btn-primary border-0 button_bg">
+                  <button type="button" class="btn-submit">
                     <span>Done</span>
                   </button>
                 </router-link>

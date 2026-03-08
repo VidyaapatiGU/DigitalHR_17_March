@@ -1,45 +1,59 @@
 <style scoped>
-.main h-100 {
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
 .form-container {
-  width: 100%;
+  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
 }
 
-.form-group label {
-  color: #333;
+.form-title {
+  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
 }
 
-.form-control {
-  background-color: #ffffff;
-  border: none;
+.form-group label, .section-label {
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
+}
 
-  color: #333;
+.section-heading {
+  font-weight: 600; font-size: 0.95rem; color: var(--text-primary);
+  padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);
+  margin-top: 1.5rem; margin-bottom: 1rem;
+}
+
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
+}
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
+
+.doc-link {
+  color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500;
+}
+.doc-link:hover { text-decoration: underline; }
+
+.salary-input .form-control:disabled {
+  background-color: #f8fafc; color: var(--text-primary); opacity: 1;
 }
 
 @media (max-width: 576px) {
-}
-
-@media (min-width: 576px) {
-}
-
-@media (min-width: 768px) {
-  .form-container {
-    padding: 30px;
-  }
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
+  .form-container { padding: 1.25rem; }
 }
 </style>
 
 <template>
-  <div class="main h-100">
-    <div class="border-bottom px-4">
-      <h5 class="pt-2 hind-medium source-500 page-title">Add Employee</h5>
+  <div class="page-wrapper">
+    <div class="page-header-bar">
+      <h5>Add Employee</h5>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
@@ -471,7 +485,7 @@
               <button
                 @click="handleAddEmployee"
                 type="button"
-                class="btn btn-primary border-0 button_bg source-500 text-light mt-4 px-5"
+                class="btn-submit mt-4 px-5"
               >
                 Add Employee
               </button>

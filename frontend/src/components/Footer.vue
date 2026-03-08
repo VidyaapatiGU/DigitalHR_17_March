@@ -1,21 +1,17 @@
 <style scoped>
-.main {
-  min-height: 5vh;
-}
-
-.text_shadow {
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+.footer {
+  padding: 0.75rem 1.5rem;
+  background: #fff;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
 }
 </style>
 
 <template>
-  <div class="main bg-dark bg-transparent d-flex align-items-center border">
-    <div
-      class="container text-dark d-flex justify-content-between align-items-center px-3 px-sm-5 w-100"
-    >
-      <div class="source-400 text_shadow text-dark footer-text">Digital HR</div>
-      <div class="source-400 text_shadow text-dark footer-text">Made In Goa</div>
-    </div>
+  <div class="footer d-flex justify-content-between align-items-center">
+    <span class="source-400">Digital HR</span>
+    <span class="source-400">Made in Goa</span>
   </div>
 </template>
 

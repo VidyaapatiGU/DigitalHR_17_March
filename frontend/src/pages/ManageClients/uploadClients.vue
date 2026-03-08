@@ -1,76 +1,52 @@
 <style scoped>
-/* //////////////////////////////////////////////////////////////////////////////////////////////////////// */
-
-::-webkit-scrollbar {
-  width: 10px; /* Set the width of the scrollbar */
-  height: 90vh; /* Set the height of the scrollbar */
+.page-wrapper { height: 100%; }
+.page-header-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
-::-webkit-scrollbar-track {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
-  background: #c9c9c9;
-  border-radius: 5px;
-}
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(#000000, #5e5e5e);
-  border-radius: 5px;
+.form-container {
+  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
 }
 
-.customize-table {
-  --easy-table-header-font-size: 1.1rem;
-  --easy-table-body-row-font-size: 1rem;
+.form-title {
+  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
 }
 
-.main {
-}
-.table-icon {
-}
-h1 {
+.form-group label {
+  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+  margin-bottom: 0.25rem; display: block;
 }
 
-.animated_input {
-  height: 3rem;
-  max-width: 19rem;
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary); color: #fff; cursor: pointer;
+  transition: var(--transition-fast);
 }
+.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
 
-.table-icon:hover {
-  transform: translateY(-2px) scale(1.15);
-  transition: transform 0.3s ease-out;
+.doc-link {
+  color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500;
 }
-
-.thumbs-down {
-  color: rgb(235, 46, 21);
-}
+.doc-link:hover { text-decoration: underline; }
 
 @media (max-width: 576px) {
-}
-
-@media (min-width: 576px) {
-}
-
-@media (min-width: 768px) {
-}
-
-@media (min-width: 992px) {
-}
-
-@media (min-width: 1200px) {
+  .form-container { padding: 1.25rem; }
 }
 </style>
 
 <template>
-  <div class="source-400 pt-2 h-100 scroll">
-    <div class="border-bottom px-4 d-flex justify-content-between align-items-center py-2">
-      <div>
-        <h5 class="source-500 page-title">Upload Client Excel</h5>
-      </div>
-      <div class=""></div>
-    </div>
+  <div class="page-wrapper">
+    <div class="page-header-bar"><h5>Upload Client Excel</h5></div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="container py-3 h-100">
+          <div class="p-4 h-100">
           <div class="w-100 d-flex justify-content-center gap-3">
             <div class="row w-100">
               <div class="col-12 col-sm-6 col-md-3 d-flex align-items-center">
@@ -112,7 +88,7 @@ h1 {
               <button
                 v-if="showSpinner == false"
                 type="button"
-                class="btn btn-primary border-0 button_bg"
+                class="btn-submit"
                 @click="uploadFile"
               >
                 <span>Upload</span>
@@ -312,7 +288,7 @@ h1 {
 
               <div class="col-12 col-sm-6 col-md-3 d-flex align-items-center justify-content-end">
                 <router-link to="/manage/clients">
-                  <button type="button" class="btn btn-primary border-0 button_bg">
+                  <button type="button" class="btn-submit">
                     <span>Done</span>
                   </button>
                 </router-link>
