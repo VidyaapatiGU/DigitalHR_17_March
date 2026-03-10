@@ -1,83 +1,58 @@
 <style scoped>
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////// */
+
+::-webkit-scrollbar {
+  width: 10px; /* Set the width of the scrollbar */
+  height: 90vh; /* Set the height of the scrollbar */
+}
+::-webkit-scrollbar-track {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+
+  background: #c9c9c9;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(#000000, #5e5e5e);
+  border-radius: 5px;
+}
 
 .customize-table {
-  --easy-table-border: none;
-  --easy-table-row-border: 1px solid #f1f5f9;
-  --easy-table-header-font-size: 13px;
-  --easy-table-header-font-color: #64748b;
-  --easy-table-header-background-color: #f8fafc;
-  --easy-table-header-height: 44px;
-  --easy-table-body-row-height: 52px;
-  --easy-table-body-row-font-size: 13px;
-  --easy-table-body-row-font-color: #334155;
-  --easy-table-body-row-hover-background-color: #f8fafc;
-  --easy-table-footer-background-color: #f8fafc;
-  --easy-table-footer-font-color: #64748b;
-  --easy-table-footer-font-size: 13px;
-  --easy-table-footer-height: 44px;
+  --easy-table-header-font-size: 1.1rem;
+  --easy-table-body-row-font-size: 1rem;
 }
 
-.page-wrapper { height: 100%; }
-.page-header-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
-}
-.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
-.notification-badge { position: relative; cursor: pointer; padding: 0.25rem; }
+/* Removed empty rulesets: .main, .table-icon, h1 */
 
-.table-container {
-  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color); overflow: hidden;
+.animated_input {
+  height: 3rem;
+  max-width: 19rem;
 }
 
-.toolbar {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
-}
-.search-input { max-width: 280px; font-size: 0.875rem; border-radius: var(--radius-md) !important; }
-.action-buttons { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-.btn-action {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
-  border-radius: var(--radius-md); border: 1px solid var(--border-color);
-  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
-}
-.btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
-
-.form-container {
-  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
-  background: #fff; border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+.table-icon:hover {
+  transform: scale(1.15);
+  transition: transform 0.3s ease-out;
 }
 
-.form-title {
-  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
+.thumbs-down {
+  color: rgb(235, 46, 21);
 }
-
-.form-group label {
-  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
-  margin-bottom: 0.25rem; display: block;
-}
-
-.btn-submit {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
-  border-radius: var(--radius-md); border: none;
-  background: var(--primary); color: #fff; cursor: pointer;
-  transition: var(--transition-fast);
-}
-.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
-
-.table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
-.table-icon:hover { background: #f1f5f9; }
 
 @media (max-width: 576px) {
-  .form-container { padding: 1.25rem; }
 }
-</style>
+
+@media (min-width: 576px) {
+}
+
+@media (min-width: 768px) {
+}
+
+@media (min-width: 992px) {
+}
+
+@media (min-width: 1200px) {
+}
+      </style>
 
       <template>
 
@@ -125,7 +100,7 @@
           <button
             @click="handleAddAttendance"
             type="button"
-            class="btn btn-sm btn-submit"
+            class="btn text-light border-0 button_bg btn-sm"
             data-bs-dismiss="modal"
           >
             Add
@@ -135,10 +110,10 @@
     </div>
   </div>
   <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
-  <div class="page-wrapper source-400 scroll">
-    <div class="page-header-bar">
+  <div class="source-400 pt-2 h-100 scroll">
+    <div class="border-bottom px-4 d-flex justify-content-between align-items-center py-2">
       <div>
-        <h5>
+        <h5 class="source-500 page-title">
           Employee Attendance
           {{ monthYear }}
         </h5>
@@ -164,20 +139,20 @@
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="p-4">
-          <div class="toolbar mb-3">
+        <div class="container py-3">
+          <div class="mt-5 mb-3 d-flex justify-content-between px-2 gap-2">
             <div class="d-flex">
               <input
                 v-model="search"
-                class="form-control search-input"
+                class="border form-control form-control-sm"
                 size="small"
                 placeholder="Type to search"
               />
             </div>
-            <div class="action-buttons">
+            <div class="d-flex justify-content-center align-items-center gap-2">
               <button
                 type="button"
-                class="btn-action"
+                class="btn text-light border-0 button_bg btn-sm"
                 @click="downloadSalarySheet3"
               >
                 <i class="bi bi-download"></i>
@@ -185,7 +160,7 @@
               </button>
               <button
                 type="button"
-                class="btn-action"
+                class="btn text-light border-0 button_bg btn-sm"
                 @click="downloadSalarySheet2"
               >
                 <i class="bi bi-download"></i>
@@ -201,7 +176,7 @@
               </button> -->
             </div>
           </div>
-          <div class="table-container">
+          <div class="table border rounded">
             <div :key="renderKey" class="w-100">
               <EasyDataTable
                 table-class-name="customize-table text-capitalize pointer"
@@ -223,7 +198,7 @@
                     <div
                       class="table-icon action_icon_color"
                       data-bs-toggle="modal"
-                      data-bs-target="#ModalNotification"
+                      data-bs-target="#ModalEditAttendance"
                       @click="updateEmployee = JSON.parse(JSON.stringify(item))"
                     >
                       <el-tooltip content="Edit" placement="bottom">
@@ -256,6 +231,75 @@
     </div>
 
     <!-- ////////////////////////////////////////Modal////////////////////////////////////////////// -->
+
+    <!-- Edit Attendance Modal -->
+    <div class="modal fade" id="ModalEditAttendance" tabindex="-1" aria-labelledby="ModalEditAttendanceLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="ModalEditAttendanceLabel">
+              Edit Attendance — {{ updateEmployee.name }}
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Days Present</label>
+                <input type="number" class="form-control" v-model="updateEmployee.present" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Total Working Days</label>
+                <input type="number" class="form-control" v-model="updateEmployee.totalWorkingDays" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">CL (Count)</label>
+                <input type="number" class="form-control" v-model="updateEmployee.numberOfCL" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">CL Days (Absent)</label>
+                <input type="number" class="form-control" v-model="updateEmployee.absentDaysCL" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">SL (Count)</label>
+                <input type="number" class="form-control" v-model="updateEmployee.numberOfSL" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">SL Days (Absent)</label>
+                <input type="number" class="form-control" v-model="updateEmployee.absentDaysSL" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">PL (Count)</label>
+                <input type="number" class="form-control" v-model="updateEmployee.numberOfPL" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">PL Days (Absent)</label>
+                <input type="number" class="form-control" v-model="updateEmployee.absentDaysPL" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">LOP (Count)</label>
+                <input type="number" class="form-control" v-model="updateEmployee.numberOfLOP" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">LOP Days (Absent)</label>
+                <input type="number" class="form-control" v-model="updateEmployee.absentDaysLOP" />
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-bold">Remark</label>
+                <input type="text" class="form-control" v-model="updateEmployee.remark" />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="updateEmployeeAttendance()">
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
