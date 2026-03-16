@@ -436,8 +436,8 @@
                               placeholder="Enter EPF"
                             />
                           </div> -->
-                          <!--  <div class="form-group col-12 col-sm-6 col-md-4">
-                            <label for="ESIC" class="mt-2">ESIC</label>
+                          <div class="form-group col-12 col-sm-6 col-md-4">
+                            <label for="ESIC" class="mt-2">ESIC (%)</label>
                             <input
                               disabled
                               v-model="form.esic"
@@ -446,30 +446,8 @@
                               id="ESIC"
                               placeholder="Enter ESIC"
                             />
-                          </div> -->
+                          </div>
 
-                          <!-- <div class="form-group col-12 col-sm-6 col-md-4">
-                            <label for="E_EPF" class="mt-2">E_EPF</label>
-                            <input
-                              disabled
-                              v-model="form.e_epf"
-                              type="number"
-                              class="form-control border"
-                              id="E_EPF"
-                              placeholder="Enter E_EPF"
-                            />
-                          </div> -->
-                          <!-- <div class="form-group col-12 col-sm-6 col-md-4">
-                            <label for="E_ESIC" class="mt-2">E_ESIC</label>
-                            <input
-                              disabled
-                              v-model="form.e_esic"
-                              type="number"
-                              class="form-control border"
-                              id="E_ESIC"
-                              placeholder="Enter E_ESIC"
-                            />
-                          </div> -->
                           <div
                             class="form-group col-12 col-sm-6 col-md-4 d-flex align-items-center py-2"
                           >
@@ -693,11 +671,11 @@ export default {
           food_allow: employeeData.food_allow,
           conveyance: employeeData.conveyance,
           epf: employeeData.epf,
-          esic: employeeData.esic,
+          esic: employeeData.esic ?? employeeData.e_esic ?? '',
           lwf: employeeData.lwf,
           esi: employeeData.esi,
           e_epf: employeeData.e_epf,
-          e_esic: employeeData.e_esic,
+          e_esic: employeeData.e_esic ?? employeeData.esic ?? '',
           adhar_proof: employeeData.adhar_proof,
           adhar_proof_url: employeeData.adhar_proof_url,
           adhar_proof_id: employeeData.adhar_proof_id,
@@ -906,11 +884,6 @@ export default {
 
       if (this.form.e_epf == '') {
         toast.info(`Enter E-EPF`, { autoClose: 1000 });
-        return false;
-      }
-
-      if (this.form.e_esic == '') {
-        toast.info(`Enter E-ESIC`, { autoClose: 1000 });
         return false;
       }
 

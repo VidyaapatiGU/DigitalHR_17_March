@@ -3,6 +3,7 @@ const dotenv = require("dotenv").config();
 const { validationResult, matchedData } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const Admin = require("../models/Admin");
 const logger = require("../config/logger.js");
 const Client = require("../models/Client");
 const Employee = require("../models/Employee");
@@ -179,7 +180,7 @@ const getUser = async (req, res) => {
 const updateUser = async (req, res) => {
   const loggedin_user = req.user;
   const { id } = req.params;
-  const { name, whatsapp_no, roleType, department, team } = req.body;
+  const { name, whatsapp_no, roleType, department, team, profile_url } = req.body;
 
   const errors = validationResult(req);
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -193,14 +194,15 @@ const updateUser = async (req, res) => {
 
   if (loggedin_user) {
     try {
-      const updatedUser = {
-        name,
-        whatsapp_no,
-        roleType,
-        department,
-        team,
-      };
-      const oldUser = await User.findOne({ _id: id });
+      const updatedUser = {};
+      if (name !== undefined) updatedUser.name = name;
+      if (whatsapp_no !== undefined) updatedUser.whatsapp_no = whatsapp_no;
+      if (roleType !== undefined) updatedUser.roleType = roleType;
+      if (department !== undefined) updatedUser.department = department;
+      if (team !== undefined) updatedUser.team = team;
+      if (profile_url) updatedUser.profile_url = profile_url;
+
+      let oldUser = await User.findOne({ _id: id });
       if (oldUser) {
         const result = await User.findByIdAndUpdate(id, updatedUser, {
           new: true,
@@ -210,7 +212,7 @@ const updateUser = async (req, res) => {
           .populate("team");
 
         if (result.roleType.name === "client") {
-          const client = await Client.findOneAndUpdate(
+          await Client.findOneAndUpdate(
             { user_id: id },
             {
               name: result.name,
@@ -231,6 +233,42 @@ const updateUser = async (req, res) => {
           .status(200)
           .json({ data: result, message: "User Updated Successfully" });
       } else {
+        // attempt updating Admin document
+        const admin = await Admin.findById(id);
+        if (admin) {
+          if (name !== undefined) admin.name = name;
+          if (whatsapp_no !== undefined) admin.whatsapp_no = whatsapp_no;
+          if (profile_url) admin.profile_url = profile_url;
+          await admin.save();
+          logger.info(
+            `${ip}: API /api/v1/user/update/:${id} | Admin updated successfully`
+          );
+          return res
+            .status(200)
+            .json({ data: admin, message: "User Updated Successfully" });
+        }
+
+        // attempt updating Client document
+        const client = await Client.findById(id);
+        if (client) {
+          if (name !== undefined) client.name = name;
+          if (whatsapp_no !== undefined) client.whatsapp_no = whatsapp_no;
+          if (profile_url) client.profile_url = profile_url;
+          if (req.body.address !== undefined) client.address = req.body.address;
+          if (req.body.city !== undefined) client.city = req.body.city;
+          if (req.body.state !== undefined) client.state = req.body.state;
+          if (req.body.country !== undefined) client.country = req.body.country;
+          if (req.body.pin_code !== undefined) client.pin_code = req.body.pin_code;
+
+          await client.save();
+          logger.info(
+            `${ip}: API /api/v1/user/update/:${id} | Client updated successfully`
+          );
+          return res
+            .status(200)
+            .json({ data: client, message: "User Updated Successfully" });
+        }
+
         logger.info(
           `${ip}: API /api/v1/user/update/:${id} | User: ${loggedin_user.name} | responnded with User Not Found `
         );
@@ -314,32 +352,84 @@ const logIn = async (req, res) => {
   }
   const data = matchedData(req);
 
-  const email = data.email;
+  const loginId = data.email || data.username;
   const password = data.password;
 
+  if (!loginId || !password) {
+    return res.status(400).json({ message: "Email/Username and password are required" });
+  }
+
   try {
-    const oldUser = await User.findOne({ email })
+    let oldUser = await User.findOne({
+      $or: [{ email: loginId }, { username: loginId }],
+    })
       .populate("department")
       .populate("roleType")
       .populate("team");
 
     if (!oldUser) {
-      logger.error(
-        `${ip}: API /api/v1/user/login responnded with User Not Found for the user: ${email}`
+      // Try Admin collection fallback
+      const admin = await Admin.findOne({
+        $or: [{ email: loginId }, { username: loginId }],
+      });
+
+      if (!admin) {
+        logger.error(
+          `${ip}: API /api/v1/user/login responnded with User Not Found for the user: ${loginId}`
+        );
+        return res.status(404).json({ message: "User Not Found, Please Signup" });
+      }
+
+      if (!admin.active) {
+        logger.error(
+          `${ip}: API /api/v1/user/login responnded with User Deleted for the user: ${loginId}`
+        );
+        return res.status(404).json({ message: "User Deleted" });
+      }
+
+      const isPasswordCorrectAdmin = await bcrypt.compare(password, admin.password);
+
+      if (!isPasswordCorrectAdmin) {
+        logger.error(
+          `${ip}: API /api/v1/user/login responnded with Incorrect Password for the user: ${loginId}`
+        );
+        return res
+          .status(401)
+          .json({ status: 401, message: "Incorrect Password" });
+      }
+
+      const adminUserShape = {
+        _id: admin._id,
+        username: admin.username,
+        email: admin.email,
+        name: admin.name,
+        roleType: { name: admin.role },
+        active: admin.active,
+        approved: true,
+      };
+
+      const token = jwt.sign({ user: adminUserShape }, secret, {
+        expiresIn: "48hr",
+      });
+
+      logger.info(
+        `${ip}: API /api/v1/user/login responnded with Login Successfull for the admin: ${loginId}`
       );
-      return res.status(404).json({ message: "User Not Found, Please Signup" });
+      return res
+        .status(200)
+        .json({ data: adminUserShape, token, message: "Login Successfull" });
     }
 
     if (!oldUser.active) {
       logger.error(
-        `${ip}: API /api/v1/user/login responnded with User Deleted for the user: ${email}`
+        `${ip}: API /api/v1/user/login responnded with User Deleted for the user: ${loginId}`
       );
       return res.status(404).json({ message: "User Deleted" });
     }
 
     if (!oldUser.approved) {
       logger.error(
-        `${ip}: API /api/v1/user/login responnded with user Disabled: ${email}`
+        `${ip}: API /api/v1/user/login responnded with user Disabled: ${loginId}`
       );
       return res.status(402).json({ status: 402, message: "User Disabled" });
     }
@@ -347,19 +437,29 @@ const logIn = async (req, res) => {
 
     if (!isPasswordCorrect) {
       logger.error(
-        `${ip}: API /api/v1/user/login responnded with Incorrect Password for the user: ${email}`
+        `${ip}: API /api/v1/user/login responnded with Incorrect Password for the user: ${loginId}`
       );
       return res
         .status(401)
         .json({ status: 401, message: "Incorrect Password" });
     }
 
-    const token = jwt.sign({ user: oldUser }, secret, {
+    // Keep JWT compact; only store essentials needed for auth
+    const tokenPayload = {
+      _id: oldUser._id,
+      username: oldUser.username,
+      email: oldUser.email,
+      roleType: oldUser.roleType,
+      active: oldUser.active,
+      approved: oldUser.approved,
+    };
+
+    const token = jwt.sign({ user: tokenPayload }, secret, {
       expiresIn: "48hr",
     });
     //console.log(token);
     logger.info(
-      `${ip}: API /api/v1/user/login responnded with Login Successfull for the user: ${email}`
+      `${ip}: API /api/v1/user/login responnded with Login Successfull for the user: ${loginId}`
     );
     return res
       .status(200)
@@ -417,7 +517,22 @@ const getCurrent = async (req, res) => {
           });
         }
       }
+
+      // Check Admin collection for auth tokens issued to Admin model users
+      const admin = await Admin.find({ _id: req.user._id });
+      if (admin.length > 0) {
+        const adminObj = admin[0].toObject();
+        adminObj.roleType = { name: adminObj.role || "admin" };
+        logger.info(
+          `${ip}: API /api/v1/admin/getCurrent/:${req.user._id}  responnded with Success `
+        );
+        return await res.status(200).json({
+          user: adminObj,
+        });
+      }
     }
+
+    return res.status(404).json({ message: "User Not Found" });
   } catch (error) {
     console.log(error);
     logger.info(`${ip}: API /api/v1/user/getCurrent responnded with the Error`);

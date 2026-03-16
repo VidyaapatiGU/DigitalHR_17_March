@@ -220,7 +220,7 @@
             Close
           </button>
           <button
-            @click="handleDelete(updateClient.user_id)"
+            @click="handleDelete(updateClient.user_id || updateClient._id)"
             type="button"
             class="btn text-light border-0 button_bg btn-sm"
             data-bs-dismiss="modal"
@@ -272,7 +272,7 @@
           </button>
           <button
             v-if="updateClient.approved == true"
-            @click="toggleUserApproved(updateClient.user_id)"
+            @click="toggleUserApproved(updateClient.user_id || updateClient._id)"
             type="button"
             class="btn text-light border-0 button_bg btn-sm"
             data-bs-dismiss="modal"
@@ -281,7 +281,7 @@
           </button>
           <button
             v-else
-            @click="toggleUserApproved(updateClient.user_id)"
+            @click="toggleUserApproved(updateClient.user_id || updateClient._id)"
             type="button"
             class="btn text-light border-0 button_bg btn-sm"
             data-bs-dismiss="modal"
@@ -637,7 +637,7 @@ export default {
     await this.getCurrent();
 
     console.log('this.user: ', this.user);
-    if (this.user.roleType.name == 'super_admin') {
+    if (this.user.roleType.name == 'super_admin' || this.user.roleType.name == 'admin') {
       try {
         const res = await axiosClient.get(`/api/v1/client/get/all/clients`);
         this.originalItems = res.data.data;
@@ -693,7 +693,7 @@ export default {
     },
 
     async handleSendMessage() {
-      this.form.to_user = this.updateClient.user_id;
+      this.form.to_user = this.updateClient.user_id || this.updateClient._id;
       this.form.by_user = this.user._id;
 
       try {
@@ -717,7 +717,7 @@ export default {
             autoClose: 1000,
           });
           for (let i in this.items) {
-            if (this.items[i].user_id == id) {
+            if (this.items[i].user_id == id || this.items[i]._id == id) {
               this.items[i].approved = !this.items[i].approved;
             }
           }
@@ -766,7 +766,7 @@ export default {
           toast.success(`Client Deleted`, {
             autoClose: 1000,
           });
-          this.items = this.items.filter((item) => item.user_id != id);
+          this.items = this.items.filter((item) => item.user_id != id && item._id != id);
         }
       } catch (err) {
         console.log('error: ', err);

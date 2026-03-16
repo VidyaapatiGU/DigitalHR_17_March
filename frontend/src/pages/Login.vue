@@ -180,13 +180,13 @@
       <form class="form-container">
         <div class="login-title">Admin Login</div>
         <div class="form-group">
-          <label for="email">Email address</label>
+          <label for="email">Email or Username</label>
           <input
             v-model="form.email"
             type="email"
             class="form-control"
             id="email"
-            placeholder="Enter your email"
+            placeholder="Enter your email or username"
           />
         </div>
         <div class="form-group">
@@ -241,14 +241,16 @@ export default {
   },
 
   async created() {
+    const existingToken = localStorage.getItem('token');
+    if (!existingToken) return;
     try {
       const token = await axiosClient.get(`api/v1/user/getCurrent/`);
-      console.log(token);
       if (token) {
         this.$router.push('/dashboard');
       }
     } catch (err) {
-      console.log('error: ', err);
+      // token invalid/expired; ignore and stay on login
+      localStorage.removeItem('token');
     }
   },
 
@@ -292,7 +294,13 @@ export default {
       }
 
       try {
-        const response = await axiosClient.post(`/api/v1/user/login`, this.form);
+        // backend accepts either email or username; map input accordingly
+        const payload =
+          this.form.email && this.form.email.includes('@')
+            ? { email: this.form.email, password: this.form.password }
+            : { username: this.form.email, password: this.form.password };
+
+        const response = await axiosClient.post(`/api/v1/user/login`, payload);
         console.log(response.data);
 
         localStorage.setItem('token', response.data.token);

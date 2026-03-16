@@ -204,7 +204,7 @@
           </button>
           <button
             v-if="updateEmployee.approved == true"
-            @click="toggleUserApproved(updateEmployee.user_id)"
+            @click="toggleUserApproved(updateEmployee._id || updateEmployee.user_id)"
             type="button"
             class="btn-action"
             data-bs-dismiss="modal"
@@ -213,7 +213,7 @@
           </button>
           <button
             v-else
-            @click="toggleUserApproved(updateEmployee.user_id)"
+            @click="toggleUserApproved(updateEmployee._id || updateEmployee.user_id)"
             type="button"
             class="btn-action"
             data-bs-dismiss="modal"
@@ -384,6 +384,10 @@
                 size="small"
                 placeholder="Type to search"
               />
+              <div class="form-check form-switch ms-2">
+                <input class="form-check-input" type="checkbox" id="showDisapprovedByClient" v-model="showDisapprovedOnly">
+                <label class="form-check-label" for="showDisapprovedByClient" style="font-size:12px;">Show disapproved</label>
+              </div>
             </div>
           </div>
           <div class="table-container">
@@ -391,7 +395,7 @@
               <EasyDataTable
                 table-class-name="customize-table text-capitalize"
                 :headers="headers"
-                :items="items"
+                :items="filteredItems"
                 search-field="name"
                 :search-value="search"
                 :rows-per-page="10"
@@ -410,7 +414,21 @@
                     </div>
 
                     <div class="table-icon action_icon_color" @click="handleViewEmployee(item._id)">
-                      <el-tooltip content="View " placement="bottom">
+                      <el-tooltip placement="bottom" popper-class="mini-card-tooltip">
+                        <template #content>
+                          <div class="p-2" style="min-width:210px; font-size:12px; line-height:1.35;">
+                            <div class="fw-semibold text-capitalize">{{ item.name || '—' }}</div>
+                            <div class="text-muted">{{ item.designation || 'No designation' }}</div>
+                            <div class="mt-1">Code: <strong>{{ item.emp_no || '—' }}</strong></div>
+                            <div>Username: {{ item.username || '—' }}</div>
+                            <div>📧 {{ item.email || 'No email' }}</div>
+                            <div>📱 {{ item.whatsapp_no || 'No WhatsApp' }}</div>
+                            <div>Dept: {{ item.department?.name || '—' }}</div>
+                            <div>Team: {{ item.team?.name || '—' }}</div>
+                            <div>City: {{ item.city || '—' }}</div>
+                            <div class="text-wrap">Addr: {{ item.address || '—' }}</div>
+                          </div>
+                        </template>
                         <i class="bi bi-eye-fill pointer" style="font-size"></i>
                       </el-tooltip>
                     </div>
@@ -537,6 +555,7 @@ export default {
 
       search: '',
       entries: 0,
+      showDisapprovedOnly: false,
       entriesPerPage: 5,
       entriesPerPageOptions: [5, 10, 15, 20],
       page: 1,
@@ -550,7 +569,7 @@ export default {
 
     try {
       const res = await axiosClient.get(
-        `/api/v1/employee/get/employees/by/client/${this.clientId}`
+        `/api/v1/employee/get/employees/by/client/${this.clientId}?includeInactive=true`
       );
       console.log('res.data.data: ', res.data.data);
       this.originalItems = res.data.data;
@@ -621,11 +640,12 @@ export default {
           toast.success(`Updated Client `, {
             autoClose: 1000,
           });
-          for (let i in this.items) {
-            if (this.items[i].user_id == id) {
-              this.items.splice(i, 1);
+          this.items = this.items.map((emp) => {
+            if (emp.user_id === id || emp._id === id) {
+              return { ...emp, approved: !emp.approved, active: emp.approved ? false : true };
             }
-          }
+            return emp;
+          });
         }
       } catch (err) {
         console.log('error: ', err);
@@ -725,6 +745,15 @@ export default {
       }
 
       return;
+    },
+  },
+
+  computed: {
+    filteredItems() {
+      if (this.showDisapprovedOnly) {
+        return this.items;
+      }
+      return this.items.filter((emp) => emp.approved !== false);
     },
   },
 };

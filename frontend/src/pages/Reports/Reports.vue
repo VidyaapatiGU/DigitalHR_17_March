@@ -1,148 +1,152 @@
 <template>
-  <div class="reports-bg container-fluid mt-4" style="max-height: 90vh; overflow-y: auto; padding-right: 15px;">
-    <h1 class="reports-title mb-4">Download Reports</h1>
-
-    <!-- PDF Downloads Section -->
-    <div class="reports-section mb-5">
-      <h3 class="reports-section-title mb-3">📄 PDF Downloads</h3>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="reports-card card">
-            <div class="card-body">
-              <h5 class="card-title">Standard Forms</h5>
-              <div class="input-group mb-2">
-                <select class="form-select" v-model="selectedPdfReport">
-                  <option :value="null" disabled>-- Select a PDF --</option>
-                  <option v-for="report in pdfReportsList" :key="report.file" :value="report.file">
-                    {{ report.name }}
-                  </option>
-                </select>
-                <a
-                  :href="pdfDownloadUrl"
-                  :class="['btn', 'btn-primary', { disabled: !selectedPdfReport }]"
-                  download
-                >
-                  <i class="bi bi-download me-2"></i>
-                  Download
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div class="reports-bg container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h1 class="reports-title mb-1">Download Reports</h1>
+        <p class="text-muted mb-0">Quick access to compliance forms, attendance, ESIC, PF, and employee exports.</p>
       </div>
     </div>
 
-    <!-- Settings Downloads Section -->
-    <div class="reports-section mb-5">
-      <h3 class="reports-section-title mb-3">⚙️ Settings & Notices</h3>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="reports-card card mb-3">
-            <div class="card-body">
-              <h5 class="card-title">Notices</h5>
-              <button class="btn btn-outline-primary btn-sm mb-2 w-100 reports-btn" @click="downloadCloseNotice" title="Download Notice of Close Day">
-                <i class="bi bi-download me-2"></i>Notice of Close Day
-              </button>
-              <button class="btn btn-outline-primary btn-sm mb-2 w-100 reports-btn" @click="downloadNoticeOfHours" title="Download Notice of Hours">
-                <i class="bi bi-download me-2"></i>Notice of Hours
-              </button>
-              <button class="btn btn-outline-primary btn-sm w-100 reports-btn" @click="downloadMonthlySalaryNotice" title="Download Monthly Salary Notice">
-                <i class="bi bi-download me-2"></i>Monthly Salary Notice
-              </button>
+    <div class="reports-grid">
+      <!-- Compliance PDFs -->
+      <div class="reports-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <span class="icon-circle text-primary"><i class="bi bi-file-earmark-text"></i></span>
+            <div>
+              <h6 class="mb-0">Compliance PDFs</h6>
+              <small class="text-muted">Standard downloadable forms</small>
             </div>
           </div>
         </div>
-        <div class="col-md-6">
-          <div class="reports-card card mb-3">
-            <div class="card-body">
-              <h5 class="card-title">Forms & Policy Documents</h5>
-              <button class="btn btn-outline-primary btn-sm mb-2 w-100 reports-btn" @click="downloadSalaryInspectorForm" title="Download Area Labour Inspector Form">
-                <i class="bi bi-download me-2"></i>Area Labour Inspector Form
-              </button>
-              <button class="btn btn-outline-primary btn-sm mb-2 w-100 reports-btn" @click="downloadMinimumWagesForm" title="Download Minimum Wages Form">
-                <i class="bi bi-download me-2"></i>Minimum Wages Form
-              </button>
-              <button class="btn btn-outline-primary btn-sm w-100 reports-btn" @click="downloadHolidaysListWord" title="Download Holidays List">
-                <i class="bi bi-download me-2"></i>Holidays List
-              </button>
-            </div>
+        <div class="card-body">
+          <div class="input-group">
+            <select class="form-select form-select-sm" v-model="selectedPdfReport">
+              <option :value="null" disabled>-- Select a PDF --</option>
+              <option v-for="report in pdfReportsList" :key="report.file" :value="report.file">
+                {{ report.name }}
+              </option>
+            </select>
+            <a
+              :href="pdfDownloadUrl"
+              :class="['btn', 'btn-primary', 'btn-sm', { disabled: !selectedPdfReport }]"
+              download
+            >
+              <i class="bi bi-download me-1"></i>Download
+            </a>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- PF / EPFO Section -->
-    <div class="reports-section mb-5">
-      <h3 class="reports-section-title mb-3">🏛️ PF / EPFO Portal</h3>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="reports-card card mb-3">
-            <div class="card-body">
-              <h5 class="card-title">PF ECR Challan</h5>
-              <p class="text-muted small mb-2">Generate PF challan in EPFO hash (##) format. Edit data, review, and download for upload to the EPFO portal.</p>
-              <button class="btn btn-outline-primary btn-sm w-100 reports-btn" @click="$router.push('/reports/pf-challan')">
-                <i class="bi bi-bank me-2"></i>Open PF Challan Generator
-              </button>
-            </div>
+      <!-- Notices & Settings -->
+      <div class="reports-card">
+        <div class="card-header d-flex align-items-center gap-2">
+          <span class="icon-circle text-warning"><i class="bi bi-gear"></i></span>
+          <div>
+            <h6 class="mb-0">Notices & Settings</h6>
+            <small class="text-muted">Regulatory notices and policy docs</small>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="btn-grid">
+            <button class="btn btn-light btn-sm" @click="downloadCloseNotice">
+              <i class="bi bi-calendar2-x me-1"></i>Close Day Notice
+            </button>
+            <button class="btn btn-light btn-sm" @click="downloadNoticeOfHours">
+              <i class="bi bi-clock-history me-1"></i>Notice of Hours
+            </button>
+            <button class="btn btn-light btn-sm" @click="downloadMonthlySalaryNotice">
+              <i class="bi bi-cash-coin me-1"></i>Monthly Salary Notice
+            </button>
+            <button class="btn btn-light btn-sm" @click="downloadSalaryInspectorForm">
+              <i class="bi bi-people me-1"></i>Salary Inspector Form
+            </button>
+            <button class="btn btn-light btn-sm" @click="downloadMinimumWagesForm">
+              <i class="bi bi-clipboard-data me-1"></i>Minimum Wages Form
+            </button>
+            <button class="btn btn-light btn-sm" @click="downloadHolidaysListWord">
+              <i class="bi bi-card-list me-1"></i>Holidays List
+            </button>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Excel & Data Downloads Section -->
-    <div class="reports-section mb-5">
-      <h3 class="reports-section-title mb-3">📊 Excel & Data Downloads</h3>
-      <div class="row">
-        <div class="col-md-6">
-          <div class="reports-card card mb-3">
-            <div class="card-body">
-              <h5 class="card-title">Attendance Reports</h5>
-              <button class="btn btn-outline-success btn-sm w-100 reports-btn" @click="downloadLeavesBalance" title="Download Leaves Balance">
-                <i class="bi bi-download me-2"></i>Leaves Balance (CSV)
-              </button>
-              <!-- ESIC Month/Year Selection and Download -->
-              <div class="row mb-2 mt-3">
-                <div class="col-12">
-                  <button class="btn btn-outline-danger btn-sm w-100 mt-2 reports-btn" @click="showEsicModal = true; fetchAttendancePeriods();" title="Download ESIC Challan Report">
-                    <i class="bi bi-download me-2"></i>ESIC Challan (Excel)
-                  </button>
-                  <!-- ESIC Modal -->
-                  <div v-if="showEsicModal" class="modal fade show" tabindex="-1" style="display:block; background:rgba(0,0,0,0.4);">
-                    <div class="modal-dialog modal-dialog-centered">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title">Select Month/Year for ESIC Report</h5>
-                          <button type="button" class="btn-close" @click="showEsicModal = false"></button>
-                        </div>
-                        <div class="modal-body">
-                          <select class="form-select form-select-sm mb-3" v-model="esicPeriod">
-                            <option v-if="!esicOptions.length" :value="null" disabled>No available periods</option>
-                            <option v-for="opt in esicOptions" :key="opt.label" :value="opt">{{ opt.label }}</option>
-                          </select>
-                        </div>
-                        <div class="modal-footer">
-                          <button class="btn btn-secondary btn-sm" @click="showEsicModal = false">Cancel</button>
-                          <button class="btn btn-danger btn-sm" :disabled="!esicPeriod" @click="showEsicModal = false; downloadEsicChallanReport();">Download</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+      <!-- PF / EPFO -->
+      <div class="reports-card">
+        <div class="card-header d-flex align-items-center gap-2">
+          <span class="icon-circle text-info"><i class="bi bi-bank"></i></span>
+          <div>
+            <h6 class="mb-0">PF / EPFO</h6>
+            <small class="text-muted">Generate PF challan in EPFO hash format</small>
+          </div>
+        </div>
+        <div class="card-body">
+          <button class="btn btn-primary btn-sm w-100 reports-btn" @click="$router.push('/reports/pf-challan')">
+            <i class="bi bi-bank me-2"></i>Open PF Challan Generator
+          </button>
+        </div>
+      </div>
+
+      <!-- Attendance & ESIC -->
+      <div class="reports-card">
+        <div class="card-header d-flex align-items-center gap-2">
+          <span class="icon-circle text-success"><i class="bi bi-clipboard-check"></i></span>
+          <div>
+            <h6 class="mb-0">Attendance & ESIC</h6>
+            <small class="text-muted">Exports for leaves, attendance and ESIC</small>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="btn-grid">
+            <button class="btn btn-light btn-sm" @click="downloadLeavesBalance">
+              <i class="bi bi-download me-1"></i>Leaves Balance (CSV)
+            </button>
+            <button class="btn btn-danger btn-sm" @click="showEsicModal = true; fetchAttendancePeriods();">
+              <i class="bi bi-download me-1"></i>ESIC Challan (Excel)
+            </button>
+          </div>
+
+          <!-- ESIC Modal -->
+          <div v-if="showEsicModal" class="modal fade show" tabindex="-1" style="display:block; background:rgba(0,0,0,0.4);">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Select Month/Year for ESIC Report</h5>
+                  <button type="button" class="btn-close" @click="showEsicModal = false"></button>
+                </div>
+                <div class="modal-body">
+                  <select class="form-select form-select-sm mb-3" v-model="esicPeriod">
+                    <option v-if="!esicOptions.length" :value="null" disabled>No available periods</option>
+                    <option v-for="opt in esicOptions" :key="opt.label" :value="opt">{{ opt.label }}</option>
+                  </select>
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-secondary btn-sm" @click="showEsicModal = false">Cancel</button>
+                  <button class="btn btn-danger btn-sm" :disabled="!esicPeriod" @click="showEsicModal = false; downloadEsicChallanReport();">Download</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-md-6">
-          <div class="reports-card card mb-3">
-            <div class="card-body">
-              <h5 class="card-title">Employee & Holiday Data</h5>
-              <button class="btn btn-outline-success btn-sm mb-2 w-100 reports-btn" @click="downloadEmployeesList" title="Download Employees List">
-                <i class="bi bi-download me-2"></i>Employees List (Excel)
-              </button>
-              <button class="btn btn-outline-success btn-sm w-100 reports-btn" @click="downloadWeeklyHolidayExcel" title="Download Weekly Holiday Notice">
-                <i class="bi bi-download me-2"></i>Weekly Holiday Notice (Excel)
-              </button>
-            </div>
+      </div>
+
+      <!-- Employee & Holidays -->
+      <div class="reports-card">
+        <div class="card-header d-flex align-items-center gap-2">
+          <span class="icon-circle text-secondary"><i class="bi bi-people"></i></span>
+          <div>
+            <h6 class="mb-0">Employee & Holidays</h6>
+            <small class="text-muted">Employee roster and holiday notices</small>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="btn-grid">
+            <button class="btn btn-light btn-sm" @click="downloadEmployeesList">
+              <i class="bi bi-download me-1"></i>Employees List (Excel)
+            </button>
+            <button class="btn btn-light btn-sm" @click="downloadWeeklyHolidayExcel">
+              <i class="bi bi-download me-1"></i>Weekly Holiday Notice
+            </button>
           </div>
         </div>
       </div>
@@ -721,9 +725,46 @@ export default {
     },
 
     // ===== Weekly Holiday Excel (same as Settings.vue FORM XXVI) =====
-    downloadWeeklyHolidayExcel() {
+    async downloadWeeklyHolidayExcel() {
       try {
-        if (!this.employeeHolidayAssignments.length) {
+        // Always refresh to avoid using stale employee list
+        await this.loadSettingsData();
+
+        // Pull latest employees to ensure we don't include removed staff
+        let currentEmployees = [];
+        try {
+          const empRes = await axiosClient.get(`/api/v1/employee/client/${this.user._id}`);
+          currentEmployees = Array.isArray(empRes.data?.data) ? empRes.data.data : [];
+        } catch (err) {
+          console.warn('Could not refresh employees, falling back to saved assignments', err);
+        }
+
+        const normalize = (v) => (v == null ? '' : String(v).trim());
+        const assignmentFor = (emp) => {
+          const empId = normalize(emp._id);
+          const empNo = normalize(emp.emp_no);
+          const empName = normalize(emp.name).toLowerCase();
+
+          return this.employeeHolidayAssignments.find((a) => {
+            const aId = normalize(a.employeeId || a._id);
+            const aEmpNo = normalize(a.emp_no || a.empCode || a.emp_id);
+            const aName = normalize(a.employeeName || a.name).toLowerCase();
+            return (aId && aId === empId) || (aEmpNo && aEmpNo === empNo) || (aName && aName === empName);
+          });
+        };
+
+        const hydratedAssignments = currentEmployees.length
+          ? currentEmployees.map((emp) => {
+              const match = assignmentFor(emp) || {};
+              return {
+                employeeName: emp.name || match.employeeName || '',
+                holidayDay: match.holidayDay || match.holiday || '',
+                remarks: match.remarks || '',
+              };
+            })
+          : this.employeeHolidayAssignments;
+
+        if (!hydratedAssignments.length) {
           toast.error('No holiday assignments found!', { autoClose: 1000 });
           return;
         }
@@ -839,7 +880,7 @@ export default {
         headerRow.height = 28;
 
         const minRows = 10;
-        this.employeeHolidayAssignments.forEach((emp, idx) => {
+        hydratedAssignments.forEach((emp, idx) => {
           const dataRow = worksheet.addRow(['', idx + 1, emp.employeeName || '', emp.holidayDay || '', emp.remarks || '']);
           applyRowStyle(dataRow, { font: { size: 11 }, border: thinBorder });
           applyLeftMarginStyle(dataRow);
@@ -915,6 +956,7 @@ export default {
         }
 
         const presentDaysMap = {};
+        const reasonMap = {};
         attendanceRecords.forEach(rec => {
           const empNo = rec.emp_no || rec.empCode || '';
           if (!empNo) return;
@@ -922,6 +964,22 @@ export default {
           if (typeof rec.present === 'number') presentCount = rec.present;
           else if (typeof rec.present === 'string' && rec.present.match(/^\d+$/)) presentCount = Number(rec.present);
           presentDaysMap[String(empNo)] = (presentDaysMap[String(empNo)] || 0) + (presentCount || 0);
+
+          // Capture reason code / last working day for zero-present rows
+          if (presentCount === 0) {
+            const reasonCode =
+              rec.reasonCode ?? rec.reason_code ?? rec.reason ?? rec.reason_code_esic ?? '';
+            const lastWorking =
+              rec.lastWorkingDay ??
+              rec.last_working_day ??
+              rec.lastWorkingDate ??
+              rec.last_working_date ??
+              '';
+            reasonMap[String(empNo)] = {
+              reasonCode,
+              lastWorkingDay: lastWorking,
+            };
+          }
         });
 
         const formatDate = (d) => {
@@ -952,8 +1010,14 @@ export default {
           const name = emp.name || '';
           const present = presentDaysMap[String(empCode)] ?? 0;
           const totalWages = emp.gross ?? emp.gross_salary ?? emp.monthly_wages ?? emp.salary ?? '';
-          const reason = (present === 0) ? (emp.reason_code ?? '') : '';
-          const lastWorking = (emp.last_working_day || emp.lastWorkingDay || emp.last_working_date) ? formatDate(emp.last_working_day || emp.lastWorkingDay || emp.last_working_date) : '';
+          const reasonSource = reasonMap[String(empCode)] || {};
+          const reason = (present === 0) ? (reasonSource.reasonCode ?? emp.reason_code ?? '') : '';
+          const lastWorkingRaw =
+            reasonSource.lastWorkingDay ||
+            emp.last_working_day ||
+            emp.lastWorkingDay ||
+            emp.last_working_date;
+          const lastWorking = lastWorkingRaw ? formatDate(lastWorkingRaw) : '';
 
           worksheet.addRow({
             ip_number: ipNumber,
@@ -1009,15 +1073,24 @@ export default {
       try {
         const res = await axiosClient.get(`/api/v1/employee/client/${this.user._id}`);
         const leavesData = res.data.data || [];
-        
-        let csv = "Emp Code,Name,CL,SL,PL\n";
+
+        let csv = "Emp Code,Name,CL Balance,SL Balance,PL Balance,CL Dates,SL Dates,PL Dates\n";
+
+        const esc = (value) => String(value ?? '').replace(/"/g, '""');
+
         leavesData.forEach(emp => {
           const empCode = emp.emp_no || '';
           const name = emp.name || '';
-          const cl = emp.leaves?.cl?.balance || '';
-          const sl = emp.leaves?.sl?.balance || '';
-          const pl = emp.leaves?.pl?.balance || '';
-          csv += `"${empCode}","${name}","${cl}","${sl}","${pl}"\n`;
+
+          const clBalance = emp?.leaves?.cl?.balance ?? '';
+          const slBalance = emp?.leaves?.sl?.balance ?? '';
+          const plBalance = emp?.leaves?.pl?.balance ?? '';
+
+          const clDates = Array.isArray(emp?.leaves?.cl?.absentDates) ? emp.leaves.cl.absentDates.join(';') : '';
+          const slDates = Array.isArray(emp?.leaves?.sl?.absentDates) ? emp.leaves.sl.absentDates.join(';') : '';
+          const plDates = Array.isArray(emp?.leaves?.pl?.absentDates) ? emp.leaves.pl.absentDates.join(';') : '';
+
+          csv += `"${esc(empCode)}","${esc(name)}","${esc(clBalance)}","${esc(slBalance)}","${esc(plBalance)}","${esc(clDates)}","${esc(slDates)}","${esc(plDates)}"\n`;
         });
 
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -1152,3 +1225,68 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.reports-bg {
+  background: #f6f8fb;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 3rem;
+}
+
+.reports-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.reports-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.reports-card .card-header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.85rem 1rem;
+}
+
+.reports-card .card-body {
+  padding: 1rem;
+}
+
+.btn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+}
+
+.bg-primary-soft {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.reports-btn {
+  font-weight: 500;
+}
+</style>

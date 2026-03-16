@@ -225,7 +225,17 @@ const logIn = async (req, res) => {
         .json({ status: 401, message: "Incorrect Password" });
     }
 
-    const token = jwt.sign({ user: oldClient }, secret, {
+    // Keep JWT small to avoid header bloat; only include essentials
+    const tokenPayload = {
+      _id: oldClient._id,
+      username: oldClient.username,
+      email: oldClient.email,
+      roleType: { name: "client" },
+      active: oldClient.active,
+      approved: oldClient.approved,
+    };
+
+    const token = jwt.sign({ user: tokenPayload }, secret, {
       expiresIn: "48hr",
     });
     //console.log(token);
@@ -403,10 +413,11 @@ const getAllClients = async (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
   try {
-    if (user && user.roleType.name === "super_admin") {
-      const clients = await Client.find({
-        active: true,
-      }).populate("contact_person");
+    if (user && ["super_admin", "admin"].includes(user.roleType?.name)) {
+      // Return all clients (active and inactive) so admins can manage/toggle them
+      const clients = await Client.find({})
+        .populate("contact_person")
+        .sort({ createdAt: -1 });
 
       logger.info(
         `${ip}: API /api/v1/client/getall | User: ${user.name} | responnded with Success `
@@ -612,18 +623,23 @@ const deleteClient = async (req, res) => {
       const updated = {
         active: false,
       };
-      const oldUser = await Client.findOne({ user_id: id });
+      // Try matching by user_id first, else fall back to client _id
+      let oldUser = await Client.findOne({ user_id: id });
+      if (!oldUser) {
+        oldUser = await Client.findOne({ _id: id });
+      }
       if (oldUser) {
         console.log("oldUser: ", oldUser);
         const clientRes = await Client.findOneAndUpdate(
-          { user_id: id },
+          { _id: oldUser._id },
           updated,
           {
             new: true,
           }
         );
 
-        const userRes = await User.findOneAndUpdate({ _id: id }, updated, {
+        // also mark linked User inactive if exists
+        await User.findOneAndUpdate({ _id: oldUser.user_id || id }, updated, {
           new: true,
         });
 
@@ -695,7 +711,10 @@ const AppDisClient = async (req, res) => {
 
   try {
     if (loggedin_user) {
-      const oldUser = await Client.findOne({ user_id: id });
+      let oldUser = await Client.findOne({ user_id: id });
+      if (!oldUser) {
+        oldUser = await Client.findOne({ _id: id });
+      }
 
       if (oldUser) {
         console.log("olduser: ", oldUser);
@@ -709,7 +728,7 @@ const AppDisClient = async (req, res) => {
           };
 
           const clientRes = await Client.findOneAndUpdate(
-            { user_id: id },
+            { _id: oldUser._id },
             updatedClient,
             {
               new: true,
@@ -717,7 +736,7 @@ const AppDisClient = async (req, res) => {
           );
 
           const UserRes = await User.findOneAndUpdate(
-            { _id: id },
+            { _id: oldUser.user_id || id },
             updatedUser,
             {
               new: true,
@@ -740,14 +759,14 @@ const AppDisClient = async (req, res) => {
             approved: true,
           };
           const clientRes = await Client.findOneAndUpdate(
-            { user_id: id },
+            { _id: oldUser._id },
             updatedClient,
             {
               new: true,
             }
           );
           const UserRes = await User.findOneAndUpdate(
-            { _id: id },
+            { _id: oldUser.user_id || id },
             updatedUser,
             {
               new: true,

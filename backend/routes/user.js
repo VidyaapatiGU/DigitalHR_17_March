@@ -51,8 +51,11 @@ router.post(
 router.post(
   "/login/",
   [
-    body("email", "Enter a Valid Email").isEmail(),
-    body("password", "Password must have atlest 5 character").notEmpty(),
+    body("email", "Enter a Valid Email").optional().isEmail(),
+    body("username", "Enter a valid username").optional().notEmpty(),
+    body("password", "Password must have atlest 5 character").isLength({
+      min: 5,
+    }),
   ],
   logIn
 );
@@ -78,11 +81,13 @@ router.get("/get/:id", validateToken, getUser);
 router.put(
   "/update/:id",
   [
-    body("name", "Enter a valid name").isLength({ min: 3 }),
-    body("whatsapp_no", "Enter a Valid Whatsapp Number").notEmpty().isNumeric(),
-    body("roleType", "Select a valid role id").notEmpty(),
-    body("team", "Select a valid team id").notEmpty(),
-    body("department", "Select a valid department id").notEmpty(),
+    body("name", "Enter a valid name").optional().isLength({ min: 3 }),
+    body("whatsapp_no", "Enter a Valid Whatsapp Number")
+      .optional()
+      .isNumeric(),
+    body("roleType", "Select a valid role id").optional(),
+    body("team", "Select a valid team id").optional(),
+    body("department", "Select a valid department id").optional(),
   ],
   validateToken,
   updateUser

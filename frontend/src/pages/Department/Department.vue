@@ -23,20 +23,22 @@
 
 .page-wrapper { height: 100%; }
 .page-header-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
-.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
+.page-header-bar h5 { font-weight: 700; color: var(--text-primary); margin: 0; font-size: 1.1rem; }
 
 .table-container {
   background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color); overflow: hidden;
+  border: 1px solid var(--border-color); overflow: hidden; padding: 1rem;
 }
 
 .toolbar {
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
+  background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 0.9rem 1rem;
+  box-shadow: var(--shadow-sm);
 }
-.search-input { max-width: 280px; font-size: 0.875rem; border-radius: var(--radius-md) !important; }
+.search-input { max-width: 320px; font-size: 0.875rem; border-radius: var(--radius-md) !important; }
 .action-buttons { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .btn-action {
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -175,74 +177,68 @@
 
   <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
   <div class="page-wrapper main source-400 pt-2 h-100 scroll">
-    <div class="page-header-bar"><h5>Departments</h5></div>
+    <div class="page-header-bar">
+      <h5 class="mb-0">Departments</h5>
+      <div class="d-flex gap-2">
+        <button class="btn btn-light btn-sm" @click="search = ''">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Clear
+        </button>
+        <button class="btn btn-primary btn-sm text-white" data-bs-toggle="modal" data-bs-target="#ModalAdd">
+          <i class="bi bi-plus-lg me-1"></i>Add Department
+        </button>
+      </div>
+    </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
         <div class="p-4">
-          <div class="d-flex justify-content-center">
-            <div class="">
-              <div class="toolbar mb-4">
-                  <input
-                    type="text"
-                    class="form-control search-input"
-                    placeholder="Search Department"
-                    aria-label="Search Department"
-                    aria-describedby="addon-wrapping"
-                    v-model="search"
-                  />
+          <div class="toolbar mb-3">
+            <input
+              type="text"
+              class="form-control search-input"
+              placeholder="Search department"
+              aria-label="Search department"
+              aria-describedby="addon-wrapping"
+              v-model="search"
+            />
+          </div>
 
-                <div class="action-buttons">
-                  <button
+          <div class="table-container">
+            <EasyDataTable
+              table-class-name="customize-table rounded"
+              :headers="headers"
+              :items="items"
+              search-field="name"
+              :search-value="search"
+              :rows-per-page="10"
+              buttons-pagination
+            >
+              <template #item-actions="item">
+                <div class="d-flex justify-content-start gap-2">
+                  <div
+                    class="table-icon action_icon_color"
+                    @click="updateDepartment = item"
                     data-bs-toggle="modal"
-                    data-bs-target="#ModalAdd"
-                    type="button"
-                    class="btn-action"
+                    data-bs-target="#Modal"
                   >
-                    Add New
-                  </button>
-                </div>
-              </div>
-              <div class="table-container">
-                <div class="w-100">
-                  <EasyDataTable
-                    table-class-name="customize-table rounded"
-                    :headers="headers"
-                    :items="items"
-                    search-field="name"
-                    :search-value="search"
-                    :rows-per-page="10"
-                    buttons-pagination
-                  >
-                    <template #item-actions="item">
-                      <div class="d-flex justify-content-evenly">
-                        <div
-                          class="table-icon action_icon_color w-100"
-                          @click="updateDepartment = item"
-                          data-bs-toggle="modal"
-                          data-bs-target="#Modal"
-                        >
-                          <el-tooltip content="Update Role" placement="bottom">
-                            <i class="bi bi-pen-fill pointer" style="font-size"></i>
-                          </el-tooltip>
-                        </div>
+                    <el-tooltip content="Update Department" placement="bottom">
+                      <i class="bi bi-pen-fill pointer" style="font-size"></i>
+                    </el-tooltip>
+                  </div>
 
-                        <div
-                          class="table-icon action_icon_color w-100"
-                          @click="updateDepartment = item"
-                          data-bs-toggle="modal"
-                          data-bs-target="#ModalDelete"
-                        >
-                          <el-tooltip content="Delete Role" placement="bottom">
-                            <i class="bi bi-trash-fill pointer" style="font-size"></i>
-                          </el-tooltip>
-                        </div>
-                      </div>
-                    </template>
-                  </EasyDataTable>
+                  <div
+                    class="table-icon action_icon_color"
+                    @click="updateDepartment = item"
+                    data-bs-toggle="modal"
+                    data-bs-target="#ModalDelete"
+                  >
+                    <el-tooltip content="Delete Department" placement="bottom">
+                      <i class="bi bi-trash-fill pointer" style="font-size"></i>
+                    </el-tooltip>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </template>
+            </EasyDataTable>
           </div>
         </div>
       </div>

@@ -3,6 +3,149 @@ const logger = require("../config/logger.js");
 const Attendance = require("../models/Attendance.js");
 const Employee = require("../models/Employee.js");
 
+const normalizeInt = (value) => {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const parseAbsentDaysToIsoDates = (value, year, month) => {
+  if (value == null) return [];
+  const valueStr = String(value).trim();
+  if (!valueStr) return [];
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  const tokens = valueStr
+    .replace(/[;|]+/g, ",")
+    .split(/[\s,]+/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  const isoDates = [];
+  for (const token of tokens) {
+    if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(token)) {
+      const [yyyy, mm, dd] = token.split("-").map((p) => parseInt(p, 10));
+      if (yyyy === year && mm === month && dd >= 1 && dd <= daysInMonth) {
+        isoDates.push(`${String(yyyy)}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`);
+      }
+      continue;
+    }
+
+    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(token)) {
+      const [dd, mm, yyyyRaw] = token.split("/");
+      const ddNum = parseInt(dd, 10);
+      const mmNum = parseInt(mm, 10);
+      const yyyyNum = parseInt(yyyyRaw, 10);
+      if (yyyyNum === year && mmNum === month && ddNum >= 1 && ddNum <= daysInMonth) {
+        isoDates.push(`${String(yyyyNum)}-${String(mmNum).padStart(2, "0")}-${String(ddNum).padStart(2, "0")}`);
+      }
+      continue;
+    }
+
+    if (/^\d{1,2}$/.test(token)) {
+      const ddNum = parseInt(token, 10);
+      if (ddNum >= 1 && ddNum <= daysInMonth) {
+        isoDates.push(`${String(year)}-${String(month).padStart(2, "0")}-${String(ddNum).padStart(2, "0")}`);
+      }
+    }
+  }
+
+  return Array.from(new Set(isoDates)).sort();
+};
+
+const restoreEmployeeLeavesFromMonthAttendance = async (clientUserId, yearNum, monthNum, attendanceRecords) => {
+  const byEmp = new Map();
+
+  for (const rec of attendanceRecords) {
+    const empNo = String(rec.emp_no || "").trim();
+    if (!empNo) continue;
+
+    const existing = byEmp.get(empNo) || {
+      clDates: new Set(),
+      slDates: new Set(),
+      plDates: new Set(),
+      clFallback: 0,
+      slFallback: 0,
+      plFallback: 0,
+    };
+
+    const clDates = parseAbsentDaysToIsoDates(rec.absentDaysCL, yearNum, monthNum);
+    const slDates = parseAbsentDaysToIsoDates(rec.absentDaysSL, yearNum, monthNum);
+    const plDates = parseAbsentDaysToIsoDates(rec.absentDaysPL, yearNum, monthNum);
+
+    if (clDates.length > 0) clDates.forEach((d) => existing.clDates.add(d));
+    else existing.clFallback += normalizeInt(rec.numberOfCL);
+
+    if (slDates.length > 0) slDates.forEach((d) => existing.slDates.add(d));
+    else existing.slFallback += normalizeInt(rec.numberOfSL);
+
+    if (plDates.length > 0) plDates.forEach((d) => existing.plDates.add(d));
+    else existing.plFallback += normalizeInt(rec.numberOfPL);
+
+    byEmp.set(empNo, existing);
+  }
+
+  const empNos = Array.from(byEmp.keys());
+  if (empNos.length === 0) return { employeesUpdated: 0, employeesMissing: 0 };
+
+  const employees = await Employee.find({
+    client_user_id: clientUserId,
+    emp_no: { $in: empNos },
+  }).select("_id emp_no leaves");
+
+  const employeesByEmpNo = new Map(employees.map((e) => [String(e.emp_no), e]));
+
+  const ops = [];
+  let employeesUpdated = 0;
+  let employeesMissing = 0;
+
+  const restoreType = (current, toRemoveSet, fallbackCount) => {
+    const balance = normalizeInt(current?.balance);
+    const absentDates = Array.isArray(current?.absentDates) ? current.absentDates : [];
+
+    const removeSet = toRemoveSet || new Set();
+    const nextAbsentDates = removeSet.size > 0 ? absentDates.filter((d) => !removeSet.has(d)) : absentDates.slice();
+    const removedCount = absentDates.length - nextAbsentDates.length;
+
+    const restoreCount = removedCount > 0 ? removedCount : normalizeInt(fallbackCount);
+    return {
+      balance: String(balance + restoreCount),
+      absentDates: nextAbsentDates,
+    };
+  };
+
+  for (const empNo of empNos) {
+    const employee = employeesByEmpNo.get(empNo);
+    if (!employee) {
+      employeesMissing++;
+      continue;
+    }
+
+    const restore = byEmp.get(empNo);
+    const currentLeaves = employee.leaves || {};
+
+    const nextLeaves = {
+      cl: restoreType(currentLeaves.cl, restore.clDates, restore.clFallback),
+      sl: restoreType(currentLeaves.sl, restore.slDates, restore.slFallback),
+      pl: restoreType(currentLeaves.pl, restore.plDates, restore.plFallback),
+    };
+
+    ops.push({
+      updateOne: {
+        filter: { _id: employee._id },
+        update: { $set: { leaves: nextLeaves, updated_at: Date.now() } },
+      },
+    });
+    employeesUpdated++;
+  }
+
+  if (ops.length > 0) {
+    await Employee.bulkWrite(ops, { ordered: false });
+  }
+
+  return { employeesUpdated, employeesMissing };
+};
+
 //@desc Test Attendance API
 //@route GET /api/v1/attendance
 //@access Private: Needs Login
@@ -69,6 +212,8 @@ const addAttendance = async (req, res) => {
           absentDaysPL: employeeData[i].absentDaysPL,
           numberOfSL: employeeData[i].numberOfSL,
           absentDaysSL: employeeData[i].absentDaysSL,
+          reasonCode: employeeData[i].reasonCode,
+          lastWorkingDay: employeeData[i].lastWorkingDay,
           month: data.month,
           year: data.year,
           remark: employeeData[i].remark || "NA",
@@ -142,6 +287,8 @@ const addSingleAttendance = async (req, res) => {
         month: data.month,
         year: data.year,
         gross: data.gross,
+        reasonCode: data.reasonCode,
+        lastWorkingDay: data.lastWorkingDay,
         remark: data.remark || "NA",
       });
 
@@ -521,15 +668,87 @@ const addRecordInAttendanceData = async (req, res) => {
 //@access Private: Needs Login
 const deleteAttendance = async (req, res) => {
   const { id } = req.params;
+  const { deleteScope, month, year, client_user_id } = req.query;
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   try {
+    // Allow deleting an entire month's data for a client when query params are provided
+    if (deleteScope === "month") {
+      if (!client_user_id || !month || !year) {
+        return res
+          .status(400)
+          .json({ message: "client_user_id, month and year are required to delete by month" });
+      }
+
+      // Normalize month/year inputs
+      const monthNum = Number(month);
+      const yearNum = Number(year);
+      if (Number.isNaN(monthNum) || Number.isNaN(yearNum)) {
+        return res.status(400).json({ message: "Valid numeric month and year are required" });
+      }
+
+      const isoPrefix = `${yearNum}-${String(monthNum).padStart(2, "0")}`;
+      const monthQuery = {
+        client_user_id,
+        $expr: {
+          $eq: [{ $dateToString: { format: "%Y-%m", date: "$month_year" } }, isoPrefix],
+        },
+      };
+
+      const recordsToDelete = await Attendance.find(monthQuery).lean();
+      if (!recordsToDelete || recordsToDelete.length === 0) {
+        logger.info(
+          `${ip}: API /api/v1/attendance/delete/${id}?month=${month}&year=${year} | Attendance not found`
+        );
+        return res.status(404).json({ message: "Attendance not found" });
+      }
+
+      const leaveRestore = await restoreEmployeeLeavesFromMonthAttendance(
+        client_user_id,
+        yearNum,
+        monthNum,
+        recordsToDelete
+      );
+
+      const result = await Attendance.deleteMany(monthQuery);
+
+      logger.info(
+        `${ip}: API /api/v1/attendance/delete/${id}?month=${month}&year=${year} | Attendance deleted successfully | count=${result.deletedCount} | restoredEmployees=${leaveRestore.employeesUpdated}`
+      );
+      return res
+        .status(200)
+        .json({
+          message: "Attendance deleted successfully",
+          deletedCount: result.deletedCount,
+          leaveRestore,
+        });
+    }
+
+    // Fallback: delete single record by _id
+    const attendance = await Attendance.findById(id).lean();
+    if (!attendance) {
+      logger.info(`${ip}: API /api/v1/attendance/delete/${id} | Attendance not found`);
+      return res.status(404).json({ message: "Attendance not found" });
+    }
+
+    const clientUserId = String(attendance.client_user_id);
+    const date = attendance.month_year instanceof Date ? attendance.month_year : new Date(attendance.month_year);
+    const yearNum = date.getFullYear();
+    const monthNum = date.getMonth() + 1;
+
+    const leaveRestore = await restoreEmployeeLeavesFromMonthAttendance(
+      clientUserId,
+      yearNum,
+      monthNum,
+      [attendance]
+    );
+
     const deleted = await Attendance.findByIdAndDelete(id);
     if (!deleted) {
       logger.info(`${ip}: API /api/v1/attendance/delete/${id} | Attendance not found`);
       return res.status(404).json({ message: "Attendance not found" });
     }
     logger.info(`${ip}: API /api/v1/attendance/delete/${id} | Attendance deleted successfully`);
-    return res.status(200).json({ message: "Attendance deleted successfully" });
+    return res.status(200).json({ message: "Attendance deleted successfully", leaveRestore });
   } catch (err) {
     logger.error(`${ip}: API /api/v1/attendance/delete/${id} | Error: ${err.message}`);
     return res.status(500).json({ message: "Failed to delete attendance", error: err.message });

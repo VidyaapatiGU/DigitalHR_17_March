@@ -240,9 +240,7 @@ export default {
     await this.getCurrent();
 
     try {
-      const res = await axiosClient.get(
-        `/api/v1/employee/client${this.user._id}`
-      );
+      const res = await axiosClient.get(`/api/v1/employee/client/${this.user._id}`);
       console.log('res.data.data: ', res.data.data);
       this.originalItems = res.data.data;
       this.employees = res.data.data;

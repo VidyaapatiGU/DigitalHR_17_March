@@ -242,7 +242,7 @@ ul {
           </div>
 
           <!-- Users Section (super_admin) -->
-          <template v-if="role == 'super_admin'">
+          <template v-if="role == 'super_admin' || role == 'admin'">
             <div class="section-label">Management</div>
             <div
               data-bs-toggle="collapse"
@@ -437,6 +437,11 @@ export default {
   },
 
   async created() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // if no token present, do not call backend; user will be routed via guards/login
+      return;
+    }
     await this.getCurrent();
     const currPage = this.getcurrentPage();
 
@@ -547,6 +552,8 @@ export default {
     },
 
     async getCurrent() {
+      const tokenInStorage = localStorage.getItem('token');
+      if (!tokenInStorage) return;
       try {
         const token = await axiosClient.get(`api/v1/user/getCurrent/`);
 
@@ -554,6 +561,7 @@ export default {
           this.$router.push('/login');
         }
         this.user = token.data.user;
+        this.profile = this.user.profile_url || this.user.profile || '';
         //this.role = token.data.user.roleType.name;
         if (token.data.user.industry_type) {
           this.role = 'client';

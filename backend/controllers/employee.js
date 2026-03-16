@@ -92,9 +92,10 @@ const createEmployee = async (req, res) => {
     let lastCount = 0;
 
     if (existingClient) {
-      const latestEmployee = await Employee.findOne({
-        client_user_id: data.client_user_id,
-      }).sort({ last_emp_no: -1 });
+    const latestEmployee = await Employee.findOne({
+      client_user_id: data.client_user_id,
+      active: true,
+    }).sort({ last_emp_no: -1 });
 
       lastCount = latestEmployee ? latestEmployee.last_emp_no : 0;
       console.log("lastCount", lastCount);
@@ -171,11 +172,11 @@ const createEmployee = async (req, res) => {
       food_allow: data.food_allow,
       conveyance: data.conveyance,
       epf: data.epf,
-      esic: data.esic,
+      esic: data.esic ?? data.e_esic ?? 0,
       lwf: data.lwf || false,
       esi: data.esi || false,
       e_epf: data.e_epf,
-      e_esic: data.e_esic,
+      e_esic: data.e_esic ?? data.esic ?? 0,
       weeklyOff: data.weeklyOff || [],
     });
 
@@ -226,15 +227,37 @@ const createEmployeesByExcel = async (req, res) => {
   let Errors = [];
   let lastCount = 0;
 
-  const existingClient = await Client.findOne({
-    _id: data.client_user_id,
-  });
+  // Resolve client: prefer client_user_id, then client_id, then logged-in client user
+  let existingClient = null;
+  if (data.client_user_id) {
+    existingClient = await Client.findOne({ _id: data.client_user_id });
+  }
+  if (!existingClient && data.client_id) {
+    existingClient = await Client.findOne({ _id: data.client_id });
+  }
+  if (!existingClient && user?.industry_type) {
+    existingClient = await Client.findOne({ _id: user._id });
+  }
+  if (!existingClient) {
+    logger.error(
+      `${ip}: API /api/v1/employee/add/employees/excel | User: ${
+        user?.name || "Guest"
+      } | Responded with Client Not Found`
+    );
+    return res.status(400).json({ message: "Client not found for upload" });
+  }
 
-  if (existingClient) {
-    const latestEmployee = await Employee.findOne({
-      client_user_id: data.client_user_id,
-    }).sort({ last_emp_no: -1 });
-    lastCount = latestEmployee ? latestEmployee.last_emp_no : 0;
+  // Ensure client_user_id is set consistently
+  data.client_user_id = existingClient._id;
+
+  const latestEmployee = await Employee.findOne({
+    client_user_id: data.client_user_id,
+    active: true,
+  }).sort({ last_emp_no: -1 });
+  lastCount = latestEmployee ? latestEmployee.last_emp_no : 0;
+  // If all employees were deleted, restart numbering
+  if (!latestEmployee) {
+    lastCount = 0;
   }
 
   for (let i in data.employeeData) {
@@ -253,10 +276,7 @@ const createEmployeesByExcel = async (req, res) => {
       existingUsers.push(data.employeeData[i]);
     } else {
       try {
-        const existingClient = await Client.findOne({
-          _id: data.client_user_id,
-        });
-
+        const ownerId = user?.industry_type ? user._id : existingClient._id;
         const salt = await bcrypt.genSalt(10);
         let securedPass = "";
         if (data.employeeData[i].password) {
@@ -277,7 +297,7 @@ const createEmployeesByExcel = async (req, res) => {
         lastCount = lastCount + 1;
 
         const newEmployee = await Employee.create({
-          user_id: user._id,
+          user_id: ownerId,
           client_id: existingClient._id || data.client_id,
           client_user_id: data.client_user_id,
           emp_no: conEmpCode,
@@ -287,6 +307,7 @@ const createEmployeesByExcel = async (req, res) => {
           name: data.employeeData[i].name,
 
           fatherHusband_name: data.employeeData[i].fatherHusband_name || "",
+          gender: data.employeeData[i].gender || "Other",
           email: data.employeeData[i].email,
           whatsapp_no: data.employeeData[i].whatsapp_no,
           city: data.employeeData[i].city,
@@ -313,12 +334,24 @@ const createEmployeesByExcel = async (req, res) => {
           food_allow: data.employeeData[i].food_allow || 0,
           conveyance: data.employeeData[i].conveyance || 0,
           epf: data.employeeData[i].epf || "",
-          esic: data.employeeData[i].esic || "",
-          ip_number: data.employeeData[i].ip_number || "",
+          esic:
+            data.employeeData[i].esic ??
+            data.employeeData[i].e_esic ??
+            "",
+          ip_number: (() => {
+            const ip = data.employeeData[i].ip_number;
+            if (ip && /^\d{10}$/.test(String(ip).trim())) return String(ip).trim();
+            const esic = data.employeeData[i].esic_no;
+            if (esic && /^\d{10}$/.test(String(esic).trim())) return String(esic).trim();
+            return undefined;
+          })(),
           lwf: data.employeeData[i].lwf || false,
           esi: data.employeeData[i].esi || false,
           e_epf: data.employeeData[i].e_epf || "",
-          e_esic: data.employeeData[i].e_esic || "",
+          e_esic:
+            data.employeeData[i].e_esic ??
+            data.employeeData[i].esic ??
+            "",
         });
 
         logger.info(
@@ -518,10 +551,13 @@ const getClientEmployees = async (req, res) => {
 
   try {
     if (user) {
+      const includeInactive = req.query.includeInactive === "true";
+      const activeFilter = includeInactive ? {} : { active: true };
+
       // First attempt: search by client_id field
       let employees = await Employee.find({
         client_id: client_id,
-        active: true,
+        ...activeFilter,
       });
       logger.info(`Found ${employees.length} employee(s) for client_id query`, {
         client_id: client_id,
@@ -534,7 +570,7 @@ const getClientEmployees = async (req, res) => {
       if (employees.length <= 0) {
         employees = await Employee.find({
           client_user_id: client_id,
-          active: true,
+          ...activeFilter,
         });
         logger.info(`Found ${employees.length} employee(s) for client_user_id query`, {
           client_id: client_id,
@@ -596,7 +632,7 @@ const getAllEmployees = async (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
   try {
-    if (user && user.roleType.name === "super_admin") {
+    if (user && ["super_admin", "admin"].includes(user.roleType?.name)) {
       //console.log("user: ", user);
 
       const employees = await Employee.find({ active: true });
@@ -743,60 +779,73 @@ const updateEmployee = async (req, res) => {
     try {
       const oldUser = await Employee.findOne({ _id: id });
       if (oldUser) {
+        const updates = {};
+        const setIf = (field, key = field) => {
+          if (data[field] !== undefined) updates[key] = data[field];
+        };
+
+        // If either ESIC value provided, update both to keep parity between employee/employer
+        const esicValue =
+          data.esic !== undefined
+            ? data.esic
+            : data.e_esic !== undefined
+            ? data.e_esic
+            : undefined;
+        if (esicValue !== undefined) {
+          updates.esic = esicValue;
+          updates.e_esic = esicValue;
+        }
+
+        [
+          "name",
+          "fatherHusband_name",
+          "gender",
+          "whatsapp_no",
+          "city",
+          "designation",
+          "address",
+          "country",
+          "state",
+          "pin_code",
+          "uan_no",
+          "pf_no",
+          "esic_no",
+          "ip_number",
+          "bank_name",
+          "bank_ac_no",
+          "bank_ifsc",
+          "gross",
+          "pf_basic",
+          "basic",
+          "da",
+          "hra",
+          "food_allow",
+          "conveyance",
+          "epf",
+          "esi",
+          "lwf",
+          "e_epf",
+          "weeklyOff",
+        ].forEach((f) => setIf(f));
+
+        updates.updated_at = Date.now();
+
         const result = await Employee.findOneAndUpdate(
           { _id: id },
-          {
-            name: data.name,
-            fatherHusband_name: data.fatherHusband_name,
-            gender: data.gender,
-            whatsapp_no: data.whatsapp_no,
-            city: data.city,
-            designation: data.designation,
-            address: data.address,
-            country: data.country,
-            state: data.state,
-            pin_code: data.pin_code,
-
-            uan_no: data.uan_no,
-            pf_no: data.pf_no,
-            esic_no: data.esic_no,
-            ip_number: data.ip_number,
-            bank_name: data.bank_name,
-            bank_ac_no: data.bank_ac_no,
-            bank_ifsc: data.bank_ifsc,
-            gross: data.gross,
-            pf_basic: data.pf_basic,
-            basic: data.basic,
-            da: data.da,
-            hra: data.hra,
-            food_allow: data.food_allow,
-            conveyance: data.conveyance,
-            epf: data.epf,
-            esi: data.esi,
-            lwf: data.lwf,
-            e_epf: data.e_epf,
-            e_esic: data.e_esic,
-            weeklyOff: data.weeklyOff,
-            updated_at: Date.now(),
-          },
+          updates,
           {
             new: true,
           }
         );
 
-        const user = await User.findOneAndUpdate(
-          { _id: id },
-          {
-            name: data.name,
-            whatsapp_no: data.whatsapp_no,
-            city: data.city,
-            address: data.address,
-            country: data.country,
-            state: data.state,
-            pin_code: data.pin_code,
-            weeklyOff: data.weeklyOff,
-          }
-        );
+        // Update linked User document if it exists
+        const userUpdate = {};
+        ["name", "whatsapp_no", "city", "address", "country", "state", "pin_code", "weeklyOff"].forEach((f) => {
+          if (data[f] !== undefined) userUpdate[f] = data[f];
+        });
+        if (Object.keys(userUpdate).length > 0) {
+          await User.findOneAndUpdate({ _id: oldUser.user_id || id }, userUpdate);
+        }
 
         logger.info(
           `${ip}: API /api/v1/employee/update/:${id} | User: ${loggedin_user.name} | responnded with Success `
@@ -897,8 +946,8 @@ const updateEmployeeWithEmpCode = async (req, res) => {
 };
 
 
-//@desc Delete Employee with id (we are updating active to false )
-//@route PUT /api/v1/employee/delete/:id
+//@desc Delete Employee with id (hard delete employee + linked user)
+//@route DELETE /api/v1/employee/delete/:id
 //@access Private: Needs Login
 const deleteEmployee = async (req, res) => {
   const loggedin_user = req.user;
@@ -907,23 +956,11 @@ const deleteEmployee = async (req, res) => {
 
   try {
     if (loggedin_user) {
-      const updated = {
-        active: false,
-      };
-      const oldUser = await Employee.findOne({ _id: id });
-      if (oldUser) {
-        console.log("oldUser: ", oldUser);
-        const employeeRes = await Employee.findOneAndUpdate(
-          { _id: id },
-          updated,
-          {
-            new: true,
-          }
-        );
-
-        const userRes = await User.findOneAndUpdate({ _id: id }, updated, {
-          new: true,
-        });
+      const employee = await Employee.findOne({ _id: id });
+      if (employee) {
+        const employeeRes = await Employee.findOneAndDelete({ _id: id });
+        const userId = employee.user_id || id;
+        await User.findOneAndDelete({ _id: userId });
 
         logger.info(
           `${ip}: API /api/v1/employee/delete/:${id} | User: ${loggedin_user.name} | responnded with Success `
@@ -935,7 +972,7 @@ const deleteEmployee = async (req, res) => {
         logger.info(
           `${ip}: API /api/v1/employee/delete/:${id} | User: ${loggedin_user.name} | responnded with Employee Not Found `
         );
-        return res.status(200).json({ message: "User Not Found" });
+        return res.status(404).json({ message: "User Not Found" });
       }
     } else {
       logger.error(
@@ -963,33 +1000,37 @@ const AppDisEmployee = async (req, res) => {
 
   try {
     if (loggedin_user) {
-      const oldUser = await Employee.findOne({ user_id: id });
+      // Try multiple identifiers: user_id, _id, emp_no
+      let oldUser = await Employee.findOne({
+        $or: [{ user_id: id }, { _id: id }, { emp_no: id }],
+      });
 
       if (oldUser) {
         console.log("olduser: ", oldUser);
         if (oldUser.approved) {
           const updatedEmployee = {
             approved: false,
+            active: false,
           };
           const updatedUser = {
             approved: false,
           };
 
           const employeeRes = await Employee.findOneAndUpdate(
-            { user_id: id },
+            { _id: oldUser._id },
             updatedEmployee,
             {
               new: true,
             }
           );
 
-          /* const UserRes = await User.findOneAndUpdate(
-            { _id: id },
+          await User.findOneAndUpdate(
+            { _id: oldUser.user_id || id },
             updatedUser,
             {
               new: true,
             }
-          ); */
+          );
 
           logger.info(
             `${ip}: API /api/v1/employee/app_dis/:${id} | User: ${loggedin_user.name} | responnded with Success `
@@ -1007,14 +1048,14 @@ const AppDisEmployee = async (req, res) => {
             approved: true,
           };
           const employeeRes = await Employee.findOneAndUpdate(
-            { user_id: id },
+            { _id: oldUser._id },
             updatedEmployee,
             {
               new: true,
             }
           );
-          const UserRes = await User.findOneAndUpdate(
-            { _id: id },
+          await User.findOneAndUpdate(
+            { _id: oldUser.user_id || id },
             updatedUser,
             {
               new: true,
@@ -1262,7 +1303,18 @@ const logIn = async (req, res) => {
         .json({ status: 401, message: "Incorrect Password" });
     }
 
-    const token = jwt.sign({ user: oldUser }, secret, {
+    // Keep JWT compact; only send essentials
+    const tokenPayload = {
+      _id: oldUser._id,
+      username: oldUser.username,
+      email: oldUser.email,
+      designation: oldUser.designation,
+      roleType: { name: "employee" },
+      active: oldUser.active,
+      approved: oldUser.approved,
+    };
+
+    const token = jwt.sign({ user: tokenPayload }, secret, {
       expiresIn: "48hr",
     });
     //console.log(token);

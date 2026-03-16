@@ -699,7 +699,17 @@ const addLeaves = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
   }
 
-  const { client_id, leaves } = req.body;
+  const data = matchedData(req);
+  const { client_id, leaves } = data;
+
+  const normalizeBalance = (value) => {
+    const parsed = parseInt(value, 10);
+    return Number.isFinite(parsed) ? String(parsed) : "0";
+  };
+
+  const clBalance = normalizeBalance(leaves?.cl?.balance);
+  const slBalance = normalizeBalance(leaves?.sl?.balance);
+  const plBalance = normalizeBalance(leaves?.pl?.balance);
 
   try {
       let record;
@@ -707,10 +717,10 @@ const addLeaves = async (req, res) => {
       const existingRecord = await Leaves.findOne({ client_id });
 
       if (existingRecord) {
-          // Update the existing record
-          existingRecord.leaves.cl = Array.isArray(leaves.cl) ? leaves.cl : existingRecord.leaves.cl;
-          existingRecord.leaves.sl = Array.isArray(leaves.sl) ? leaves.sl : existingRecord.leaves.sl;
-          existingRecord.leaves.pl = Array.isArray(leaves.pl) ? leaves.pl : existingRecord.leaves.pl;
+          // Persist default balances in Leaves collection as arrays (backward compatible with Settings.vue)
+          existingRecord.leaves.cl = [clBalance];
+          existingRecord.leaves.sl = [slBalance];
+          existingRecord.leaves.pl = [plBalance];
           record = await existingRecord.save();
           logger.info(
               `${ip}: API /api/v1/leaves/add/client | User: ${user.name} | Updated Leaves record for client_id: ${client_id}`
@@ -720,9 +730,9 @@ const addLeaves = async (req, res) => {
           const newLeaves = new Leaves({
               client_id,
               leaves: {
-                  cl: Array.isArray(leaves.cl) ? leaves.cl : [],
-                  sl: Array.isArray(leaves.sl) ? leaves.sl : [],
-                  pl: Array.isArray(leaves.pl) ? leaves.pl : [],
+                  cl: [clBalance],
+                  sl: [slBalance],
+                  pl: [plBalance],
               },
           });
           record = await newLeaves.save();
@@ -737,20 +747,49 @@ const addLeaves = async (req, res) => {
           );
       }
 
-      // Update the employee collection for all employees with matching client_id
-      const employeeUpdateResult = await Employee.updateMany(
-        { client_id },
-        { 
-          $set: { 
-            "leaves.cl": leaves.cl, 
-            "leaves.sl": leaves.sl, 
-            "leaves.pl": leaves.pl 
-          } 
-        }
-    );
-    logger.info(
-        `${ip}: API /api/v1/leaves/add/client | User: ${user.name} | Updated Employee leaves for client_id: ${client_id}. Update result: ${JSON.stringify(employeeUpdateResult)}`
-    );
+      // Initialize employee leave balances only where empty/zero and without any recorded leave dates.
+      // This prevents Settings updates from wiping employee leave history.
+      const now = Date.now();
+
+      const initLeaveType = async (type, balance) => {
+        const balancePath = `leaves.${type}.balance`;
+        const datesPath = `leaves.${type}.absentDates`;
+
+        return await Employee.updateMany(
+          {
+            client_id,
+            $and: [
+              {
+                $or: [
+                  { [balancePath]: { $exists: false } },
+                  { [balancePath]: { $in: [null, "", "0"] } },
+                ],
+              },
+              {
+                $or: [
+                  { [datesPath]: { $exists: false } },
+                  { [datesPath]: { $size: 0 } },
+                ],
+              },
+            ],
+          },
+          {
+            $set: {
+              [balancePath]: balance,
+              [datesPath]: [],
+              updated_at: now,
+            },
+          }
+        );
+      };
+
+      const clInit = await initLeaveType("cl", clBalance);
+      const slInit = await initLeaveType("sl", slBalance);
+      const plInit = await initLeaveType("pl", plBalance);
+
+      logger.info(
+        `${ip}: API /api/v1/leaves/add/client | User: ${user.name} | Initialized employee leave defaults for client_id: ${client_id}. CL: ${JSON.stringify(clInit)} SL: ${JSON.stringify(slInit)} PL: ${JSON.stringify(plInit)}`
+      );
     
 
       // Return 200 for an update, 201 for a new record

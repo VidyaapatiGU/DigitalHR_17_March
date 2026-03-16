@@ -42,10 +42,10 @@
 .btn-action {
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
-  border-radius: var(--radius-md); border: 1px solid var(--border-color);
-  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
+  border-radius: var(--radius-md); border: none;
+  background: var(--primary, #1e3a5f); color: #fff; cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
 }
-.btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
+.btn-action:hover { background: var(--primary-light, #2563eb); color: #fff; }
 
 .form-container {
   width: 100%; max-width: 960px; padding: 2rem; margin: auto;
@@ -333,8 +333,8 @@
               </button>
             </div>
               <router-link to="/upload/excel">
-                <button type="button" class="btn-action">
-                  Upload Attendance
+                <button type="button" class="btn-action" aria-label="Upload Attendance">
+                  <i class="bi bi-file-earmark-arrow-up"></i>
                 </button>
               </router-link>
               <!-- <router-link to="/add/single/attendance">
@@ -390,20 +390,6 @@
                     </div>
                   </div>
                 </template>
-                  async handleDeleteAttendance(item) {
-                    if (!confirm('Are you sure you want to delete this attendance record?')) return;
-                    try {
-                      await axiosClient.delete(`/api/v1/attendance/delete/${item._id}`);
-                      toast.success('Attendance deleted successfully', { autoClose: 1500 });
-                      // Remove from UI
-                      this.items = this.items.filter(i => i._id !== item._id);
-                      this.originalItems = this.originalItems.filter(i => i._id !== item._id);
-                      this.renderKey++;
-                    } catch (err) {
-                      console.log('Delete error:', err);
-                      toast.error('Failed to delete attendance');
-                    }
-                  },
               </EasyDataTable>
             </div>
           </div>
@@ -548,11 +534,28 @@ export default {
     async handleDeleteAttendance(item) {
       if (!confirm('Are you sure you want to delete this attendance record?')) return;
       try {
-        await axiosClient.delete(`/api/v1/attendance/delete/${item._id}`);
-        toast.success('Attendance deleted successfully', { autoClose: 1500 });
-        // Remove from UI
-        this.items = this.items.filter(i => i._id !== item._id);
-        this.originalItems = this.originalItems.filter(i => i._id !== item._id);
+        const res = await axiosClient.delete(`/api/v1/attendance/delete/${item._id}`, {
+          params: {
+            deleteScope: 'month',
+            client_user_id: this.user._id,
+            month: item.month,
+            year: item.year,
+            month_year: item.month_year,
+          },
+        });
+        const restoredEmployees = res?.data?.leaveRestore?.employeesUpdated ?? null;
+        toast.success(
+          restoredEmployees != null
+            ? `Attendance month deleted. Leave balances restored for ${restoredEmployees} employees.`
+            : 'Attendance month deleted successfully',
+          { autoClose: 2000 }
+        );
+
+        // Remove every record of that month/year from the client state
+        this.items = this.items.filter(i => !(i.month == item.month && i.year == item.year));
+        this.originalItems = this.originalItems.filter(
+          i => !(i.month == item.month && i.year == item.year)
+        );
         this.renderKey++;
       } catch (err) {
         console.log('Delete error:', err);
@@ -679,16 +682,23 @@ export default {
     }
     
     // Create CSV header
-    let csv = "Emp Code,Name,CL,SL,PL\n";
+    let csv = "Emp Code,Name,CL Balance,SL Balance,PL Balance,CL Dates,SL Dates,PL Dates\n";
+
+    const esc = (value) => String(value ?? '').replace(/"/g, '""');
     
     this.leavesBalanceData.forEach(emp => {
       const empCode = emp.emp_no || '';
       const name = emp.name || '';
-      // Join arrays using a semicolon or any other preferred separator
-      const cl = Array.isArray(emp.leaves.cl) ? emp.leaves.cl.join(";") : '';
-      const sl = Array.isArray(emp.leaves.sl) ? emp.leaves.sl.join(";") : '';
-      const pl = Array.isArray(emp.leaves.pl) ? emp.leaves.pl.join(";") : '';
-      csv += `"${empCode}","${name}","${cl}","${sl}","${pl}"\n`;
+
+      const clBalance = emp?.leaves?.cl?.balance ?? '';
+      const slBalance = emp?.leaves?.sl?.balance ?? '';
+      const plBalance = emp?.leaves?.pl?.balance ?? '';
+
+      const clDates = Array.isArray(emp?.leaves?.cl?.absentDates) ? emp.leaves.cl.absentDates.join(';') : '';
+      const slDates = Array.isArray(emp?.leaves?.sl?.absentDates) ? emp.leaves.sl.absentDates.join(';') : '';
+      const plDates = Array.isArray(emp?.leaves?.pl?.absentDates) ? emp.leaves.pl.absentDates.join(';') : '';
+
+      csv += `"${esc(empCode)}","${esc(name)}","${esc(clBalance)}","${esc(slBalance)}","${esc(plBalance)}","${esc(clDates)}","${esc(slDates)}","${esc(plDates)}"\n`;
     });
     
     // Create a Blob with CSV MIME type

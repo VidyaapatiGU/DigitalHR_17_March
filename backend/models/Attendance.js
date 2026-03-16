@@ -83,6 +83,13 @@ const AttendanceSchema = new Schema({
   absentDaysSL: {
     type: String,
   },
+  // Additional details when present days are zero
+  reasonCode: {
+    type: Number,
+  },
+  lastWorkingDay: {
+    type: String,
+  },
   remark: {
     type: String,
     default: "NA",

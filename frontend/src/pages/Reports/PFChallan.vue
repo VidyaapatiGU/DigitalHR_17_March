@@ -12,20 +12,16 @@
     <div class="reports-section mb-4" v-if="!challanLoaded">
       <h5 class="reports-section-title mb-3">📋 Step 1: Select Period & Generate Challan</h5>
       <div class="row align-items-end">
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">Month</label>
-          <select class="form-select form-select-sm" v-model="selectedMonth">
-            <option v-for="(m, i) in monthNames" :key="i" :value="i + 1">{{ m }}</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label fw-semibold">Year</label>
-          <select class="form-select form-select-sm" v-model="selectedYear">
-            <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Period</label>
+          <select class="form-select form-select-sm" v-model="selectedPeriod">
+            <option v-if="periodsLoading" :value="null" disabled>Loading periods...</option>
+            <option v-else-if="!availablePeriods.length" :value="null" disabled>No attendance periods</option>
+            <option v-for="opt in availablePeriods" :key="opt.label" :value="opt">{{ opt.label }}</option>
           </select>
         </div>
         <div class="col-md-3 mt-2">
-          <button class="btn btn-primary btn-sm w-100" @click="generateChallan" :disabled="loading">
+          <button class="btn btn-primary btn-sm w-100" @click="generateChallan" :disabled="loading || periodsLoading || !selectedPeriod">
             <span v-if="loading" class="spinner-border spinner-border-sm me-1"></span>
             <i v-else class="bi bi-gear me-1"></i>
             Generate PF Challan
@@ -40,7 +36,7 @@
       <div class="reports-section mb-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="reports-section-title mb-0">
-            ✏️ Step 2: Review & Edit — {{ monthNames[selectedMonth - 1] }} {{ selectedYear }}
+            ✏️ Step 2: Review & Edit — {{ selectedPeriodLabel }}
           </h5>
           <div class="d-flex gap-2">
             <button class="btn btn-outline-warning btn-sm" @click="resetChallan">
@@ -148,6 +144,9 @@ export default {
       errorMsg: '',
       selectedMonth: new Date().getMonth() + 1,
       selectedYear: new Date().getFullYear(),
+      availablePeriods: [],
+      periodsLoading: false,
+      selectedPeriod: null,
       monthNames: [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December',
@@ -159,6 +158,10 @@ export default {
     yearOptions() {
       const curr = new Date().getFullYear();
       return Array.from({ length: 6 }, (_, i) => curr - i);
+    },
+    selectedPeriodLabel() {
+      if (!this.selectedPeriod) return '';
+      return `${this.selectedPeriod.monthName} ${this.selectedPeriod.year}`;
     },
     totals() {
       const sum = (key) => this.challanRows.reduce((s, r) => s + (Number(r[key]) || 0), 0);
@@ -188,12 +191,13 @@ export default {
           r.epfEpsDiff || 0,
           r.ncpDays || 0,
           r.refund || 0,
-        ].join('##');
+        ].join('#~#');
       }).join('\n');
     },
   },
   async created() {
     await this.getCurrent();
+    await this.loadAvailablePeriods();
   },
   methods: {
     async getCurrent() {
@@ -205,24 +209,122 @@ export default {
       }
     },
 
+    async loadAvailablePeriods() {
+      this.periodsLoading = true;
+      try {
+        let res;
+        try {
+          res = await axiosClient.get(`/api/v1/attendance/get/all/${this.user._id}`);
+        } catch (err) {
+          console.warn('Primary attendance endpoint failed, trying client attendance endpoint', err);
+        }
+
+        if (!res || (!res.data && !res.data?.length && !res.data?.data)) {
+          try {
+            res = await axiosClient.get(`/api/v1/attendance/client/${this.user._id}`);
+          } catch (err) {
+            console.warn('Fallback attendance endpoint also failed', err);
+          }
+        }
+
+        let records = [];
+        if (!res) {
+          records = [];
+        } else if (Array.isArray(res.data)) {
+          records = res.data;
+        } else if (Array.isArray(res.data?.data)) {
+          records = res.data.data;
+        } else {
+          records = res.data?.data || res.data || [];
+        }
+
+        const monthNames = this.monthNames;
+        const map = {};
+
+        records.forEach((a) => {
+          let m = null;
+          let y = null;
+
+          if (a.year && a.month) {
+            y = Number(a.year);
+            if (typeof a.month === 'number' || String(a.month).match(/^\d+$/)) {
+              m = Number(a.month);
+            } else if (typeof a.month === 'string') {
+              const idx = monthNames.findIndex((n) => n.toLowerCase() === a.month.toLowerCase());
+              if (idx !== -1) m = idx + 1;
+            }
+          } else if (a.month_year) {
+            const d = new Date(a.month_year);
+            if (!isNaN(d)) {
+              m = d.getMonth() + 1;
+              y = d.getFullYear();
+            } else {
+              const mmYYYY = /^(\d{2})-(\d{4})$/;
+              const yyyyMM = /^(\d{4})-(\d{2})$/;
+              if (mmYYYY.test(a.month_year)) {
+                const [, mm, yy] = a.month_year.match(mmYYYY);
+                m = Number(mm);
+                y = Number(yy);
+              } else if (yyyyMM.test(a.month_year)) {
+                const [, yy, mm] = a.month_year.match(yyyyMM);
+                m = Number(mm);
+                y = Number(yy);
+              }
+            }
+          }
+
+          if (m && y) {
+            const label = `${monthNames[m - 1]} ${y}`;
+            if (!map[label]) {
+              map[label] = {
+                label,
+                month: m,
+                year: y,
+                monthName: monthNames[m - 1],
+                padded: String(m).padStart(2, '0'),
+              };
+            }
+          }
+        });
+
+        const opts = Object.values(map).sort((a, b) => b.year - a.year || b.month - a.month);
+        this.availablePeriods = opts;
+
+        if (!this.selectedPeriod && opts.length) {
+          this.selectedPeriod = opts[0];
+          this.selectedMonth = opts[0].month;
+          this.selectedYear = opts[0].year;
+        }
+      } catch (err) {
+        console.error('Failed to load attendance periods:', err);
+        this.availablePeriods = [];
+      } finally {
+        this.periodsLoading = false;
+      }
+    },
+
     async generateChallan() {
       this.loading = true;
       this.errorMsg = '';
       try {
-        // Fetch employees for this client
-        const empRes = await axiosClient.get(`/api/v1/employee/client/${this.user._id}`);
-        const employees = empRes.data.data || [];
-        if (!employees.length) {
-          this.errorMsg = 'No employees found for this client.';
+        if (!this.selectedPeriod) {
+          this.errorMsg = 'Select an available period before generating.';
           this.loading = false;
           return;
         }
 
+        // Fetch employees for this client
+        const empRes = await axiosClient.get(`/api/v1/employee/client/${this.user._id}`);
+        const employees = empRes.data.data || [];
+
         // Fetch attendance for the selected month/year
-        const month = this.selectedMonth;
-        const year = this.selectedYear;
-        const monthName = this.monthNames[month - 1];
-        const paddedMonth = String(month).padStart(2, '0');
+        const month = this.selectedPeriod.month;
+        const year = this.selectedPeriod.year;
+        const monthName = this.selectedPeriod.monthName;
+        const paddedMonth = this.selectedPeriod.padded;
+
+        this.selectedMonth = month;
+        this.selectedYear = year;
 
         let attendanceRecords = [];
         try {
@@ -240,44 +342,75 @@ export default {
           console.warn('Attendance fetch error:', err);
         }
 
-        // Build attendance map: emp_no -> { present, totalWorkingDays }
-        const attMap = {};
+        if (!attendanceRecords.length) {
+          this.errorMsg = `No attendance data found for ${monthName} ${year}.`;
+          this.loading = false;
+          return;
+        }
+
+        const normalize = (v) => (v == null ? '' : String(v).trim());
+
+        // Build attendance map: emp_no -> { present, totalWorkingDays, name, gross }
+        const attMap = new Map();
+        let periodTotalDays = 0;
         attendanceRecords.forEach((rec) => {
-          const empNo = rec.emp_no || '';
+          const empNo = normalize(rec.emp_no);
           if (!empNo) return;
-          attMap[empNo] = {
-            present: Number(rec.present) || 0,
-            totalWorkingDays: Number(rec.totalWorkingDays) || 0,
-          };
+          const present = Number(rec.present) || 0;
+          const totalWorkingDays = Number(rec.totalWorkingDays) || 0;
+          const name = normalize(rec.name);
+          const gross = Number(rec.gross) || 0;
+
+          periodTotalDays = Math.max(periodTotalDays, totalWorkingDays || 0);
+
+          if (!attMap.has(empNo)) {
+            attMap.set(empNo, {
+              present,
+              totalWorkingDays,
+              name,
+              gross,
+            });
+          } else {
+            const existing = attMap.get(empNo);
+            existing.present += present;
+            existing.totalWorkingDays = Math.max(existing.totalWorkingDays, totalWorkingDays);
+            if (!existing.name && name) existing.name = name;
+            if (!existing.gross && gross) existing.gross = gross;
+          }
         });
 
         // PF wage ceiling
         const PF_CEILING = 15000;
 
-        // Build challan rows
-        this.challanRows = employees
-          .filter((emp) => emp.active !== false)
-          .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-          .map((emp) => {
-            const uan = emp.uan_no || '';
-            const name = (emp.name || '').toUpperCase();
-            const gross = Number(emp.gross) || 0;
-            const empNo = emp.emp_no || '';
+        const employeesByEmpNo = new Map(
+          employees.map((emp) => [normalize(emp.emp_no), emp]).filter(([key]) => key)
+        );
 
-            // Get attendance data
-            const att = attMap[empNo] || { present: 0, totalWorkingDays: 0 };
-            const totalDays = att.totalWorkingDays || 30;
-            const presentDays = att.present || totalDays;
+        // Build challan rows using attendance as the source of truth for the selected period
+        this.challanRows = Array.from(attMap.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([empNo, att]) => {
+            const emp = employeesByEmpNo.get(empNo) || {};
+
+            const uan = emp.uan_no || '';
+            const name = (emp.name || att.name || '').toUpperCase();
+
+            const totalDays = att.totalWorkingDays || periodTotalDays || 30;
+            const presentDays = att.present || 0;
             const ncpDays = Math.max(0, totalDays - presentDays);
 
-            // Calculate proportional wages if NCP days exist
-            let actualGross = gross;
+            const grossBase = Number(att.gross || emp.gross) || 0;
+            let actualGross = grossBase;
             if (ncpDays > 0 && totalDays > 0) {
-              actualGross = Math.round((gross * presentDays) / totalDays);
+              actualGross = Math.round((grossBase * presentDays) / totalDays);
+            }
+
+            let pfBasic = Number(emp.pf_basic) || 0;
+            if (pfBasic > 0 && ncpDays > 0 && totalDays > 0) {
+              pfBasic = Math.round((pfBasic * presentDays) / totalDays);
             }
 
             // EPF wages — capped at 15000
-            const pfBasic = Number(emp.pf_basic) || 0;
             const epfWagesBase = pfBasic > 0 ? pfBasic : Math.min(actualGross, PF_CEILING);
             const epfWages = Math.min(epfWagesBase, PF_CEILING);
             const epsWages = epfWages;
@@ -290,6 +423,7 @@ export default {
             const refund = 0;
 
             return {
+              empNo,
               uan,
               name,
               gross: actualGross,
@@ -370,7 +504,7 @@ export default {
       const content = this.hashPreview;
       const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const link = document.createElement('a');
-      const paddedMonth = String(this.selectedMonth).padStart(2, '0');
+      const paddedMonth = this.selectedPeriod?.padded || String(this.selectedMonth).padStart(2, '0');
       link.href = URL.createObjectURL(blob);
       link.download = `PF_CHALLAN_${paddedMonth}_${this.selectedYear}.txt`;
       document.body.appendChild(link);

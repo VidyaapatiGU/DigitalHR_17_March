@@ -199,6 +199,11 @@
                       <i class="bi bi-check text-primary"></i>
                     </div>
                   </template>
+                  <template #item-missingFields="item">
+                    <div class="text-danger" style="font-size: 12px;">
+                      {{ (item.missingFields || []).join(', ') }}
+                    </div>
+                  </template>
                 </EasyDataTable>
               </div>
             </div>
@@ -312,6 +317,7 @@ export default {
         { text: 'Email', value: 'emailActions', sortable: false, width: 250 },
         { text: 'Whatsapp', value: 'whatsappActions', sortable: false, width: 250 },
         { text: 'Adhar Card', value: 'adhar_cardActions', sortable: false, width: 250 },
+        { text: 'Missing', value: 'missingFields', sortable: false, width: 300 },
       ],
       employeesToSelect: [],
       employeesNotToSelect: [],
@@ -414,6 +420,10 @@ export default {
       this.handleUploadButton = true;
       this.file = event.target.files[0];
       this.showSpinner = true;
+      this.employeesToSelect = [];
+      this.employeesNotToSelect = [];
+      this.itemsSelected = [];
+      this.excelData = [];
       setTimeout(async () => {
         this.showResponse = false;
         await this.extractEmployeesFromExcel();
@@ -437,31 +447,180 @@ export default {
         const worksheet = workbook.Sheets[firstSheetName];
 
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        this.excelData = jsonData;
+        const normalizedData = jsonData.map((row) => this.normalizeRow(row));
+        this.excelData = normalizedData;
 
-        let tempEmployeesToSelect = jsonData;
+        let tempEmployeesToSelect = normalizedData;
         let tempEmployeesNotToSelect = [];
 
         for (let i = 0; i < tempEmployeesToSelect.length; i++) {
-          if (
-            tempEmployeesToSelect[i].name != undefined &&
-            tempEmployeesToSelect[i].email != undefined &&
-            tempEmployeesToSelect[i].whatsapp_no != undefined &&
-            tempEmployeesToSelect[i].adhar_card != undefined &&
-            tempEmployeesToSelect[i].name != '' &&
-            tempEmployeesToSelect[i].email != '' &&
-            toString(tempEmployeesToSelect[i].whatsapp_no) != '' &&
-            toString(tempEmployeesToSelect[i].adhar_card) != ''
-          ) {
-            this.employeesToSelect.push(tempEmployeesToSelect[i]);
+          const normalizedRow = this.prepareRowForUpload(tempEmployeesToSelect[i]);
+          const missingFields = this.getMissingRequiredFields(normalizedRow);
+          if (missingFields.length === 0) {
+            this.employeesToSelect.push(normalizedRow);
           } else {
-            this.employeesNotToSelect.push(tempEmployeesToSelect[i]);
+            this.employeesNotToSelect.push({
+              ...normalizedRow,
+              missingFields,
+            });
           }
         }
+        this.itemsSelected = [...this.employeesToSelect];
         this.showSpinner = false;
       };
       reader.readAsArrayBuffer(this.file);
       return;
+    },
+
+    normalizeRow(row) {
+      const normalized = {};
+      Object.keys(row || {}).forEach((key) => {
+        const cleanKey = key
+          .toString()
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '');
+
+        const mappedKey = this.mapExcelKey(cleanKey);
+        normalized[mappedKey] = row[key];
+      });
+      // Normalize common numeric fields
+      if (normalized.gross !== undefined) {
+        normalized.gross = this.toNumber(normalized.gross);
+      }
+      // Coerce booleans coming in as strings
+      if (normalized.lwf !== undefined) {
+        normalized.lwf = this.toBoolean(normalized.lwf);
+      }
+      if (normalized.esi !== undefined) {
+        normalized.esi = this.toBoolean(normalized.esi);
+      }
+      // Normalize gender values
+      if (normalized.gender) {
+        normalized.gender = this.normalizeGender(normalized.gender);
+      }
+      // Normalize date_of_joining from Excel serials or strings
+      if (normalized.date_of_joining) {
+        normalized.date_of_joining = this.normalizeDate(normalized.date_of_joining);
+      }
+      // Make ip_number optional: remove empty strings to avoid validation errors
+      if (normalized.ip_number !== undefined && String(normalized.ip_number).trim() === '') {
+        delete normalized.ip_number;
+      }
+      // If esic_no provided and ip_number missing, use it as ip_number when 10 digits
+      if (!normalized.ip_number && normalized.esic_no) {
+        const esicCandidate = String(normalized.esic_no).trim();
+        if (/^\d{10}$/.test(esicCandidate)) {
+          normalized.ip_number = esicCandidate;
+        }
+      }
+      return normalized;
+    },
+
+    prepareRowForUpload(row) {
+      const normalized = { ...row };
+      if (!normalized.gender) {
+        normalized.gender = 'Other';
+      }
+      if (!normalized.address) {
+        normalized.address = 'N/A';
+      }
+      if (!normalized.date_of_joining) {
+        normalized.date_of_joining = new Date().toISOString().slice(0, 10);
+      }
+      if (normalized.gross === undefined || normalized.gross === null || normalized.gross === '') {
+        normalized.gross = 0;
+      }
+      if (!normalized.designation) {
+        normalized.designation = 'Employee';
+      }
+      return normalized;
+    },
+
+    getMissingRequiredFields(row) {
+      const missing = [];
+      if (!row.name) missing.push('name');
+      if (!row.email) missing.push('email');
+      if (!row.whatsapp_no) missing.push('whatsapp_no');
+      if (!row.adhar_card) missing.push('adhar_card');
+      if (!row.gender) missing.push('gender');
+      if (!row.date_of_joining) missing.push('date_of_joining');
+      if (!row.address) missing.push('address');
+      if (row.gross === undefined || row.gross === null || row.gross === '') missing.push('gross');
+      return missing;
+    },
+
+    mapExcelKey(cleanKey) {
+      if (['name', 'employee_name', 'employee', 'emp_name', 'fullname', 'full_name'].includes(cleanKey)) {
+        return 'name';
+      }
+      if (['whatsapp', 'whatsapp_no', 'whatsappnumber', 'whatsapp_number', 'mobile', 'mobile_no', 'mobile_number'].includes(cleanKey)) {
+        return 'whatsapp_no';
+      }
+      if (['adhar', 'aadhar', 'aadhaar', 'adhar_card', 'aadhar_card', 'adhar_no', 'aadhar_no'].includes(cleanKey)) {
+        return 'adhar_card';
+      }
+      if (['email', 'email_address', 'emailid', 'e_mail'].includes(cleanKey)) {
+        return 'email';
+      }
+      if (['designation', 'job_title', 'title', 'position'].includes(cleanKey)) {
+        return 'designation';
+      }
+      if (['father_husband_name', 'father_husband', 'father_name', 'husband_name'].includes(cleanKey)) {
+        return 'fatherHusband_name';
+      }
+      if (['date_of_joining', 'joining_date', 'dateofjoining', 'doj', 'date_joined'].includes(cleanKey)) {
+        return 'date_of_joining';
+      }
+      if (['gender', 'sex'].includes(cleanKey)) {
+        return 'gender';
+      }
+      if (['address', 'current_address', 'residential_address'].includes(cleanKey)) {
+        return 'address';
+      }
+      if (['gross', 'gross_salary', 'gross_pay', 'gross_wage'].includes(cleanKey)) {
+        return 'gross';
+      }
+      if (['esic_no', 'esic_number', 'esic', 'esicnumber', 'ip_number', 'ip_no'].includes(cleanKey)) {
+        return 'esic_no';
+      }
+      return cleanKey;
+    },
+
+    toBoolean(value) {
+      if (typeof value === 'boolean') return value;
+      const normalized = String(value).trim().toLowerCase();
+      if (['true', 'yes', '1', 'y'].includes(normalized)) return true;
+      if (['false', 'no', '0', 'n'].includes(normalized)) return false;
+      return Boolean(value);
+    },
+
+    toNumber(value) {
+      if (typeof value === 'number') return value;
+      const normalized = String(value).replace(/,/g, '').trim();
+      if (normalized === '') return value;
+      const parsed = Number(normalized);
+      return Number.isNaN(parsed) ? value : parsed;
+    },
+
+    normalizeGender(value) {
+      const normalized = String(value).trim().toLowerCase();
+      if (['m', 'male'].includes(normalized)) return 'Male';
+      if (['f', 'female'].includes(normalized)) return 'Female';
+      if (['o', 'other'].includes(normalized)) return 'Other';
+      return value;
+    },
+
+    normalizeDate(value) {
+      // Excel serial date
+      if (typeof value === 'number' && value > 25569) {
+        const utcDays = Math.floor(value - 25569);
+        const date = new Date(utcDays * 86400 * 1000);
+        return date.toISOString().slice(0, 10);
+      }
+      // If already Date or ISO-ish string, pass through
+      return value;
     },
 
     async uploadFile() {
@@ -470,7 +629,8 @@ export default {
       this.form.roleType = this.selected_roleType._id;
       if (this.validateForm() == false) return;
 
-      this.form.employeeData = this.itemsSelected;
+      this.form.employeeData =
+        this.itemsSelected.length > 0 ? this.itemsSelected : this.employeesToSelect;
       try {
         const res = await axiosClient.post(`/api/v1/employee/add/employees/excel`, this.form);
         toast.success(`Employees Added`, {
@@ -483,7 +643,11 @@ export default {
         this.showResponse = true;
       } catch (err) {
         console.log('error: ', err);
-        toast.error(`Something Went Wrong`, {
+        const message =
+          err.response?.data?.message ||
+          err.response?.data?.errors?.[0]?.msg ||
+          'Something Went Wrong';
+        toast.error(message, {
           autoClose: 1500,
         });
       }
@@ -498,8 +662,15 @@ export default {
     },
 
     validateForm() {
-      if (this.employeesToSelect.length <= 0) {
+      if (!this.file) {
         toast.info(`Select Excel File`, {
+          autoClose: 1500,
+        });
+        return false;
+      }
+
+      if (this.employeesToSelect.length <= 0) {
+        toast.info(`No valid rows found in Excel`, {
           autoClose: 1500,
         });
         return false;
@@ -517,6 +688,11 @@ export default {
           autoClose: 1500,
         });
         return false;
+      }
+
+      if (this.itemsSelected.length <= 0 && this.employeesToSelect.length > 0) {
+        // If nothing is manually selected, we will upload all valid rows
+        this.itemsSelected = [...this.employeesToSelect];
       }
 
       if (this.itemsSelected.length <= 0) {

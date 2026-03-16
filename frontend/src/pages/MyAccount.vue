@@ -2,6 +2,7 @@
 .account-page {
   padding: 2rem;
   min-height: 100vh;
+  overflow-y: auto;
 }
 
 .account-header {
@@ -162,7 +163,7 @@
         <div class="details-card scroll">
           <div class="details-card-header d-flex justify-content-between align-items-center">
             <span>Account Details</span>
-            <button v-if="!isEditing" @click="startEditing" class="btn btn-primary btn-sm">
+            <button v-if="!isEditing" type="button" @click="startEditing" class="btn btn-primary btn-sm">
               <i class="bi bi-pencil me-1"></i> Edit Profile
             </button>
           </div>
@@ -197,7 +198,7 @@
                     class="form-control"
                     id="team"
                     type="text"
-                    v-model="user.team.name"
+                    :value="user.team?.name || ''"
                   />
                 </div>
                 <div class="info-group">
@@ -207,7 +208,7 @@
                     class="form-control capitalize"
                     id="role"
                     type="text"
-                    v-model="user.roleType.name"
+                    :value="user.roleType?.name || ''"
                   />
                 </div>
               </div>
@@ -229,7 +230,7 @@
                     class="form-control capitalize"
                     id="department"
                     type="text"
-                    v-model="user.department.name"
+                    :value="user.department?.name || ''"
                   />
                 </div>
               </div>
@@ -267,6 +268,7 @@ export default {
         name: '',
         whatsapp_no: '',
         profile: null,
+        profileData: '',
       },
       isEditing: false,
       loading: false,
@@ -304,7 +306,7 @@ export default {
   methods: {
     startEditing() {
       this.editForm.name = this.user.name;
-      this.editForm.whatsapp_no = this.user.whatsapp_no;
+      this.editForm.whatsapp_no = this.user.whatsapp_no || '';
       this.isEditing = true;
     },
 
@@ -316,7 +318,12 @@ export default {
       const file = e.target.files[0];
       if (file) {
         this.editForm.profile = file;
-        this.profile = URL.createObjectURL(file);
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          this.editForm.profileData = ev.target.result;
+          this.profile = ev.target.result;
+        };
+        reader.readAsDataURL(file);
       }
     },
 
@@ -326,10 +333,16 @@ export default {
         const updateData = {
           name: this.editForm.name,
           whatsapp_no: this.editForm.whatsapp_no,
-          roleType: this.user.roleType._id,
-          department: this.user.department._id,
-          team: this.user.team._id,
+          profile_url: this.editForm.profileData || this.user.profile_url,
         };
+
+        if (this.user.roleType && this.user.roleType._id) updateData.roleType = this.user.roleType._id;
+        if (this.user.department && this.user.department._id) updateData.department = this.user.department._id;
+        if (this.user.team && this.user.team._id) updateData.team = this.user.team._id;
+
+        // Remove optional fields if left blank to satisfy backend validators
+        if (!updateData.whatsapp_no) delete updateData.whatsapp_no;
+        if (!updateData.profile_url) delete updateData.profile_url;
 
         await axiosClient.put(`api/v1/user/update/${this.user._id}`, updateData);
 
@@ -351,8 +364,12 @@ export default {
           this.$router.push('/login');
         }
         this.user = token.data.user;
-        if (this.user.profile) {
-          this.profile = `http://localhost:5000/${this.user.profile}`;
+        this.editForm.name = this.user.name || '';
+        this.editForm.whatsapp_no = this.user.whatsapp_no || '';
+        if (this.user.profile_url) {
+          this.profile = this.user.profile_url;
+        } else if (this.user.profile) {
+          this.profile = this.user.profile;
         }
       } catch (err) {
         console.log('error: ', err);

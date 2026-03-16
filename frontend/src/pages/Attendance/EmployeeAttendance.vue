@@ -409,7 +409,7 @@ export default {
       const res = await axiosClient.get(
         `/api/v1/attendance/get/${this.user._id}/${this.monthYear}`
       );
-      this.data = res.data;
+      this.data = this.normalizeAttendanceItems(res.data);
       //console.log('res.data.data: ', this.data);
 
       const resClient = await axiosClient.get(
@@ -473,6 +473,122 @@ export default {
   setup() {},
 
   methods: {
+    excelSerialToDate(serial) {
+      const value = Number(serial);
+      if (!Number.isFinite(value)) return null;
+      // Excel serial date to JS Date (1900 system)
+      const ms = Math.round((value - 25569) * 86400 * 1000);
+      const date = new Date(ms);
+      return Number.isNaN(date.getTime()) ? null : date;
+    },
+
+    parseAbsentDaysToList(value) {
+      if (value == null || value === '') return [];
+
+      const daySet = new Set();
+      const pushDay = (dayNum) => {
+        const d = Number(dayNum);
+        if (!Number.isFinite(d)) return;
+        if (d < 1 || d > 31) return;
+        daySet.add(String(Math.trunc(d)));
+      };
+
+      const pushFromDate = (dateObj) => {
+        if (!dateObj) return;
+        const dayNum = dateObj.getDate();
+        pushDay(dayNum);
+      };
+
+      const handleNumeric = (num) => {
+        if (!Number.isFinite(num)) return;
+        if (num > 31) {
+          pushFromDate(this.excelSerialToDate(num));
+          return;
+        }
+        pushDay(Math.trunc(num));
+      };
+
+      const handleToken = (token) => {
+        if (!token) return;
+
+        if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(token)) {
+          const parts = token.split('-').map((p) => parseInt(p, 10));
+          if (parts.length === 3) {
+            const date = new Date(parts[0], parts[1] - 1, parts[2]);
+            if (!Number.isNaN(date.getTime())) pushFromDate(date);
+          }
+          return;
+        }
+
+        if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(token)) {
+          const [dd, mm, yyyy] = token.split('/').map((p) => parseInt(p, 10));
+          const date = new Date(yyyy, mm - 1, dd);
+          if (!Number.isNaN(date.getTime())) pushFromDate(date);
+          return;
+        }
+
+        if (/^\d{1,2}-\d{1,2}$/.test(token)) {
+          const [a, b] = token.split('-').map((p) => parseInt(p, 10));
+          if (!Number.isFinite(a) || !Number.isFinite(b)) return;
+          const start = Math.min(a, b);
+          const end = Math.max(a, b);
+          for (let d = start; d <= end; d += 1) {
+            pushDay(d);
+          }
+          return;
+        }
+
+        if (/^\d{1,2}(\.\d{1,2})+$/.test(token)) {
+          const [first] = token.split('.');
+          if (Number(first) <= 31) {
+            token.split('.').forEach((seg) => pushDay(parseInt(seg, 10)));
+            return;
+          }
+        }
+
+        if (/^\d+(\.\d+)?$/.test(token)) {
+          handleNumeric(Number(token));
+        }
+      };
+
+      if (value instanceof Date) {
+        pushFromDate(value);
+      } else if (typeof value === 'number') {
+        handleNumeric(value);
+      } else if (Array.isArray(value)) {
+        value.forEach((v) => {
+          const list = this.parseAbsentDaysToList(v);
+          list.forEach((d) => daySet.add(String(d)));
+        });
+      } else {
+        const valueStr = String(value).trim();
+        if (!valueStr) return [];
+        const tokens = valueStr
+          .replace(/[;|]+/g, ',')
+          .split(/[\s,]+/)
+          .map((t) => t.trim())
+          .filter(Boolean);
+        tokens.forEach(handleToken);
+      }
+
+      const sorted = Array.from(daySet).sort((a, b) => Number(a) - Number(b));
+      return sorted;
+    },
+
+    normalizeAbsentDays(value) {
+      const list = this.parseAbsentDaysToList(value);
+      return list.join(', ');
+    },
+
+    normalizeAttendanceItems(rows) {
+      return (rows || []).map((row) => ({
+        ...row,
+        absentDaysCL: this.normalizeAbsentDays(row.absentDaysCL),
+        absentDaysSL: this.normalizeAbsentDays(row.absentDaysSL),
+        absentDaysPL: this.normalizeAbsentDays(row.absentDaysPL),
+        absentDaysLOP: this.normalizeAbsentDays(row.absentDaysLOP),
+      }));
+    },
     CalculatePayableWage(
       pBasic,
       pHra,

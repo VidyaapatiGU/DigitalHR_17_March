@@ -75,6 +75,9 @@ const UserSchema = new Schema({
     type: Boolean,
     default: true,
   },
+  profile_url: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model("User", UserSchema);

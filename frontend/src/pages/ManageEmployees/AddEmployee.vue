@@ -288,16 +288,6 @@
                   placeholder="Enter PF No"
                 />
               </div>
-              <div class="form-group col-12 col-sm-6 col-md-4">
-                <label for="ESIC No" class="mt-2">ESIC No</label>
-                <input
-                  v-model="form.esic_no"
-                  type="number"
-                  class="form-control border"
-                  id="ESIC No"
-                  placeholder="ESIC No"
-                />
-              </div>
             </div>
             <hr />
             <div class="row source-400 mt-3">
@@ -424,37 +414,16 @@
                   placeholder="Enter EPF"
                 />
               </div> -->
-              <!-- <div class="form-group col-12 col-sm-6 col-md-4">
-                <label for="ESIC" class="mt-2">ESIC</label>
+              <div class="form-group col-12 col-sm-6 col-md-4">
+                <label for="ESIC" class="mt-2">ESIC (%)</label>
                 <input
-                  v-model="form.esic"
+                  v-model.number="form.esic"
                   type="number"
                   class="form-control border"
                   id="ESIC"
-                  placeholder="Enter ESIC"
+                  placeholder="Enter ESIC contribution"
                 />
-              </div> -->
-
-              <!--  <div class="form-group col-12 col-sm-6 col-md-4">
-                <label for="E_EPF" class="mt-2">E_EPF</label>
-                <input
-                  v-model="form.e_epf"
-                  type="number"
-                  class="form-control border"
-                  id="E_EPF"
-                  placeholder="Enter E_EPF"
-                />
-              </div> -->
-              <!-- <div class="form-group col-12 col-sm-6 col-md-4">
-                <label for="E_ESIC" class="mt-2">E_ESIC</label>
-                <input
-                  v-model="form.e_esic"
-                  type="number"
-                  class="form-control border"
-                  id="E_ESIC"
-                  placeholder="Enter E_ESIC"
-                />
-              </div> -->
+              </div>
               <div class="form-group col-12 col-sm-6 col-md-4">
                 <label for="E_ESIC" class="mt-2">Gross</label>
                 <span class="text-danger">*</span>
@@ -690,6 +659,13 @@ export default {
     async handleAddEmployee(e) {
       if (this.validateForm() == false) {
         return;
+      }
+
+      // keep backend fields in sync: single ESIC input populates both employee & employer ESIC
+      this.form.e_esic = this.form.esic;
+      // use ESIC IP number as ESIC No for backend requirement when not provided separately
+      if (!this.form.esic_no && this.form.ip_number) {
+        this.form.esic_no = this.form.ip_number;
       }
 
       this.form.team = this.selected_team._id;

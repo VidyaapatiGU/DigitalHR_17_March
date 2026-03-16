@@ -255,6 +255,11 @@ export default {
   },
 
   async created() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.$router.push('/login');
+      return;
+    }
     await this.getCurrent();
 
     if (this.role === 'super_admin') {
@@ -301,6 +306,11 @@ export default {
 
   methods: {
     async getCurrent() {
+      const tokenInStorage = localStorage.getItem('token');
+      if (!tokenInStorage) {
+        this.$router.push('/login');
+        return;
+      }
       try {
         const token = await axiosClient.get(`api/v1/user/getCurrent/`);
         console.log('Token : ', token);

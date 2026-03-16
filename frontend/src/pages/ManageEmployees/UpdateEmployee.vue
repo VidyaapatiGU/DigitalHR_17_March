@@ -441,47 +441,16 @@
                               />
                             </div>
                           </div>
-                          <!-- <div class="form-group col-12 col-sm-6 col-md-4">
-                            <label for="EPF" class="mt-2">EPF</label>
+                          <div class="form-group col-12 col-sm-6 col-md-4">
+                            <label for="ESIC" class="mt-2">ESIC (%)</label>
                             <input
-                              v-model="form.epf"
-                              type="number"
-                              class="form-control border"
-                              id="EPF"
-                              placeholder="Enter EPF"
-                            />
-                          </div> -->
-                          <!-- <div class="form-group col-12 col-sm-6 col-md-4">
-                            <label for="ESIC" class="mt-2">ESIC</label>
-                            <input
-                              v-model="form.esic"
+                              v-model.number="form.esic"
                               type="number"
                               class="form-control border"
                               id="ESIC"
-                              placeholder="Enter ESIC"
+                              placeholder="Enter ESIC contribution"
                             />
-                          </div> -->
-
-                          <!-- <div class="form-group col-12 col-sm-6 col-md-4">
-                            <label for="E_EPF" class="mt-2">E_EPF</label>
-                            <input
-                              v-model="form.e_epf"
-                              type="number"
-                              class="form-control border"
-                              id="E_EPF"
-                              placeholder="Enter E_EPF"
-                            />
-                          </div> -->
-                          <!-- <div class="form-group col-12 col-sm-6 col-md-4">
-                            <label for="E_ESIC" class="mt-2">E_ESIC</label>
-                            <input
-                              v-model="form.e_esic"
-                              type="number"
-                              class="form-control border"
-                              id="E_ESIC"
-                              placeholder="Enter E_ESIC"
-                            />
-                          </div> -->
+                          </div>
                           <div
                             class="form-group col-12 col-sm-6 col-md-4 d-flex align-items-center py-2"
                           >
@@ -773,11 +742,11 @@ export default {
           food_allow: employeeData.food_allow,
           conveyance: employeeData.conveyance,
           epf: employeeData.epf,
-          esic: employeeData.esic,
+          esic: employeeData.esic ?? employeeData.e_esic ?? '',
           lwf: employeeData.lwf,
           esi: employeeData.esi,
           e_epf: employeeData.e_epf,
-          e_esic: employeeData.e_esic,
+          e_esic: employeeData.e_esic ?? employeeData.esic ?? '',
           adhar_proof: employeeData.adhar_proof,
           adhar_proof_url: employeeData.adhar_proof_url,
           adhar_proof_id: employeeData.adhar_proof_id,
@@ -927,6 +896,9 @@ export default {
       this.form.team = this.selected_team._id;
       
       this.form.weeklyOff = this.form.weeklyOff.map(option => option.value);
+
+      // Single ESIC field drives both employee & employer ESIC on backend
+      this.form.e_esic = this.form.esic;
 
       try {
         const res = await axiosClient.put(`api/v1/employee/update/${this.form._id}`, this.form);

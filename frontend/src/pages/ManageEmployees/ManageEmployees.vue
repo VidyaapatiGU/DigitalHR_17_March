@@ -56,9 +56,9 @@
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.6rem;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .search-input {
@@ -268,7 +268,7 @@
           </button>
           <button
             v-if="updateEmployee.approved == true"
-            @click="toggleUserApproved(updateEmployee.user_id)"
+            @click="toggleUserApproved(updateEmployee._id || updateEmployee.user_id)"
             type="button"
             class="btn text-light border-0 button_bg btn-sm"
             data-bs-dismiss="modal"
@@ -277,12 +277,64 @@
           </button>
           <button
             v-else
-            @click="toggleUserApproved(updateEmployee.user_id)"
+            @click="toggleUserApproved(updateEmployee._id || updateEmployee.user_id)"
             type="button"
             class="btn text-light border-0 button_bg btn-sm"
             data-bs-dismiss="modal"
           >
             Approve
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="modal fade"
+    id="ModalBulkDelete"
+    tabindex="-1"
+    aria-labelledby="ModalBulkDeleteLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title source-400 text-capitalize" id="ModalBulkDeleteLabel">
+            Delete {{ bulkDeleteCount }} employees?
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+
+        <div class="modal-body pt-0">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="includeDisapprovedOnDelete"
+              v-model="includeDisapprovedOnDelete"
+            />
+            <label class="form-check-label" for="includeDisapprovedOnDelete">
+              Also delete disapproved employees
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+            Close
+          </button>
+          <button
+            @click="handleBulkDelete"
+            type="button"
+            class="btn text-light border-0 button_bg btn-sm"
+            data-bs-dismiss="modal"
+          >
+            Delete Selected
           </button>
         </div>
       </div>
@@ -418,20 +470,39 @@
   <div class="source-400 pt-0 h-100 scroll page-wrapper">
     <div class="page-header-bar">
       <h5>Manage Employees</h5>
-      <div class="notification-badge" data-bs-toggle="modal" data-bs-target="#ModalNotification">
-        <i class="bi bi-bell-fill pointer" style="font-size: 1.1rem; color: var(--text-secondary)"></i>
-        <span
-          v-if="notifications.length > 0 && notifications.length <= 99"
-          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-        >
-          {{ notifications.length }}
-        </span>
-        <span
-          v-if="notifications.length > 99"
-          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-        >
-          99+
-        </span>
+      <div class="d-flex align-items-center gap-2">
+        <el-tooltip content="Upload Employee Excel" placement="bottom">
+          <router-link to="/upload/employee/excel" class="text-decoration-none">
+            <button type="button" class="btn-action">
+              <i class="bi bi-file-earmark-arrow-up"></i>
+              Upload Excel
+            </button>
+          </router-link>
+        </el-tooltip>
+        <el-tooltip content="Download Excel format" placement="bottom">
+          <a
+            href="https://technirmitisoftwares.com/Employees_format.xlsx"
+            class="btn-action"
+            style="padding: 0.45rem 0.6rem;"
+          >
+            <i class="bi bi-download"></i>
+          </a>
+        </el-tooltip>
+        <div class="notification-badge" data-bs-toggle="modal" data-bs-target="#ModalNotification">
+          <i class="bi bi-bell-fill pointer" style="font-size: 1.1rem; color: #ef4444"></i>
+          <span
+            v-if="notifications.length > 0 && notifications.length <= 99"
+            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+          >
+            {{ notifications.length }}
+          </span>
+          <span
+            v-if="notifications.length > 99"
+            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+          >
+            99+
+          </span>
+        </div>
       </div>
     </div>
 
@@ -446,17 +517,6 @@
               placeholder="Search employees..."
             />
             <div v-if="role != 'super_admin'" class="action-buttons">
-              <a href="https://technirmitisoftwares.com/Employees_format.xlsx" class="format-link">
-                Download Format
-              </a>
-              <el-tooltip content="Upload Employee Excel" placement="bottom">
-                <router-link to="/upload/employee/excel" class="text-decoration-none">
-                  <button type="button" class="btn-action">
-                    <i class="bi bi-file-earmark-arrow-up"></i>
-                    Upload Excel
-                  </button>
-                </router-link>
-              </el-tooltip>
               <el-tooltip content="Add Employee" placement="bottom">
                 <router-link to="/add/employee" class="text-decoration-none">
                   <button type="button" class="btn-action">
@@ -475,6 +535,22 @@
                   Export
                 </button>
               </el-tooltip>
+              <el-tooltip content="Delete selected employees" placement="bottom">
+                <button
+                  type="button"
+                  class="btn-action"
+                  :disabled="selectedIds.length === 0"
+                  data-bs-toggle="modal"
+                  data-bs-target="#ModalBulkDelete"
+                >
+                  <i class="bi bi-trash-fill"></i>
+                  Delete Selected
+                </button>
+              </el-tooltip>
+            </div>
+            <div class="form-check form-switch ms-auto">
+              <input class="form-check-input" type="checkbox" id="showDisapproved" v-model="showDisapprovedOnly">
+              <label class="form-check-label" for="showDisapproved" style="font-size:12px;">Show disapproved</label>
             </div>
           </div>
           <div class="table-container">
@@ -483,17 +559,48 @@
               <EasyDataTable
                 table-class-name="customize-table"
                 :headers="headers"
-                :items="items"
+                :items="filteredItems"
                 search-field="name"
                 :search-value="search"
                 :rows-per-page="10"
                 border-cell
                 buttons-pagination
               >
+                <template #header-select>
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    :checked="allVisibleSelected"
+                    :indeterminate="someVisibleSelected"
+                    @change="toggleSelectAll($event.target.checked)"
+                  />
+                </template>
+                <template #item-select="item">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    :checked="selectedIds.includes(item._id)"
+                    @change="toggleSelect(item._id, $event.target.checked)"
+                  />
+                </template>
                 <template #item-actions="item">
                   <div class="d-flex justify-content-evenly">
                     <div class="table-icon action_icon_color" @click="handleViewEmployee(item._id)">
-                      <el-tooltip content="View " placement="bottom">
+                      <el-tooltip placement="bottom" popper-class="mini-card-tooltip">
+                        <template #content>
+                          <div class="p-2" style="min-width:210px; font-size:12px; line-height:1.35;">
+                            <div class="fw-semibold text-capitalize">{{ item.name || '—' }}</div>
+                            <div class="text-muted">{{ item.designation || 'No designation' }}</div>
+                            <div class="mt-1">Code: <strong>{{ item.emp_no || '—' }}</strong></div>
+                            <div>Username: {{ item.username || '—' }}</div>
+                            <div>📧 {{ item.email || 'No email' }}</div>
+                            <div>📱 {{ item.whatsapp_no || 'No WhatsApp' }}</div>
+                            <div>Dept: {{ item.department?.name || '—' }}</div>
+                            <div>Team: {{ item.team?.name || '—' }}</div>
+                            <div>City: {{ item.city || '—' }}</div>
+                            <div class="text-wrap">Addr: {{ item.address || '—' }}</div>
+                          </div>
+                        </template>
                         <i class="bi bi-eye-fill pointer" style="font-size"></i>
                       </el-tooltip>
                     </div>
@@ -618,6 +725,7 @@ export default {
 
       notifications: [],
       headers: [
+        { text: '', value: 'select', sortable: false, width: 40 },
         { text: 'Name', value: 'name', sortable: true },
         { text: 'Employee Code', value: 'emp_no' },
         { text: 'Username', value: 'username' },
@@ -639,12 +747,15 @@ export default {
       showDeleteModal: false,
 
       search: '',
+      showDisapprovedOnly: false,
       entries: 0,
       entriesPerPage: 5,
       entriesPerPageOptions: [5, 10, 15, 20],
       page: 1,
       items: [],
       originalItems: [],
+      selectedIds: [],
+      includeDisapprovedOnDelete: false,
     };
   },
 
@@ -652,7 +763,7 @@ export default {
     await this.getCurrent();
     try {
       const res = await axiosClient.get(
-        `/api/v1/employee/client/${this.user._id}`
+        `/api/v1/employee/client/${this.user._id}?includeInactive=true`
       );
       //console.log('res.data.data: ', res.data.data);
       this.originalItems = res.data.data;
@@ -770,11 +881,12 @@ export default {
           toast.success(`Updated Client `, {
             autoClose: 1000,
           });
-          for (let i in this.items) {
-            if (this.items[i].user_id == id) {
-              this.items.splice(i, 1);
+          this.items = this.items.map((emp) => {
+            if (emp.user_id === id || emp._id === id) {
+              return { ...emp, approved: !emp.approved, active: emp.approved ? false : true };
             }
-          }
+            return emp;
+          });
         }
       } catch (err) {
         console.log('error: ', err);
@@ -835,11 +947,63 @@ export default {
             autoClose: 1000,
           });
           this.items = this.items.filter((item) => item._id != id);
+          this.originalItems = this.originalItems.filter((item) => item._id != id);
+          this.selectedIds = this.selectedIds.filter((selectedId) => selectedId != id);
         }
       } catch (err) {
         console.log('error: ', err);
         toast.error(`Some Thing Went Wrong`);
       }
+    },
+
+    toggleSelect(id, isChecked) {
+      if (isChecked) {
+        if (!this.selectedIds.includes(id)) {
+          this.selectedIds.push(id);
+        }
+      } else {
+        this.selectedIds = this.selectedIds.filter((selectedId) => selectedId !== id);
+      }
+    },
+
+    toggleSelectAll(isChecked) {
+      const visibleIds = this.filteredItems.map((item) => item._id);
+      if (isChecked) {
+        const merged = new Set([...this.selectedIds, ...visibleIds]);
+        this.selectedIds = Array.from(merged);
+      } else {
+        this.selectedIds = this.selectedIds.filter((id) => !visibleIds.includes(id));
+      }
+    },
+
+    async handleBulkDelete() {
+      const disapprovedIds = this.includeDisapprovedOnDelete
+        ? this.originalItems.filter((emp) => emp.approved === false).map((emp) => emp._id)
+        : [];
+      const idsToDelete = Array.from(new Set([...this.selectedIds, ...disapprovedIds]));
+      if (idsToDelete.length === 0) return;
+      const results = await Promise.allSettled(
+        idsToDelete.map((id) => axiosClient.delete(`/api/v1/employee/delete/${id}`))
+      );
+      const failedIds = [];
+      results.forEach((res, idx) => {
+        if (res.status === 'rejected') failedIds.push(idsToDelete[idx]);
+      });
+      const deletedIds = idsToDelete.filter((id) => !failedIds.includes(id));
+
+      if (deletedIds.length) {
+        this.items = this.items.filter((item) => !deletedIds.includes(item._id));
+        this.originalItems = this.originalItems.filter((item) => !deletedIds.includes(item._id));
+      }
+
+      this.selectedIds = failedIds;
+
+      if (failedIds.length) {
+        toast.error(`Failed to delete ${failedIds.length} employees`, { autoClose: 1500 });
+      } else {
+        toast.success(`Deleted ${deletedIds.length} employees`, { autoClose: 1500 });
+      }
+      this.includeDisapprovedOnDelete = false;
     },
 
     FilterByName() {
@@ -894,6 +1058,30 @@ export default {
       }
 
       return;
+    },
+  },
+
+  computed: {
+    filteredItems() {
+      if (this.showDisapprovedOnly) {
+        return this.items;
+      }
+      return this.items.filter((emp) => emp.approved !== false);
+    },
+    allVisibleSelected() {
+      const visibleIds = this.filteredItems.map((item) => item._id);
+      return visibleIds.length > 0 && visibleIds.every((id) => this.selectedIds.includes(id));
+    },
+    someVisibleSelected() {
+      const visibleIds = this.filteredItems.map((item) => item._id);
+      const selectedVisible = visibleIds.filter((id) => this.selectedIds.includes(id));
+      return selectedVisible.length > 0 && selectedVisible.length < visibleIds.length;
+    },
+    bulkDeleteCount() {
+      const disapprovedIds = this.includeDisapprovedOnDelete
+        ? this.originalItems.filter((emp) => emp.approved === false).map((emp) => emp._id)
+        : [];
+      return Array.from(new Set([...this.selectedIds, ...disapprovedIds])).length;
     },
   },
 };

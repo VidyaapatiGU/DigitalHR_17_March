@@ -95,6 +95,9 @@ const ClientSchema = new Schema({
     type: Boolean,
     default: true,
   },
+  profile_url: {
+    type: String,
+  },
 
   /* /////////////Proofs//////////////// */
   adhar_proof: {

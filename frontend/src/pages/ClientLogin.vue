@@ -211,7 +211,7 @@ export default {
   data() {
     return {
       form: {
-        //email: 'rahre49@gmail.com',
+        username: '',
         email: '',
         password: '',
       },
@@ -219,6 +219,8 @@ export default {
   },
 
   async created() {
+    const existingToken = localStorage.getItem('token');
+    if (!existingToken) return;
     try {
       const token = await axiosClient.get(`api/v1/user/getCurrent/`);
       console.log(token);
@@ -226,7 +228,8 @@ export default {
         this.$router.push('/dashboard');
       }
     } catch (err) {
-      console.log('error: ', err);
+      // token invalid/expired; clear it and stay on login
+      localStorage.removeItem('token');
     }
   },
 
