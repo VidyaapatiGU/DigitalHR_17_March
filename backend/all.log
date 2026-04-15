@@ -66468,3 +66468,600 @@
 [17-03-2026 02:48:28 AM] [32minfo[39m: 	[32m::1: API /api/v1/settings/working-hours | User: undefined | received workingHours: {"workingGeneralStart":"09:00","workingGeneralEnd":"18:00","lunchGeneralStart":"13:00","lunchGeneralEnd":"14:00","shift4Start":"18:00","shift4End":"19:00","extraShifts":[{"start":"18:00","end":"19:00","_id":"6966707315ae53f56fefd064"}]}[39m
 [17-03-2026 02:48:28 AM] [32minfo[39m: 	[32m::1: API /api/v1/settings/working-hours | User: undefined | updated working hours for client 67764e60a0dcb26ea1d81851 -> {"workingGeneralStart":"09:00","workingGeneralEnd":"18:00","lunchGeneralStart":"13:00","lunchGeneralEnd":"14:00","shift4Start":"18:00","shift4End":"19:00","extraShifts":[{"start":"18:00","end":"19:00","_id":"6966707315ae53f56fefd064"}],"extraLunchShifts":[]}[39m
 [17-03-2026 02:48:28 AM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[17-03-2026 10:27:20 AM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 10:27:21 AM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 10:27:21 AM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[17-03-2026 10:27:21 AM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[17-03-2026 10:27:21 AM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 10:27:23 AM] [32minfo[39m: 	[32m{[39m
+[32m  workingHours: {[39m
+[32m    workingGeneralStart: '09:00',[39m
+[32m    workingGeneralEnd: '18:00',[39m
+[32m    lunchGeneralStart: '13:00',[39m
+[32m    lunchGeneralEnd: '14:00',[39m
+[32m    shift4Start: '18:00',[39m
+[32m    shift4End: '19:00',[39m
+[32m    extraShifts: [ [Object] ],[39m
+[32m    extraLunchShifts: [][39m
+[32m  },[39m
+[32m  minimumWages: {[39m
+[32m    unskilled: { basic: '1000', vda: '1000', total: '2000' },[39m
+[32m    semiSkilled: { basic: '1000', vda: '1000', total: '2000' },[39m
+[32m    skilled: { basic: '1000', vda: '1000', total: '2000' },[39m
+[32m    highlySkilled: { basic: '1000', vda: '1000', total: '2000' }[39m
+[32m  },[39m
+[32m  _id: new ObjectId('67cfe8d77c4a81f71c977b90'),[39m
+[32m  client_id: new ObjectId('67764e60a0dcb26ea1d81851'),[39m
+[32m  weeklyOff: [ 'Sunday' ],[39m
+[32m  active: true,[39m
+[32m  __v: 0,[39m
+[32m  salary_logic: 'calender_month',[39m
+[32m  updatedAt: 2026-03-16T21:18:28.720Z,[39m
+[32m  employeeHolidayAssignments: [[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad35'),[39m
+[32m      employeeName: 'Rahul Sharma',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f9747e')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad39'),[39m
+[32m      employeeName: 'Anjali Gupta',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f9747f')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad3d'),[39m
+[32m      employeeName: 'Amit Singh',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97480')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad41'),[39m
+[32m      employeeName: 'Priya Verma',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97481')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d22bdbad6155854ad45'),[39m
+[32m      employeeName: 'Sandeep Kumar',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97482')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d22bdbad6155854ad49'),[39m
+[32m      employeeName: 'Sneha Reddy',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97483')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d22bdbad6155854ad4d'),[39m
+[32m      employeeName: 'Vikram Malhotra',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97484')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d23bdbad6155854ad51'),[39m
+[32m      employeeName: 'Meera Joshi',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97485')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d23bdbad6155854ad55'),[39m
+[32m      employeeName: 'Rohan Das',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97486')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d23bdbad6155854ad59'),[39m
+[32m      employeeName: 'Kavita Patil',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97487')[39m
+[32m    }[39m
+[32m  ],[39m
+[32m  registrationNumber: '123456789',[39m
+[32m  monthlySalaryDate: 2026-01-14T00:00:00.000Z,[39m
+[32m  salaryInspectorName: 'Vaibhav Gawas',[39m
+[32m  salaryOptionDate: 2026-01-14T00:00:00.000Z[39m
+[32m}[39m
+[17-03-2026 10:27:23 AM] [32minfo[39m: 	[32m::1: Retrieved weekly off settings for client_id 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 11:03:52 AM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 11:03:52 AM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 11:03:52 AM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[17-03-2026 11:03:52 AM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[17-03-2026 11:03:52 AM] [32minfo[39m: 	[32m{[39m
+[32m  workingHours: {[39m
+[32m    workingGeneralStart: '09:00',[39m
+[32m    workingGeneralEnd: '18:00',[39m
+[32m    lunchGeneralStart: '13:00',[39m
+[32m    lunchGeneralEnd: '14:00',[39m
+[32m    shift4Start: '18:00',[39m
+[32m    shift4End: '19:00',[39m
+[32m    extraShifts: [ [Object] ],[39m
+[32m    extraLunchShifts: [][39m
+[32m  },[39m
+[32m  minimumWages: {[39m
+[32m    unskilled: { basic: '1000', vda: '1000', total: '2000' },[39m
+[32m    semiSkilled: { basic: '1000', vda: '1000', total: '2000' },[39m
+[32m    skilled: { basic: '1000', vda: '1000', total: '2000' },[39m
+[32m    highlySkilled: { basic: '1000', vda: '1000', total: '2000' }[39m
+[32m  },[39m
+[32m  _id: new ObjectId('67cfe8d77c4a81f71c977b90'),[39m
+[32m  client_id: new ObjectId('67764e60a0dcb26ea1d81851'),[39m
+[32m  weeklyOff: [ 'Sunday' ],[39m
+[32m  active: true,[39m
+[32m  __v: 0,[39m
+[32m  salary_logic: 'calender_month',[39m
+[32m  updatedAt: 2026-03-16T21:18:28.720Z,[39m
+[32m  employeeHolidayAssignments: [[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad35'),[39m
+[32m      employeeName: 'Rahul Sharma',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f9747e')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad39'),[39m
+[32m      employeeName: 'Anjali Gupta',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f9747f')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad3d'),[39m
+[32m      employeeName: 'Amit Singh',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97480')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad41'),[39m
+[32m      employeeName: 'Priya Verma',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97481')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d22bdbad6155854ad45'),[39m
+[32m      employeeName: 'Sandeep Kumar',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97482')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d22bdbad6155854ad49'),[39m
+[32m      employeeName: 'Sneha Reddy',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97483')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d22bdbad6155854ad4d'),[39m
+[32m      employeeName: 'Vikram Malhotra',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97484')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d23bdbad6155854ad51'),[39m
+[32m      employeeName: 'Meera Joshi',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97485')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d23bdbad6155854ad55'),[39m
+[32m      employeeName: 'Rohan Das',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97486')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d23bdbad6155854ad59'),[39m
+[32m      employeeName: 'Kavita Patil',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97487')[39m
+[32m    }[39m
+[32m  ],[39m
+[32m  registrationNumber: '123456789',[39m
+[32m  monthlySalaryDate: 2026-01-14T00:00:00.000Z,[39m
+[32m  salaryInspectorName: 'Vaibhav Gawas',[39m
+[32m  salaryOptionDate: 2026-01-14T00:00:00.000Z[39m
+[32m}[39m
+[17-03-2026 11:03:52 AM] [32minfo[39m: 	[32m::1: Retrieved weekly off settings for client_id 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 11:03:53 AM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 11:06:06 AM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 11:06:06 AM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 11:06:06 AM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[17-03-2026 11:06:06 AM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[17-03-2026 11:06:07 AM] [32minfo[39m: 	[32m{[39m
+[32m  workingHours: {[39m
+[32m    workingGeneralStart: '09:00',[39m
+[32m    workingGeneralEnd: '18:00',[39m
+[32m    lunchGeneralStart: '13:00',[39m
+[32m    lunchGeneralEnd: '14:00',[39m
+[32m    shift4Start: '18:00',[39m
+[32m    shift4End: '19:00',[39m
+[32m    extraShifts: [ [Object] ],[39m
+[32m    extraLunchShifts: [][39m
+[32m  },[39m
+[32m  minimumWages: {[39m
+[32m    unskilled: { basic: '1000', vda: '1000', total: '2000' },[39m
+[32m    semiSkilled: { basic: '1000', vda: '1000', total: '2000' },[39m
+[32m    skilled: { basic: '1000', vda: '1000', total: '2000' },[39m
+[32m    highlySkilled: { basic: '1000', vda: '1000', total: '2000' }[39m
+[32m  },[39m
+[32m  _id: new ObjectId('67cfe8d77c4a81f71c977b90'),[39m
+[32m  client_id: new ObjectId('67764e60a0dcb26ea1d81851'),[39m
+[32m  weeklyOff: [ 'Sunday' ],[39m
+[32m  active: true,[39m
+[32m  __v: 0,[39m
+[32m  salary_logic: 'calender_month',[39m
+[32m  updatedAt: 2026-03-16T21:18:28.720Z,[39m
+[32m  employeeHolidayAssignments: [[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad35'),[39m
+[32m      employeeName: 'Rahul Sharma',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f9747e')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad39'),[39m
+[32m      employeeName: 'Anjali Gupta',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f9747f')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad3d'),[39m
+[32m      employeeName: 'Amit Singh',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97480')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d21bdbad6155854ad41'),[39m
+[32m      employeeName: 'Priya Verma',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97481')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d22bdbad6155854ad45'),[39m
+[32m      employeeName: 'Sandeep Kumar',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97482')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d22bdbad6155854ad49'),[39m
+[32m      employeeName: 'Sneha Reddy',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97483')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d22bdbad6155854ad4d'),[39m
+[32m      employeeName: 'Vikram Malhotra',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97484')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d23bdbad6155854ad51'),[39m
+[32m      employeeName: 'Meera Joshi',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97485')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d23bdbad6155854ad55'),[39m
+[32m      employeeName: 'Rohan Das',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97486')[39m
+[32m    },[39m
+[32m    {[39m
+[32m      employeeId: new ObjectId('69b84d23bdbad6155854ad59'),[39m
+[32m      employeeName: 'Kavita Patil',[39m
+[32m      holidayDay: 'Sunday',[39m
+[32m      remarks: '',[39m
+[32m      _id: new ObjectId('69b870e70521d4d487f97487')[39m
+[32m    }[39m
+[32m  ],[39m
+[32m  registrationNumber: '123456789',[39m
+[32m  monthlySalaryDate: 2026-01-14T00:00:00.000Z,[39m
+[32m  salaryInspectorName: 'Vaibhav Gawas',[39m
+[32m  salaryOptionDate: 2026-01-14T00:00:00.000Z[39m
+[32m}[39m
+[17-03-2026 11:06:07 AM] [32minfo[39m: 	[32m::1: Retrieved weekly off settings for client_id 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 11:06:07 AM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 11:36:15 AM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 11:36:15 AM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 11:36:16 AM] [32minfo[39m: 	[32mFound 10 employee(s) for client_id query[39m
+[17-03-2026 11:36:16 AM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764e60a0dcb26ea1d81851 | User: undefined responded with success. Employees retrieved.[39m
+[17-03-2026 11:36:26 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d21bdbad6155854ad35 | User: undefined | responnded with Success [39m
+[17-03-2026 11:36:26 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d21bdbad6155854ad41 | User: undefined | responnded with Success [39m
+[17-03-2026 11:36:26 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d21bdbad6155854ad39 | User: undefined | responnded with Success [39m
+[17-03-2026 11:36:26 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d21bdbad6155854ad3d | User: undefined | responnded with Success [39m
+[17-03-2026 11:36:27 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d22bdbad6155854ad4d | User: undefined | responnded with Success [39m
+[17-03-2026 11:36:27 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d23bdbad6155854ad51 | User: undefined | responnded with Success [39m
+[17-03-2026 11:36:27 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d23bdbad6155854ad59 | User: undefined | responnded with Success [39m
+[17-03-2026 11:36:27 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d22bdbad6155854ad45 | User: undefined | responnded with Success [39m
+[17-03-2026 11:36:27 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d22bdbad6155854ad49 | User: undefined | responnded with Success [39m
+[17-03-2026 11:36:28 AM] [32minfo[39m: 	[32m::1: API /api/v1/employee/delete/:69b84d23bdbad6155854ad55 | User: undefined | responnded with Success [39m
+[17-03-2026 02:05:40 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 02:05:41 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 02:05:41 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 02:05:41 PM] [32minfo[39m: 	[32mFound 0 employee(s) for client_id query[39m
+[17-03-2026 02:05:41 PM] [32minfo[39m: 	[32mFound 0 employee(s) for client_user_id query[39m
+[17-03-2026 02:05:41 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764e60a0dcb26ea1d81851 | User: undefined responded with success. Employees retrieved.[39m
+[17-03-2026 03:13:36 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 03:13:36 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 03:13:38 PM] [32minfo[39m: 	[32mFound 0 employee(s) for client_id query[39m
+[17-03-2026 03:13:40 PM] [32minfo[39m: 	[32mFound 0 employee(s) for client_user_id query[39m
+[17-03-2026 03:13:40 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764e60a0dcb26ea1d81851 | User: undefined responded with success. Employees retrieved.[39m
+[17-03-2026 07:48:23 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 07:48:24 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 07:48:24 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764e60a0dcb26ea1d81851  responnded with Success [39m
+[17-03-2026 07:48:24 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764e60a0dcb26ea1d81851[39m
+[17-03-2026 07:48:24 PM] [32minfo[39m: 	[32mFound 0 employee(s) for client_id query[39m
+[17-03-2026 07:48:24 PM] [32minfo[39m: 	[32mFound 0 employee(s) for client_user_id query[39m
+[17-03-2026 07:48:24 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764e60a0dcb26ea1d81851 | User: undefined responded with success. Employees retrieved.[39m
+[17-03-2026 07:53:41 PM] [32minfo[39m: 	[32mConnected to Mongo Successfully! Host: ac-6wczup2-shard-00-02.axo92w6.mongodb.net, DB Name:test [39m
+[15-04-2026 04:02:33 PM] [32minfo[39m: 	[32mConnected to Mongo Successfully! Host: ac-6wczup2-shard-00-00.axo92w6.mongodb.net, DB Name:test [39m
+[15-04-2026 04:02:42 PM] [32minfo[39m: 	[32m::1: API /api/v1/user/getCurrent responnded with the Error: No token[39m
+[15-04-2026 04:02:42 PM] [32minfo[39m: 	[32m::1: API /api/v1/user/getCurrent responnded with the Error: No token[39m
+[15-04-2026 04:02:42 PM] [32minfo[39m: 	[32m::1: API /api/v1/user/getCurrent responnded with the Error: No token[39m
+[15-04-2026 04:02:49 PM] [31merror[39m: 	[31m::1: API /api/v1/user/login responnded with User Not Found for the user: nishagad[39m
+[15-04-2026 04:02:53 PM] [31merror[39m: 	[31m::1: API /api/v1/user/login responnded with Error [39m
+[15-04-2026 04:03:00 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/login responnded with Login Successfull for the username: nishagad[39m
+[15-04-2026 04:03:03 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:03:03 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:03:03 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:03:03 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:03:03 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:03:07 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:03:07 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:03:07 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:03:07 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:03:13 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:03:13 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 04:03:18 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:03:18 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[15-04-2026 04:03:18 PM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:03:18 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 04:11:08 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:11:41 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:11:41 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:11:42 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:11:42 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[15-04-2026 04:11:42 PM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:11:42 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 04:12:55 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:25 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:25 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:25 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:25 PM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:25 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:41 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:41 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:41 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:41 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:14:41 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:14:41 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:14:42 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:43 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/get/:67764ef6a0dcb26ea1d818b3 | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:43 PM] [32minfo[39m: 	[32m::1: API /api/v1/department/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:43 PM] [32minfo[39m: 	[32m::1: API /api/v1/role/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:43 PM] [32minfo[39m: 	[32m::1: API /api/v1/team/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:43 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:43 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:14:43 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:14:43 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:14:45 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:46 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/get/:67764ef6a0dcb26ea1d818b3 | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:46 PM] [32minfo[39m: 	[32m::1: API /api/v1/department/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:46 PM] [32minfo[39m: 	[32m::1: API /api/v1/role/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:46 PM] [32minfo[39m: 	[32m::1: API /api/v1/team/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:53 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:53 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:14:55 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:14:55 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:14:55 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:55 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:56 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:56 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:56 PM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:57 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 04:14:58 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:14:58 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:14:58 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:14:58 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:15:00 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:15:00 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/get/:67764ef6a0dcb26ea1d818b3 | User: undefined | responnded with Success [39m
+[15-04-2026 04:15:00 PM] [32minfo[39m: 	[32m::1: API /api/v1/department/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:15:00 PM] [32minfo[39m: 	[32m::1: API /api/v1/role/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:15:01 PM] [32minfo[39m: 	[32m::1: API /api/v1/team/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:15:07 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:15:07 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:15:13 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:15:13 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:15:14 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:15:14 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:15:14 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:15:14 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:15:14 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:15:58 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:16:04 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:16:04 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:16:04 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:16:04 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:16:05 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:16:05 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:21:33 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:21:35 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:21:35 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:21:35 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:21:35 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:21:35 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:22:48 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:22:48 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:22:48 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:22:48 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:22:48 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:22:48 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:23:28 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:23:33 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:23:34 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:23:34 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:23:34 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:23:40 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:23:40 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:23:40 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:23:40 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:24:09 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:24:10 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 04:24:16 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:24:17 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:24:17 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:24:37 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:24:37 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[15-04-2026 04:24:37 PM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:24:37 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 04:24:44 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:24:44 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:24:44 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:24:44 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:28:46 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:28:47 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/get/:67764ef6a0dcb26ea1d818b3 | User: undefined | responnded with Success [39m
+[15-04-2026 04:28:47 PM] [32minfo[39m: 	[32m::1: API /api/v1/department/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:28:47 PM] [32minfo[39m: 	[32m::1: API /api/v1/role/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:28:47 PM] [32minfo[39m: 	[32m::1: API /api/v1/team/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:28:54 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:28:54 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:28:54 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:28:54 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:29:01 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:29:01 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/get/:67764ef6a0dcb26ea1d818b3 | User: undefined | responnded with Success [39m
+[15-04-2026 04:29:01 PM] [32minfo[39m: 	[32m::1: API /api/v1/department/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:29:01 PM] [32minfo[39m: 	[32m::1: API /api/v1/role/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:29:01 PM] [32minfo[39m: 	[32m::1: API /api/v1/team/getall | User: undefined | responnded with Success [39m
+[15-04-2026 04:29:08 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:29:08 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 04:29:09 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 04:29:09 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 04:29:30 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 04:29:30 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 05:03:00 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:03:00 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:03:00 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:03:06 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:03:06 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:03:06 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:03:07 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:03:07 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:03:14 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:03:14 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 05:05:47 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:05:47 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 05:06:45 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:06:45 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 05:08:23 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:08:23 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:08:23 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:08:23 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 05:08:30 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:08:30 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:08:30 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:09:18 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:09:18 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:09:18 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:09:18 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:09:18 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:10:50 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:10:50 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:10:50 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:10:50 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:10:50 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:11:57 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:11:57 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:11:57 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:11:58 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:11:58 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:11:58 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:11:58 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:12:05 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:12:05 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 05:12:11 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:12:11 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:12:11 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:12:18 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:12:18 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:12:18 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:12:19 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:12:19 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:13:21 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:13:22 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:13:22 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:13:22 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:13:22 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:14:50 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:14:50 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:14:51 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:14:51 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:14:51 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:14:51 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:14:51 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 05:14:55 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:14:55 PM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[15-04-2026 05:14:55 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[15-04-2026 05:14:55 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/get | User: undefined | Fetched leaves records for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:14:56 PM] [32minfo[39m: 	[32m{[39m
+[32m  workingHours: {[39m
+[32m    workingGeneralStart: '09:00',[39m
+[32m    workingGeneralEnd: '18:00',[39m
+[32m    lunchGeneralStart: '13:00',[39m
+[32m    lunchGeneralEnd: '14:00',[39m
+[32m    extraShifts: [],[39m
+[32m    extraLunchShifts: [][39m
+[32m  },[39m
+[32m  _id: new ObjectId('69b8efdeeb9cdc0ddac3c477'),[39m
+[32m  client_id: new ObjectId('67764ef6a0dcb26ea1d818b3'),[39m
+[32m  weeklyOff: [ 'Sunday' ],[39m
+[32m  active: true,[39m
+[32m  employeeHolidayAssignments: [],[39m
+[32m  createdAt: 2026-03-17T06:08:30.529Z,[39m
+[32m  updatedAt: 2026-03-17T06:08:43.103Z,[39m
+[32m  __v: 0[39m
+[32m}[39m
+[15-04-2026 05:14:56 PM] [32minfo[39m: 	[32m::1: Retrieved weekly off settings for client_id 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:15:39 PM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/add | User: undefined | responnded with Success [39m
+[15-04-2026 05:15:39 PM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[15-04-2026 05:16:09 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:16:09 PM] [32minfo[39m: 	[32m::1: API /api/v1/settings/holiday/to_from | User: undefined | responnded with Success [39m
+[15-04-2026 05:16:09 PM] [32minfo[39m: 	[32m::1: API /api/v1/holiday/getall | User: undefined | responnded with Success [39m
+[15-04-2026 05:16:09 PM] [32minfo[39m: 	[32m::1: API /api/v1/attendance/get/all/:client_user_id | User: undefined | responnded with Success [39m
+[15-04-2026 05:25:56 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 05:25:56 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 05:25:56 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 05:25:56 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
+[15-04-2026 07:21:09 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 07:21:10 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 07:21:10 PM] [32minfo[39m: 	[32m::1: API /api/v1/client/getCurrent/:67764ef6a0dcb26ea1d818b3  responnded with Success [39m
+[15-04-2026 07:21:10 PM] [32minfo[39m: 	[32mIncoming request to get employees for client 67764ef6a0dcb26ea1d818b3[39m
+[15-04-2026 07:21:10 PM] [32minfo[39m: 	[32mFound 17 employee(s) for client_id query[39m
+[15-04-2026 07:21:10 PM] [32minfo[39m: 	[32m::1: API /api/v1/employees/client/67764ef6a0dcb26ea1d818b3 | User: undefined responded with success. Employees retrieved.[39m
