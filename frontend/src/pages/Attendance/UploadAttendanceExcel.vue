@@ -75,10 +75,51 @@
 .table-icon:hover { background: #f1f5f9; }
 
 .format-icon {
-  width: 38px;
-  height: 38px;
-  padding: 0;
+  min-height: 38px;
+  padding: 0.45rem 0.9rem;
   justify-content: center;
+  white-space: nowrap;
+}
+
+.upload-toolbar {
+  width: 100%;
+  max-width: 1080px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.upload-field-file {
+  flex: 1 1 280px;
+  min-width: 240px;
+}
+
+.upload-field-days {
+  flex: 0 1 230px;
+  min-width: 190px;
+}
+
+.upload-field-month {
+  flex: 0 1 220px;
+  min-width: 190px;
+}
+
+.upload-field-submit {
+  flex: 0 0 auto;
+}
+
+.upload-field-submit .btn-submit {
+  width: 100%;
+}
+
+:deep(.upload-month-picker .dp__main) {
+  width: 100%;
+}
+
+:deep(.upload-month-picker .dp__input) {
+  width: 100%;
 }
 
 .overlay-modal {
@@ -94,8 +135,10 @@
 .modal-card {
   background: #fff;
   border-radius: 12px;
-  max-width: 960px;
-  width: 90%;
+  max-width: min(960px, calc(100vw - 1rem));
+  width: 100%;
+  max-height: calc(100vh - 1rem);
+  overflow: auto;
   padding: 1.25rem;
   box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
 }
@@ -116,6 +159,53 @@
 
 @media (max-width: 576px) {
   .form-container { padding: 1.25rem; }
+
+  .page-header-bar {
+    padding: 0.75rem 1rem;
+  }
+
+  .page-wrapper .p-4 {
+    padding: 1rem !important;
+  }
+
+  .upload-toolbar {
+    justify-content: stretch;
+    align-items: stretch;
+  }
+
+  .upload-field-file,
+  .upload-field-days,
+  .upload-field-month,
+  .upload-field-submit {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .upload-field-submit .btn-submit {
+    justify-content: center;
+  }
+
+  .format-icon {
+    width: 100%;
+    height: 40px;
+  }
+
+  .modal-card {
+    border-radius: 10px;
+    padding: 0.9rem;
+  }
+
+  .modal-card .table {
+    min-width: 720px;
+  }
+
+  .modal-card .d-flex.justify-content-end {
+    flex-direction: column;
+  }
+
+  .modal-card .d-flex.justify-content-end .btn {
+    width: 100%;
+  }
 }
 </style>
 
@@ -131,7 +221,7 @@
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
         <div class="p-4 h-100">
-          <div class="w-100 h-100 d-flex justify-content-center gap-3">
+          <div class="upload-toolbar">
             <el-tooltip content="Download Format" placement="bottom">
               <a
                 href="https://technirmitisoftwares.com/employeeAttendanceFormat.xlsx"
@@ -139,9 +229,10 @@
                 aria-label="Download format"
               >
                 <i class="bi bi-download"></i>
+                <span>Input Format</span>
               </a>
             </el-tooltip>
-            <div>
+            <div class="upload-field-file">
               <input
                 type="file"
                 class="form-control"
@@ -151,7 +242,7 @@
                 @change="handleFileUpload"
               />
             </div>
-            <div class="">
+            <div class="upload-field-days">
               <input
                 v-model="form.totalWorkingDays"
                 type="text"
@@ -169,12 +260,12 @@
                 placeholder="Add Remark"
               />
             </div> -->
-            <div>
-              <VueDatePicker v-model="month_year" month-picker />
+            <div class="upload-field-month">
+              <VueDatePicker v-model="month_year" month-picker class="upload-month-picker" />
               <!-- <input type="date" class="form-control form-control-sm" v-model="form.month_year" /> -->
             </div>
 
-            <div>
+            <div class="upload-field-submit">
               <button type="button" class="btn-submit" @click="uploadFile">
                 Upload
               </button>

@@ -74,14 +74,106 @@
 .table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
 .table-icon:hover { background: #f1f5f9; }
 
+.manage-attendance-modal .modal-content {
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.manage-attendance-modal .modal-body {
+  overflow-y: auto;
+}
+
+.manage-attendance-modal .modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.manage-attendance-modal .modal-footer .btn {
+  min-width: 110px;
+}
+
+.modal-table-wrap {
+  overflow-x: auto;
+}
+
+.modal-table-wrap .table {
+  margin-bottom: 0;
+}
+
+.leave-date-text {
+  white-space: normal;
+  word-break: break-word;
+}
+
 @media (max-width: 576px) {
   .form-container { padding: 1.25rem; }
+
+  .page-header-bar {
+    padding: 0.75rem 1rem;
+  }
+
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .search-input {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .action-buttons .btn-action {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .page-wrapper .p-4 {
+    padding: 1rem !important;
+  }
+
+  .manage-attendance-modal .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .manage-attendance-modal .modal-dialog.modal-lg {
+    max-width: calc(100vw - 1rem);
+  }
+
+  .manage-attendance-modal .modal-content {
+    max-height: calc(100vh - 1rem);
+  }
+
+  .manage-attendance-modal .modal-header,
+  .manage-attendance-modal .modal-body,
+  .manage-attendance-modal .modal-footer {
+    padding: 0.75rem;
+  }
+
+  .manage-attendance-modal .modal-title {
+    font-size: 0.95rem;
+    line-height: 1.35;
+  }
+
+  .manage-attendance-modal .modal-footer .btn {
+    flex: 1 1 100%;
+  }
+
+  .modal-table-wrap .table {
+    min-width: 640px;
+    font-size: 0.8rem;
+  }
 }
 </style>
 
 <template>
   <div
-    class="modal fade"
+    class="modal fade manage-attendance-modal"
     id="ModalNotification"
     tabindex="-1"
     aria-labelledby="ModalNotificationLabel"
@@ -131,7 +223,7 @@
   </div>
 
   <div
-    class="modal fade"
+    class="modal fade manage-attendance-modal"
     id="ModalAddAttendance"
     tabindex="-1"
     aria-labelledby="ModalAddAttendanceLabel"
@@ -178,7 +270,7 @@
       </div>
     </div>
   </div>
-  <div class="modal fade" id="ModalLeavesBalance" tabindex="-1" aria-labelledby="ModalLeavesBalanceLabel" aria-hidden="true">
+  <div class="modal fade manage-attendance-modal" id="ModalLeavesBalance" tabindex="-1" aria-labelledby="ModalLeavesBalanceLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -186,33 +278,35 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Emp Code</th>
-              <th>Name</th>
-              <th>CL Balance</th>
-              <th>SL Balance</th>
-              <th>PL Balance</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="emp in leavesBalanceData" :key="emp._id">
-              <td>{{ emp.emp_no }}</td>
-              <td>{{ emp.name }}</td>
-              <!-- Assuming your schema now stores leave as an object -->
-              <td>{{ emp.leaves.cl.balance }}</td>
-              <td>{{ emp.leaves.sl.balance }}</td>
-              <td>{{ emp.leaves.pl.balance }}</td>
-              <td>
-                <button type="button" class="btn btn-info btn-sm" @click="viewLeaveDates(emp)">
-                  View Dates
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="modal-table-wrap">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Emp Code</th>
+                <th>Name</th>
+                <th>CL Balance</th>
+                <th>SL Balance</th>
+                <th>PL Balance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="emp in leavesBalanceData" :key="emp._id">
+                <td>{{ emp.emp_no }}</td>
+                <td>{{ emp.name }}</td>
+                <!-- Assuming your schema now stores leave as an object -->
+                <td>{{ emp.leaves.cl.balance }}</td>
+                <td>{{ emp.leaves.sl.balance }}</td>
+                <td>{{ emp.leaves.pl.balance }}</td>
+                <td>
+                  <button type="button" class="btn btn-info btn-sm" @click="viewLeaveDates(emp)">
+                    View Dates
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
@@ -225,7 +319,7 @@
     </div>
   </div>
 </div>
-<div class="modal fade" id="ModalLeaveDates" tabindex="-1" aria-labelledby="ModalLeaveDatesLabel" aria-hidden="true">
+<div class="modal fade manage-attendance-modal" id="ModalLeaveDates" tabindex="-1" aria-labelledby="ModalLeaveDatesLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -235,46 +329,48 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Leave Type</th>
-              <th>Absent Dates</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>CL</td>
-              <td>
-                <ul class="list-unstyled mb-0">
-                  <li v-for="(date, index) in selectedEmployee?.leaves?.cl?.absentDates" :key="'cl-' + index">
-                    {{ date }}
-                  </li>
-                </ul>
-              </td>
-            </tr>
-            <tr>
-              <td>SL</td>
-              <td>
-                <ul class="list-unstyled mb-0">
-                  <li v-for="(date, index) in selectedEmployee?.leaves?.sl?.absentDates" :key="'sl-' + index">
-                    {{ date }}
-                  </li>
-                </ul>
-              </td>
-            </tr>
-            <tr>
-              <td>PL</td>
-              <td>
-                <ul class="list-unstyled mb-0">
-                  <li v-for="(date, index) in selectedEmployee?.leaves?.pl?.absentDates" :key="'pl-' + index">
-                    {{ date }}
-                  </li>
-                </ul>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="modal-table-wrap">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Leave Type</th>
+                <th>Absent Dates</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CL</td>
+                <td>
+                  <ul class="list-unstyled mb-0">
+                    <li class="leave-date-text" v-for="(date, index) in selectedEmployee?.leaves?.cl?.absentDates" :key="'cl-' + index">
+                      {{ date }}
+                    </li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>SL</td>
+                <td>
+                  <ul class="list-unstyled mb-0">
+                    <li class="leave-date-text" v-for="(date, index) in selectedEmployee?.leaves?.sl?.absentDates" :key="'sl-' + index">
+                      {{ date }}
+                    </li>
+                  </ul>
+                </td>
+              </tr>
+              <tr>
+                <td>PL</td>
+                <td>
+                  <ul class="list-unstyled mb-0">
+                    <li class="leave-date-text" v-for="(date, index) in selectedEmployee?.leaves?.pl?.absentDates" :key="'pl-' + index">
+                      {{ date }}
+                    </li>
+                  </ul>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
@@ -324,14 +420,12 @@
               />
             </div>
             <div class="action-buttons">
-              <div class="d-flex align-items-center gap-2">
               <button 
                 type="button" 
                 class="btn-action" 
                 @click="retrieveLeavesBalance">
                 Leaves Balance
               </button>
-            </div>
               <router-link to="/upload/excel">
                 <button type="button" class="btn-action" aria-label="Upload Attendance">
                   <i class="bi bi-file-earmark-arrow-up"></i>

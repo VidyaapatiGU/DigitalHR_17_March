@@ -5,21 +5,16 @@ ul {
   margin: 0;
 }
 
+.main {
+  width: 100%;
+}
+
 .profile-image {
   width: 2.25rem;
   height: 2.25rem;
   object-fit: cover;
   border: 2px solid rgba(148, 163, 184, 0.3);
-}
-
-.selected {
-  background: linear-gradient(135deg, var(--sidebar-active), #2563eb);
-  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.35);
-}
-
-.offcanvas {
-  width: 15rem;
-  border: 1px solid black;
+  transition: all 150ms ease;
 }
 
 .footer {
@@ -41,10 +36,6 @@ ul {
   background: linear-gradient(180deg, #0f172a 0%, #1a1f35 100%);
 }
 
-.text_shadow {
-  /* removed heavy text shadows for cleaner look */
-}
-
 .card-body,
 .multiCollapseExample1 {
   background: rgba(30, 41, 59, 0.5);
@@ -61,7 +52,6 @@ ul {
   padding: 0.25rem 0 !important;
 }
 
-/* Nav item styling */
 .nav-item {
   display: flex;
   align-items: center;
@@ -98,7 +88,14 @@ ul {
   opacity: 1;
 }
 
-/* Section header / collapsible */
+.nav-item-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .section-header {
   display: flex;
   align-items: center;
@@ -132,7 +129,6 @@ ul {
   margin-top: 0.25rem;
 }
 
-/* Sidebar logo area */
 .sidebar-logo {
   font-size: 1.125rem;
   font-weight: 700;
@@ -156,7 +152,6 @@ ul {
   color: white;
 }
 
-/* User info at top */
 .user-name {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -182,30 +177,59 @@ ul {
   color: #ef4444;
 }
 
-@media (max-width: 576px) {
-  .side_bar {
-    display: none;
-  }
+.icon-only {
+  justify-content: center;
+  width: 40px;
+  margin: 0 auto;
+  padding: 0.55rem;
 }
 
-@media (min-width: 576px) {
-  .side_bar {
-    display: block;
-  }
+.icon-only i {
+  width: auto;
+  font-size: 1rem;
+}
+
+.main.collapsed .header {
+  padding: 1rem 0.5rem 0.85rem;
+}
+
+.main.collapsed .body {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+.main.collapsed .footer {
+  padding: 0.75rem 0.5rem;
+}
+
+.main.collapsed .sidebar-logo {
+  justify-content: center;
+  margin-bottom: 0.75rem !important;
+}
+
+.main.collapsed .profile-image {
+  width: 2rem;
+  height: 2rem;
+}
+
+.main.collapsed .user-row {
+  justify-content: center;
 }
 </style>
 
 <template>
-  <div class="main font-14px h-100 rounded-3 sidebar-main overflow-y-hidden">
+  <div
+    class="main font-14px h-100 rounded-3 sidebar-main overflow-y-hidden"
+    :class="{ collapsed }"
+  >
     <div class="d-flex h-100 justify-content-between flex-column">
-      <!-- Header: Logo + User Info -->
       <div class="header">
         <div class="sidebar-logo mb-3">
           <div class="logo-icon">D</div>
-          <span>DigitalHR</span>
+          <span v-if="!collapsed">DigitalHR</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-          <div @click="handleRedirect(`account`)" class="flex-shrink-0">
+        <div class="d-flex align-items-center gap-2 user-row">
+          <div @click="handleRedirect('account')" class="flex-shrink-0">
             <img
               v-if="profile"
               class="img-account-profile profile-image pointer rounded-circle"
@@ -219,7 +243,7 @@ ul {
               alt="Default Profile Picture"
             />
           </div>
-          <div class="overflow-hidden flex-grow-1">
+          <div v-if="!collapsed" class="overflow-hidden flex-grow-1">
             <div class="user-name text-capitalize">{{ user.name }}</div>
             <div class="user-email">{{ user.email }}</div>
             <div class="user-logout" @click="handleLogOut">Sign out</div>
@@ -227,22 +251,19 @@ ul {
         </div>
       </div>
 
-      <!-- Navigation Body -->
       <div class="body px-2 pt-3 h-100 overflow-y-auto">
-        <div class="d-flex flex-column gap-1">
-          <!-- Dashboard -->
+        <div v-if="!collapsed" class="d-flex flex-column gap-1">
           <div class="section-label">Main</div>
           <div
             @click="handleRedirect('dashboard')"
             class="nav-item"
-            :class="{ active: glowMenuItem == 'dashboard' }"
+            :class="{ active: isMenuActive('dashboard') }"
           >
             <i class="bi bi-grid-1x2-fill"></i>
-            Dashboard
+            <span class="nav-item-label">Dashboard</span>
           </div>
 
-          <!-- Users Section (super_admin) -->
-          <template v-if="role == 'super_admin' || role == 'admin'">
+          <template v-if="isAdminRole">
             <div class="section-label">Management</div>
             <div
               data-bs-toggle="collapse"
@@ -253,7 +274,7 @@ ul {
             >
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-people-fill" style="font-size: 0.9375rem"></i>
-                Users
+                <span class="nav-item-label">Users</span>
               </div>
               <i class="bi bi-chevron-down"></i>
             </div>
@@ -264,40 +285,39 @@ ul {
                   <div
                     @click="handleRedirect('manage/users')"
                     class="nav-item"
-                    :class="{ active: glowMenuItem == 'manage/users' || glowMenuItem.match(/^update\/user\/.*/) || glowMenuItem.match(/^view\/user\/.*/) || glowMenuItem.match(/^add\/user\/.*/) }"
+                    :class="{ active: isMenuActive('manage/users') }"
                   >
                     <i class="bi bi-card-list"></i>
-                    Manage Users
+                    <span class="nav-item-label">Manage Users</span>
                   </div>
                   <div
                     @click="handleRedirect('teams')"
                     class="nav-item"
-                    :class="{ active: glowMenuItem == 'teams' }"
+                    :class="{ active: isMenuActive('teams') }"
                   >
                     <i class="bi bi-people-fill"></i>
-                    Teams
+                    <span class="nav-item-label">Teams</span>
                   </div>
                   <div
                     @click="handleRedirect('role')"
                     class="nav-item"
-                    :class="{ active: glowMenuItem == 'role' }"
+                    :class="{ active: isMenuActive('role') }"
                   >
                     <i class="bi bi-award-fill"></i>
-                    Role
+                    <span class="nav-item-label">Role</span>
                   </div>
                   <div
                     @click="handleRedirect('department')"
                     class="nav-item"
-                    :class="{ active: glowMenuItem == 'department' }"
+                    :class="{ active: isMenuActive('department') }"
                   >
                     <i class="bi bi-building-fill"></i>
-                    Department
+                    <span class="nav-item-label">Department</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Clients Section -->
             <div
               data-bs-toggle="collapse"
               class="section-header"
@@ -307,7 +327,7 @@ ul {
             >
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-briefcase-fill" style="font-size: 0.9375rem"></i>
-                Clients
+                <span class="nav-item-label">Clients</span>
               </div>
               <i class="bi bi-chevron-down"></i>
             </div>
@@ -318,25 +338,24 @@ ul {
                   <div
                     @click="handleRedirect('manage/clients')"
                     class="nav-item"
-                    :class="{ active: glowMenuItem == 'manage/clients' || glowMenuItem.match(/^update\/client\/.*/) || glowMenuItem.match(/^view\/client\/.*/) }"
+                    :class="{ active: isMenuActive('manage/clients') }"
                   >
                     <i class="bi bi-person-rolodex"></i>
-                    Manage Clients
+                    <span class="nav-item-label">Manage Clients</span>
                   </div>
                   <div
                     @click="handleRedirect('add/client')"
                     class="nav-item"
-                    :class="{ active: glowMenuItem == 'add/client' || glowMenuItem.match(/^add\/client\/.*/) }"
+                    :class="{ active: isMenuActive('add/client') }"
                   >
                     <i class="bi bi-person-fill-add"></i>
-                    Add Client
+                    <span class="nav-item-label">Add Client</span>
                   </div>
                 </div>
               </div>
             </div>
           </template>
 
-          <!-- Employee Section (client role) -->
           <template v-if="role == 'client'">
             <div class="section-label">Workforce</div>
             <div
@@ -348,7 +367,7 @@ ul {
             >
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-person-badge-fill" style="font-size: 0.9375rem"></i>
-                Employees
+                <span class="nav-item-label">Employees</span>
               </div>
               <i class="bi bi-chevron-down"></i>
             </div>
@@ -357,58 +376,68 @@ ul {
               <div class="collapse multi-collapse" id="multiCollapseEmployee">
                 <div class="card card-body">
                   <div
-                    v-if="role != 'super_admin'"
                     @click="handleRedirect('add/employee')"
                     class="nav-item"
-                    :class="{ active: glowMenuItem == 'add/employee' || glowMenuItem.match(/^add\/employee\/.*/) }"
+                    :class="{ active: isMenuActive('add/employee') }"
                   >
                     <i class="bi bi-person-fill-add"></i>
-                    Add Employee
+                    <span class="nav-item-label">Add Employee</span>
                   </div>
                   <div
                     @click="handleRedirect('manage/employees')"
                     class="nav-item"
-                    :class="{ active: glowMenuItem == 'manage/employees' }"
+                    :class="{ active: isMenuActive('manage/employees') }"
                   >
                     <i class="bi bi-person-rolodex"></i>
-                    Manage Employees
+                    <span class="nav-item-label">Manage Employees</span>
                   </div>
                   <div
-                    v-if="role != 'super_admin'"
                     @click="handleRedirect('manage/attendance')"
                     class="nav-item"
-                    :class="{ active: glowMenuItem == 'manage/attendance' }"
+                    :class="{ active: isMenuActive('manage/attendance') }"
                   >
                     <i class="bi bi-calendar-check-fill"></i>
-                    Manage Attendance
+                    <span class="nav-item-label">Manage Attendance</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Reports -->
             <div class="section-label">Analytics</div>
             <div
               @click="handleRedirect('reports')"
               class="nav-item"
-              :class="{ active: glowMenuItem == 'reports' }"
+              :class="{ active: isMenuActive('reports') }"
             >
               <i class="bi bi-bar-chart-fill"></i>
-              Reports
+              <span class="nav-item-label">Reports</span>
             </div>
           </template>
         </div>
+
+        <div v-else class="d-flex flex-column gap-2">
+          <div
+            v-for="item in collapsedMenuItems"
+            :key="item.link"
+            class="nav-item icon-only"
+            :class="{ active: isMenuActive(item.link) }"
+            :title="item.label"
+            @click="handleRedirect(item.link)"
+          >
+            <i :class="item.icon"></i>
+          </div>
+        </div>
       </div>
 
-      <!-- Footer: Settings -->
       <div class="footer">
         <div
           @click="handleRedirect('setting')"
           class="nav-item"
-          :class="{ active: glowMenuItem == 'setting' }"
+          :class="{ active: isMenuActive('setting'), 'icon-only': collapsed }"
+          :title="collapsed ? 'Settings' : null"
         >
           <i class="bi bi-gear-fill"></i>
-          Settings
+          <span v-if="!collapsed" class="nav-item-label">Settings</span>
         </div>
       </div>
     </div>
@@ -422,10 +451,16 @@ import 'vue3-toastify/dist/index.css';
 
 export default {
   name: 'SideMenu',
+  emits: ['navigate'],
+  props: {
+    collapsed: {
+      type: Boolean,
+      default: false,
+    },
+  },
 
   data() {
     return {
-      offcanvas: null,
       user: {},
       role: '',
       profile: '',
@@ -436,133 +471,197 @@ export default {
     };
   },
 
+  computed: {
+    isAdminRole() {
+      return this.role === 'super_admin' || this.role === 'admin';
+    },
+
+    collapsedMenuItems() {
+      const items = [
+        {
+          link: 'dashboard',
+          icon: 'bi bi-grid-1x2-fill',
+          label: 'Dashboard',
+        },
+      ];
+
+      if (this.isAdminRole) {
+        items.push(
+          {
+            link: 'manage/users',
+            icon: 'bi bi-card-list',
+            label: 'Manage Users',
+          },
+          {
+            link: 'teams',
+            icon: 'bi bi-people-fill',
+            label: 'Teams',
+          },
+          {
+            link: 'role',
+            icon: 'bi bi-award-fill',
+            label: 'Role',
+          },
+          {
+            link: 'department',
+            icon: 'bi bi-building-fill',
+            label: 'Department',
+          },
+          {
+            link: 'manage/clients',
+            icon: 'bi bi-person-rolodex',
+            label: 'Manage Clients',
+          },
+          {
+            link: 'add/client',
+            icon: 'bi bi-person-fill-add',
+            label: 'Add Client',
+          },
+        );
+      }
+
+      if (this.role === 'client') {
+        items.push(
+          {
+            link: 'add/employee',
+            icon: 'bi bi-person-fill-add',
+            label: 'Add Employee',
+          },
+          {
+            link: 'manage/employees',
+            icon: 'bi bi-person-rolodex',
+            label: 'Manage Employees',
+          },
+          {
+            link: 'manage/attendance',
+            icon: 'bi bi-calendar-check-fill',
+            label: 'Manage Attendance',
+          },
+          {
+            link: 'reports',
+            icon: 'bi bi-bar-chart-fill',
+            label: 'Reports',
+          },
+        );
+      }
+
+      return items;
+    },
+  },
+
+  watch: {
+    '$route.path'(newPath) {
+      this.glowMenuItem = (newPath || '').replace(/^\/+/, '') || 'dashboard';
+    },
+  },
+
   async created() {
     const token = localStorage.getItem('token');
     if (!token) {
-      // if no token present, do not call backend; user will be routed via guards/login
       return;
     }
-    await this.getCurrent();
-    const currPage = this.getcurrentPage();
 
-    //const currPage = localStorage.getItem('currPage');
+    await this.getCurrent();
+
+    const currPage = this.$route?.path
+      ? this.$route.path.replace(/^\/+/, '')
+      : this.getcurrentPage();
+
     if (currPage) {
-      //this.$router.push(`/${currPage}`);
       this.glowMenuItem = currPage;
     }
   },
 
-  mounted() {},
-
   methods: {
     getcurrentPage() {
-      //console.log('getcurrentPage called');
       const currentPageUrl = window.location.href;
       const currentPageUrlArray = currentPageUrl.split('/');
       let finalPageUrl = '';
-      for (let i = 3; i < currentPageUrlArray.length; i++) {
-        finalPageUrl = finalPageUrl + currentPageUrlArray[i];
-        if (i != currentPageUrlArray.length - 1) finalPageUrl += '/';
+      for (let i = 3; i < currentPageUrlArray.length; i += 1) {
+        finalPageUrl += currentPageUrlArray[i];
+        if (i !== currentPageUrlArray.length - 1) {
+          finalPageUrl += '/';
+        }
       }
-      //console.log('finalPageUrl', finalPageUrl);
-      //console.log('currentPageUrl: ', currentPageUrlArray);
 
       return finalPageUrl;
     },
 
+    isMenuActive(link) {
+      const current = this.glowMenuItem || '';
+
+      if (link === 'manage/users') {
+        return (
+          current === 'manage/users' ||
+          /^update\/user\/.*/.test(current) ||
+          /^view\/user\/.*/.test(current) ||
+          /^add\/user\/.*/.test(current)
+        );
+      }
+
+      if (link === 'manage/clients') {
+        return (
+          current === 'manage/clients' ||
+          /^update\/client\/.*/.test(current) ||
+          /^view\/client\/.*/.test(current) ||
+          /^update\/client\/documents\/.*/.test(current) ||
+          /^view\/document\/.*/.test(current)
+        );
+      }
+
+      if (link === 'add/client') {
+        return current === 'add/client' || /^add\/client\/.*/.test(current);
+      }
+
+      if (link === 'add/employee') {
+        return current === 'add/employee' || /^add\/employee\/.*/.test(current);
+      }
+
+      if (link === 'manage/employees') {
+        return (
+          current === 'manage/employees' ||
+          /^update\/employee\/.*/.test(current) ||
+          /^view\/employee\/.*/.test(current) ||
+          /^manage\/employees\/by\/client\/.*/.test(current) ||
+          /^update\/employee\/documents\/.*/.test(current) ||
+          /^view\/employee\/document\/.*/.test(current) ||
+          /^wage\/slip\/.*/.test(current)
+        );
+      }
+
+      if (link === 'manage/attendance') {
+        return current === 'manage/attendance' || /^employee\/attendance\/.*/.test(current);
+      }
+
+      if (link === 'reports') {
+        return current === 'reports' || /^reports\/.*/.test(current);
+      }
+
+      return current === link;
+    },
+
     handleRedirect(link) {
-      //console.log('link: ', link);
       this.glowMenuItem = link;
 
-      this.$router.push(`/${link}`);
+      if (this.$route.path !== `/${link}`) {
+        this.$router.push(`/${link}`);
+      }
+
       localStorage.setItem('currPage', link);
-      /* if (link == 'dashboard') {
-        this.glowMenuItem = 'dashboard';
-
-       
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-
-      if (link == 'manage/users') {
-        this.glowMenuItem = 'manage/users';
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-      if (link == 'manage/clients') {
-        this.glowMenuItem = 'manage/clients';
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-      if (link == 'teams') {
-        this.glowMenuItem = 'teams';
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-      if (link == 'role') {
-        this.glowMenuItem = 'role';
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-      if (link == 'department') {
-        this.glowMenuItem = 'department';
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-      if (link == 'add/client') {
-        this.glowMenuItem = 'add/client';
-
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-      if (link == 'add/employee') {
-        this.glowMenuItem = 'add/employee';
-
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-      if (link == 'manage/employees') {
-        this.glowMenuItem = 'manage/employees';
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-
-      if (link == 'upload/xl') {
-        this.glowMenuItem = 'upload/xl';
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      }
-
-      if (link == 'employee/attandance') {
-        this.glowMenuItem = 'employee/attandance';
-        this.$router.push(`/${link}`);
-        localStorage.setItem('currPage', link);
-        return;
-      } */
+      this.$emit('navigate');
     },
 
     async getCurrent() {
       const tokenInStorage = localStorage.getItem('token');
       if (!tokenInStorage) return;
       try {
-        const token = await axiosClient.get(`api/v1/user/getCurrent/`);
+        const token = await axiosClient.get('api/v1/user/getCurrent/');
 
         if (!token) {
           this.$router.push('/login');
         }
         this.user = token.data.user;
         this.profile = this.user.profile_url || this.user.profile || '';
-        //this.role = token.data.user.roleType.name;
         if (token.data.user.industry_type) {
           this.role = 'client';
         } else if (token.data.user.designation) {
@@ -570,7 +669,6 @@ export default {
         } else {
           this.role = this.user.roleType.name;
         }
-        //console.log('User : ', this.user, ' role : ', this.role);
       } catch (err) {
         console.log('error: ', err);
         this.$router.push('/login');
@@ -578,7 +676,6 @@ export default {
     },
 
     async handleLogOut() {
-      //console.log('handleLogOut Called');
       const token = localStorage.getItem('token');
 
       if (!token) {
@@ -597,6 +694,8 @@ export default {
           this.$router.push('/login');
         }, 1500);
       }
+
+      this.$emit('navigate');
     },
   },
 };
