@@ -812,17 +812,21 @@ export default {
         console.log('empItem: ', empItem);
         console.log('item: ', item);
         const days = Math.max(0, Number(item.totalWorkingDays) || 0);
-        const presentRaw = Number(item.present);
-        const hasPresentValue = Number.isFinite(presentRaw);
-        const attendance = hasPresentValue ? Math.max(0, presentRaw) : 0;
+        const presentInput = item.present;
+        const hasPresentValue =
+          presentInput != null &&
+          String(presentInput).trim() !== '' &&
+          Number.isFinite(Number(presentInput));
+        const attendance = hasPresentValue ? Math.max(0, Number(presentInput)) : 0;
         const lopDays = Math.max(0, Number(item.numberOfLOP) || 0);
         const workedDaysFallback = Math.max(0, days - lopDays);
-        const workedDays = hasPresentValue
+        let workedDays = hasPresentValue
           ? Math.min(attendance, days || attendance)
           : workedDaysFallback;
+        if (days <= 0) workedDays = 0;
 
         const prorateByWorkedDays = (amount) => {
-          const salaryComponent = Number(amount) || 0;
+          const salaryComponent = Math.max(0, Number(amount) || 0);
           if (days <= 0 || workedDays <= 0) return 0;
           return Math.round((salaryComponent / days) * workedDays);
         };
@@ -840,7 +844,8 @@ export default {
 
         const payableBasic = prorateByWorkedDays(basic);
         const payableDA = prorateByWorkedDays(DA);
-        let pfBasic = payableBasic + payableDA;
+        const payablePfWages = prorateByWorkedDays(basic + DA);
+        let pfBasic = Math.min(payablePfWages, payableBasic + payableDA);
         if (pfBasic > 15000) pfBasic = 15000;
         const pf = Math.round((pfBasic * 12) / 100);
 
@@ -1041,13 +1046,32 @@ export default {
       const monthStart = new Date(parsedYear, parsedMonth, 1);
       const monthEnd = new Date(parsedYear, parsedMonth + 1, 0);
       const totalDaysInMonth = monthEnd.getDate();
+      const employeeRows = Array.isArray(this.clientEmp?.data) ? this.clientEmp.data : [];
+      const employeesByEmpNo = new Map(
+        employeeRows
+          .filter((emp) => emp && emp.emp_no != null)
+          .map((emp) => [String(emp.emp_no).trim(), emp])
+      );
+      const employeesByEmail = new Map(
+        employeeRows
+          .filter((emp) => emp && emp.email != null)
+          .map((emp) => [String(emp.email).trim().toLowerCase(), emp])
+      );
 
       // Prepare employee rows
       let rows = [];
       for (let i = 0; i < this.originalItems.length; i++) {
         const item = this.originalItems[i];
-        const empItem = this.clientEmp.data[i];
+        const empItem =
+          employeesByEmpNo.get(String(item.emp_no || '').trim()) ||
+          employeesByEmail.get(String(item.email || '').trim().toLowerCase()) ||
+          employeeRows[i];
         if (!item || !empItem) continue;
+
+        const clDays = new Set(this.parseAbsentDaysToList(item.absentDaysCL).map((v) => Number(v)));
+        const slDays = new Set(this.parseAbsentDaysToList(item.absentDaysSL).map((v) => Number(v)));
+        const plDays = new Set(this.parseAbsentDaysToList(item.absentDaysPL).map((v) => Number(v)));
+        const lopDays = new Set(this.parseAbsentDaysToList(item.absentDaysLOP).map((v) => Number(v)));
 
         // Attendance per day
         let dailyAttendance = [];
@@ -1061,10 +1085,7 @@ export default {
             status = 'W/O';
           }
           // Absent logic
-          if (item.absentDaysCL && item.absentDaysCL.includes(d)) status = 'A';
-          if (item.absentDaysSL && item.absentDaysSL.includes(d)) status = 'A';
-          if (item.absentDaysPL && item.absentDaysPL.includes(d)) status = 'A';
-          if (item.absentDaysLOP && item.absentDaysLOP.includes(d)) status = 'A';
+          if (clDays.has(d) || slDays.has(d) || plDays.has(d) || lopDays.has(d)) status = 'A';
           dailyAttendance.push(status);
         }
 
