@@ -787,48 +787,70 @@ export default {
     },
 
     downloadSalarySheet2() {
+      const employeeRows = Array.isArray(this.clientEmp?.data) ? this.clientEmp.data : [];
+      const employeesByEmpNo = new Map(
+        employeeRows
+          .filter((emp) => emp && emp.emp_no != null)
+          .map((emp) => [String(emp.emp_no).trim(), emp])
+      );
+      const employeesByEmail = new Map(
+        employeeRows
+          .filter((emp) => emp && emp.email != null)
+          .map((emp) => [String(emp.email).trim().toLowerCase(), emp])
+      );
+
       let tempItems = [];
       for (let i = 0; i < this.originalItems.length; i++) {
         const item = this.originalItems[i];
-        const empItem = this.clientEmp.data[i];
+        const empItem =
+          employeesByEmpNo.get(String(item.emp_no || '').trim()) ||
+          employeesByEmail.get(String(item.email || '').trim().toLowerCase()) ||
+          employeeRows[i];
+
+        if (!empItem) continue;
 
         console.log('empItem: ', empItem);
         console.log('item: ', item);
-        const days = item.totalWorkingDays;
-        const attendance = item.present;
-        console.log(attendance);
+        const days = Math.max(0, Number(item.totalWorkingDays) || 0);
+        const presentRaw = Number(item.present);
+        const hasPresentValue = Number.isFinite(presentRaw);
+        const attendance = hasPresentValue ? Math.max(0, presentRaw) : 0;
+        const lopDays = Math.max(0, Number(item.numberOfLOP) || 0);
+        const workedDaysFallback = Math.max(0, days - lopDays);
+        const workedDays = hasPresentValue
+          ? Math.min(attendance, days || attendance)
+          : workedDaysFallback;
+
+        const prorateByWorkedDays = (amount) => {
+          const salaryComponent = Number(amount) || 0;
+          if (days <= 0 || workedDays <= 0) return 0;
+          return Math.round((salaryComponent / days) * workedDays);
+        };
+
+        console.log(workedDays);
         console.log('Item Data');
-        console.log(item.numberOfLOP);
-        //console.log(item.numberOfLOP);
-        let calAtendence = 0;
-        if (item.numberOfLOP > 0) {
-          // it is Loss of pay
-          calAtendence = days - item.numberOfLOP;
-        } else {
-          calAtendence = days;
-        }
+        console.log(lopDays);
 
-        const gross = empItem.gross;
-        const basic = empItem.basic;
-        const hra = empItem.hra;
-        const DA = empItem.da;
-        const conveyance = empItem.conveyance;
-        const FoodAllow = empItem.food_allow;
+        const gross = Number(empItem.gross) || 0;
+        const basic = Number(empItem.basic) || 0;
+        const hra = Number(empItem.hra) || 0;
+        const DA = Number(empItem.da) || 0;
+        const conveyance = Number(empItem.conveyance) || 0;
+        const FoodAllow = Number(empItem.food_allow) || 0;
 
-        const payableBasic = Math.round((basic / days) * calAtendence);
-        const payableDA = Math.round((DA / days) * calAtendence);
+        const payableBasic = prorateByWorkedDays(basic);
+        const payableDA = prorateByWorkedDays(DA);
         let pfBasic = payableBasic + payableDA;
         if (pfBasic > 15000) pfBasic = 15000;
         const pf = Math.round((pfBasic * 12) / 100);
-        const e_pf = Math.round((pfBasic * 13) / 100);
 
-        const payableHra = Math.round((hra / days) * attendance);
-        const payableConveyance = Math.round((conveyance / days) * attendance);
-        const payableFoodAllow = Math.round((FoodAllow / days) * attendance);
+        const payableHra = prorateByWorkedDays(hra);
+        const payableConveyance = prorateByWorkedDays(conveyance);
+        const payableFoodAllow = prorateByWorkedDays(FoodAllow);
         const payableOtherAllowance = 0;
         const otEarnings = 0;
         const reimbursement = 0;
-        const lwf = attendance == 0 ? 0 : empItem.lwf ? 10 : 0;
+        const lwf = workedDays === 0 ? 0 : empItem.lwf ? 10 : 0;
 
         const grossSalary =
           payableBasic +
@@ -859,7 +881,7 @@ export default {
           minimum_FoodAllow: FoodAllow,
           minimum_gross: gross,
           daysInMonth: days,
-          attendance: attendance,
+          attendance: workedDays,
           PF_basic: pfBasic,
           payableBasic: payableBasic,
           payableDA: payableDA,
@@ -985,8 +1007,8 @@ export default {
         item.payableBasic,
         item.payableDA,
         item.payableHra,
-        item.payableConveyance,
         item.payableFoodAllow,
+        item.payableConveyance,
         item.payableOtherAllowance,
         item.otEarnings,
         item.reimbursement,
