@@ -818,10 +818,35 @@ export default {
           String(presentInput).trim() !== '' &&
           Number.isFinite(Number(presentInput));
         const attendance = hasPresentValue ? Math.max(0, Number(presentInput)) : 0;
+
+        const clTaken = Math.max(0, Number(item.numberOfCL) || 0);
+        const slTaken = Math.max(0, Number(item.numberOfSL) || 0);
+        const plTaken = Math.max(0, Number(item.numberOfPL) || 0);
+
+        const getRemainingLeaveBalance = (type) => {
+          const rawBalance = empItem?.leaves?.[type]?.balance;
+          const parsed = Number(rawBalance);
+          return Number.isFinite(parsed) ? parsed : 0;
+        };
+
+        // If leave balance goes below 0, only the in-balance portion is treated as paid leave.
+        const eligiblePaidLeavesFromBalance = (taken, remainingBalance) => {
+          const eligible = Math.min(taken, taken + remainingBalance);
+          return Math.max(0, eligible);
+        };
+
+        const paidCL = eligiblePaidLeavesFromBalance(clTaken, getRemainingLeaveBalance('cl'));
+        const paidSL = eligiblePaidLeavesFromBalance(slTaken, getRemainingLeaveBalance('sl'));
+        const paidPL = eligiblePaidLeavesFromBalance(plTaken, getRemainingLeaveBalance('pl'));
+        const paidLeaveDays = paidCL + paidSL + paidPL;
+
+        const absentFromPresent = Math.max(0, days - attendance);
+        const paidLeaveDaysCapped = Math.min(paidLeaveDays, absentFromPresent);
+
         const lopDays = Math.max(0, Number(item.numberOfLOP) || 0);
         const workedDaysFallback = Math.max(0, days - lopDays);
         let workedDays = hasPresentValue
-          ? Math.min(attendance, days || attendance)
+          ? Math.min(attendance + paidLeaveDaysCapped, days || attendance)
           : workedDaysFallback;
         if (days <= 0) workedDays = 0;
 
