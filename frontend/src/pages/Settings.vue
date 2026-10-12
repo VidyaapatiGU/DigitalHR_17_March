@@ -311,7 +311,7 @@
                 type="button"
                 class="btn text-light border-0 button_bg btn-sm"
                 data-bs-dismiss="modal"
-                v-if="salary_logicRetrived == ''"
+                v-if="salary_logicRetrieved == ''"
               >
                 Add
               </button>
@@ -379,7 +379,7 @@
                 type="button"
                 class="btn text-light border-0 button_bg btn-sm"
                 data-bs-dismiss="modal"
-                v-if="salary_structureRetrived == ''"
+                v-if="salary_structureRetrieved == ''"
               >
                 Add
               </button>
@@ -480,27 +480,27 @@
           <tbody>
             <tr>
               <td><strong>Unskilled</strong></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.unskilled.basic" /></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.unskilled.vda" /></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.unskilled.total" /></td>
+              <td><input type="number" class="form-control" v-model.number="minimumWages.unskilled.basic" /></td>
+              <td><input type="number" class="form-control" v-model.number="minimumWages.unskilled.vda" /></td>
+              <td><input type="number" class="form-control" :value="minimumWageTotal('unskilled')" readonly aria-label="Unskilled total" /></td>
             </tr>
             <tr>
               <td><strong>Semi-Skilled</strong></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.semiSkilled.basic" /></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.semiSkilled.vda" /></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.semiSkilled.total" /></td>
+              <td><input type="number" class="form-control" v-model.number="minimumWages.semiSkilled.basic" /></td>
+              <td><input type="number" class="form-control" v-model.number="minimumWages.semiSkilled.vda" /></td>
+              <td><input type="number" class="form-control" :value="minimumWageTotal('semiSkilled')" readonly aria-label="Semi-skilled total" /></td>
             </tr>
             <tr>
               <td><strong>Skilled/Clerical</strong></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.skilled.basic" /></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.skilled.vda" /></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.skilled.total" /></td>
+              <td><input type="number" class="form-control" v-model.number="minimumWages.skilled.basic" /></td>
+              <td><input type="number" class="form-control" v-model.number="minimumWages.skilled.vda" /></td>
+              <td><input type="number" class="form-control" :value="minimumWageTotal('skilled')" readonly aria-label="Skilled total" /></td>
             </tr>
             <tr>
               <td><strong>Highly Skilled</strong></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.highlySkilled.basic" /></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.highlySkilled.vda" /></td>
-              <td><input type="number" class="form-control" v-model="minimumWages.highlySkilled.total" /></td>
+              <td><input type="number" class="form-control" v-model.number="minimumWages.highlySkilled.basic" /></td>
+              <td><input type="number" class="form-control" v-model.number="minimumWages.highlySkilled.vda" /></td>
+              <td><input type="number" class="form-control" :value="minimumWageTotal('highlySkilled')" readonly aria-label="Highly skilled total" /></td>
             </tr>
           </tbody>
         </table>
@@ -1150,6 +1150,37 @@
 </div>
 
 
+  <div
+    class="modal fade"
+    id="ModalNotification"
+    tabindex="-1"
+    aria-labelledby="ModalNotificationLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="ModalNotificationLabel">Notifications</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div v-if="notifications.length === 0" class="text-muted">No new notifications.</div>
+          <div v-for="notification in notifications" :key="notification._id" class="d-flex align-items-center gap-2 mb-2">
+            <div class="flex-grow-1 border rounded p-2" :class="`border-${notification.type || 'secondary'}`">
+              {{ notification.text }}
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @click="handleDismiss(notification._id)">
+              Dismiss
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
   <div class="page-wrapper source-400 scroll">
     <div class="page-header-bar">
@@ -1520,9 +1551,9 @@ export default {
       holidayDateFrom: '',
       holidayDateFromRetrived: '',
       salary_logic: '0',
-      salary_logicRetrived: '',
+      salary_logicRetrieved: '',
       salary_structure: '0',
-      salary_structureRetrived: '',
+      salary_structureRetrieved: '',
       deleteHoliday: '',
       optionTypes: ['success', 'warning', 'danger'],
       form: {
@@ -1608,13 +1639,13 @@ export default {
       this.holidayDateFromRetrivedUp = res_holidayPolicy.data.data[0].holidayFromDate
         ? res_holidayPolicy.data.data[0].holidayFromDate.split('T')[0]
         : '';
-      this.salary_logicRetrived = res_holidayPolicy.data.data[0].salary_logic
+      this.salary_logicRetrieved = res_holidayPolicy.data.data[0].salary_logic
         ? res_holidayPolicy.data.data[0].salary_logic
         : '';
       if (res_holidayPolicy.data.data[0].salary_logic) {
         this.salary_logic = res_holidayPolicy.data.data[0].salary_logic;
       }
-      this.salary_structureRetrived = res_holidayPolicy.data.data[0].salary_structure
+      this.salary_structureRetrieved = res_holidayPolicy.data.data[0].salary_structure
         ? res_holidayPolicy.data.data[0].salary_structure
         : '';
       if (res_holidayPolicy.data.data[0].salary_structure) {
@@ -1738,6 +1769,17 @@ export default {
   }
   },
   methods: {
+    async handleDismiss(id) {
+      try {
+        const res = await axiosClient.put(`/api/v1/notification/dismiss/${id}`);
+        if (res.status === 201 || res.status === 200) {
+          this.notifications = this.notifications.filter((notification) => notification._id !== id);
+        }
+      } catch (err) {
+        console.error('Error dismissing notification:', err);
+        toast.error('Failed to dismiss notification', { autoClose: 1500 });
+      }
+    },
     async DeleteHoliday(holiday_id) {
       this.deleteHoliday = holiday_id;
     },
@@ -2650,9 +2692,21 @@ export default {
         toast.error('Failed to download form!', { autoClose: 1000 });
       }
     },
+    minimumWageTotal(category) {
+      const row = this.minimumWages?.[category] || {};
+      return (Number(row.basic) || 0) + (Number(row.vda) || 0);
+    },
+
     // Handle Minimum Wages Update
     async handleMinimumWages() {
       try {
+        Object.keys(this.minimumWages).forEach((category) => {
+          const row = this.minimumWages[category] || {};
+          row.basic = Number(row.basic) || 0;
+          row.vda = Number(row.vda) || 0;
+          row.total = this.minimumWageTotal(category);
+        });
+
         const data = {
           minimumWages: this.minimumWages,
         };
@@ -2694,6 +2748,11 @@ export default {
           this.weeklyOffDays = ['Sunday'];
         }
       } catch (error) {
+        if (error.response?.status === 404) {
+          this.selectedWeekOff = [{ label: 'Sunday', value: 'Sunday' }];
+          this.weeklyOffDays = ['Sunday'];
+          return;
+        }
         console.error("Error fetching weekly off settings:", error);
         toast.error("Failed to fetch weekly off settings. Default to Sunday.", { autoClose: 3000 });
         this.selectedWeekOff = [{ label: 'Sunday', value: 'Sunday' }];
@@ -2756,11 +2815,15 @@ export default {
 
           console.log("Updated Leave Days:", { clDays: this.clDays, slDays: this.slDays, plDays: this.plDays });
         } else {
-          toast.error("No leave data found!", { autoClose: 1000 });
+          this.clDays = 0;
+          this.slDays = 0;
+          this.plDays = 0;
         }
       } catch (err) {
         console.error("Error retrieving leave data:", err);
-        toast.error("Internal Error!", { autoClose: 1000 });
+        this.clDays = 0;
+        this.slDays = 0;
+        this.plDays = 0;
       }
     },
 

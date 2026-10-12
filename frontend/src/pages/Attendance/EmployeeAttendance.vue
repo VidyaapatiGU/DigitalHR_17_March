@@ -190,7 +190,7 @@
               >
                 <template #item-absent="item">
                   <div>
-                    {{ months[month - 1].days - item.present }}
+                    {{ absentDays(item) }}
                   </div>
                 </template>
                 <template #item-action="item">
@@ -315,6 +315,7 @@ import 'vue3-toastify/dist/index.css';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import axiosClient from '../../axiosClient';
+import { calculatePayroll } from '../../utils/payroll';
 
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
@@ -589,6 +590,21 @@ export default {
         absentDaysLOP: this.normalizeAbsentDays(row.absentDaysLOP),
       }));
     },
+
+    daysInSelectedMonth() {
+      const [yearPart, monthPart] = String(this.monthYear || '').split('-');
+      const yearNumber = Number(yearPart);
+      const monthNumber = Number(monthPart);
+      if (!Number.isInteger(yearNumber) || !Number.isInteger(monthNumber)) return 0;
+      const year = yearNumber < 100 ? 2000 + yearNumber : yearNumber;
+      return new Date(year, monthNumber, 0).getDate();
+    },
+
+    absentDays(item) {
+      const present = Math.max(0, Number(item?.present) || 0);
+      return Math.max(0, this.daysInSelectedMonth() - present);
+    },
+
     CalculatePayableWage(
       pBasic,
       pHra,
@@ -600,34 +616,25 @@ export default {
       pESI = 0,
       pLwf = 0,
       pAdvances = 0,
-      pTdsOther = 9000
+      pTdsOther = 0
     ) {
-      const gross = pBasic;
-      const days = 30;
-      const attendance = 30;
-      const basic = Math.round((gross / days) * attendance);
-      const DA = Math.round((pDA / days) * attendance);
-      let pfBasic = basic + DA;
-      if (pfBasic > 15000) pfBasic = 15000;
-      const pf = Math.round((pfBasic * 12) / 100);
-
-      const hra = Math.round((pHra / days) * attendance);
-      const conveyance = Math.round((pConvayance / days) * attendance);
-      const FoodAllow = Math.round((pFoodAllow / days) * attendance);
-      const otherAllowance = Math.round((pOtherAllowance / days) * attendance);
-      const payableGross =
-        basic + hra + DA + conveyance + FoodAllow + otherAllowance + pReimbursement;
-      const totalDeduction = pESI + pLwf + pAdvances + pf + pTdsOther;
-      const netWages = payableGross - totalDeduction;
-      console.log('payable basic: ', basic);
-      console.log('payable hra: ', hra);
-      console.log('payable DA, conveyance, FoodAllow: ', DA, conveyance, FoodAllow);
-      console.log('pfBasic: ', pfBasic);
-      console.log('payable pf: ', pf);
-      console.log('payable otherAllowance: ', otherAllowance);
-      console.log('payable Gross: ', payableGross);
-      console.log('totalDeduction: ', totalDeduction);
-      console.log('netWages: ', netWages);
+      return calculatePayroll({
+        components: {
+          basic: pBasic,
+          hra: pHra,
+          da: pDA,
+          conveyance: pConvayance,
+          foodAllow: pFoodAllow,
+          otherAllowance: pOtherAllowance,
+        },
+        periodDays: 30,
+        payableDays: 30,
+        esiEligible: Boolean(pESI),
+        lwfEligible: Boolean(pLwf),
+        advances: pAdvances,
+        tdsOther: pTdsOther,
+        reimbursement: pReimbursement,
+      });
     },
 
     calculateMinimumRateWage() {
@@ -850,85 +857,50 @@ export default {
           : workedDaysFallback;
         if (days <= 0) workedDays = 0;
 
-        const prorateByWorkedDays = (amount) => {
-          const salaryComponent = Math.max(0, Number(amount) || 0);
-          if (days <= 0 || workedDays <= 0) return 0;
-          return Math.round((salaryComponent / days) * workedDays);
-        };
-
-        console.log(workedDays);
-        console.log('Item Data');
-        console.log(lopDays);
-
         const gross = Number(empItem.gross) || 0;
-        const basic = Number(empItem.basic) || 0;
-        const hra = Number(empItem.hra) || 0;
-        const DA = Number(empItem.da) || 0;
-        const conveyance = Number(empItem.conveyance) || 0;
-        const FoodAllow = Number(empItem.food_allow) || 0;
-
-        const payableBasic = prorateByWorkedDays(basic);
-        const payableDA = prorateByWorkedDays(DA);
-        const payablePfWages = prorateByWorkedDays(basic + DA);
-        let pfBasic = Math.min(payablePfWages, payableBasic + payableDA);
-        if (pfBasic > 15000) pfBasic = 15000;
-        const pf = Math.round((pfBasic * 12) / 100);
-
-        const payableHra = prorateByWorkedDays(hra);
-        const payableConveyance = prorateByWorkedDays(conveyance);
-        const payableFoodAllow = prorateByWorkedDays(FoodAllow);
-        const payableOtherAllowance = 0;
-        const otEarnings = 0;
-        const reimbursement = 0;
-        const lwf = workedDays === 0 ? 0 : empItem.lwf ? 10 : 0;
-
-        const grossSalary =
-          payableBasic +
-          payableDA +
-          payableHra +
-          payableConveyance +
-          payableFoodAllow +
-          payableOtherAllowance +
-          otEarnings +
-          reimbursement;
-
-        let esi = 0;
-        //if (grossSalary <= 21000) esi = Math.round((grossSalary * 0.75) / 100);
-        if (grossSalary <= 21000 && empItem.esi) esi = Math.ceil((grossSalary * 0.75) / 100);
-        //let lwf = 0;
-        const tdsOther = 0;
-        const totalDeduction = esi + pf + lwf + tdsOther;
-        const netWages = grossSalary - totalDeduction;
+        const payroll = calculatePayroll({
+          components: {
+            basic: empItem.basic,
+            hra: empItem.hra,
+            da: empItem.da,
+            conveyance: empItem.conveyance,
+            foodAllow: empItem.food_allow,
+          },
+          periodDays: days,
+          payableDays: workedDays,
+          esiEligible: Boolean(empItem.esi),
+          lwfEligible: Boolean(empItem.lwf),
+        });
 
         tempItems.push({
           name: item.name,
           fatherHusband_name: empItem.fatherHusband_name,
           designation: empItem.designation,
-          minimum_basic: basic,
-          minimum_hra: hra,
-          minimum_DA: DA,
-          minimum_conveyance: conveyance,
-          minimum_FoodAllow: FoodAllow,
+          minimum_basic: payroll.minimumBasic,
+          minimum_hra: payroll.minimumHra,
+          minimum_DA: payroll.minimumDA,
+          minimum_conveyance: payroll.minimumConveyance,
+          minimum_FoodAllow: payroll.minimumFoodAllow,
           minimum_gross: gross,
           daysInMonth: days,
-          attendance: workedDays,
-          PF_basic: pfBasic,
-          payableBasic: payableBasic,
-          payableDA: payableDA,
-          payableHra: payableHra,
-          payableConveyance: payableConveyance,
-          payableFoodAllow: payableFoodAllow,
-          payableOtherAllowance: payableOtherAllowance,
-          otEarnings: otEarnings,
-          reimbursement: reimbursement,
-          grossSalary: grossSalary,
-          esi: esi,
-          pf: pf,
-          lwf: lwf,
-          advances: 0,
-          tdsOther: tdsOther,
-          totalDeduction: totalDeduction,
-          netWages: netWages,
+          attendance: payroll.payableDays,
+          PF_basic: payroll.pfBasic,
+          payableBasic: payroll.payableBasic,
+          payableDA: payroll.payableDA,
+          payableHra: payroll.payableHra,
+          payableConveyance: payroll.payableConveyance,
+          payableFoodAllow: payroll.payableFoodAllow,
+          payableOtherAllowance: payroll.payableOtherAllowance,
+          otEarnings: payroll.otEarnings,
+          reimbursement: payroll.reimbursement,
+          grossSalary: payroll.grossSalary,
+          esi: payroll.esi,
+          pf: payroll.pf,
+          lwf: payroll.lwf,
+          advances: payroll.advances,
+          tdsOther: payroll.tdsOther,
+          totalDeduction: payroll.totalDeduction,
+          netWages: payroll.netWages,
         });
       }
 

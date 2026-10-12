@@ -15,6 +15,24 @@
   padding: 1.5rem;
 }
 
+.wage-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.wage-filter-field {
+  flex: 0 1 315px;
+  min-width: 240px;
+}
+
+.wage-filter-field :deep(.dp__main),
+.wage-filter-field :deep(.dp__input) {
+  width: 100%;
+}
+
 .section-card {
   background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color); padding: 1.5rem; margin-bottom: 1.25rem;
@@ -79,6 +97,23 @@
   .section-card { padding: 1rem; }
 }
 
+@media (max-width: 576px) {
+  .wage-filter-bar { align-items: stretch; }
+  .wage-filter-field,
+  .wage-filter-bar > div:last-child {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .wage-filter-bar > div:last-child .btn-submit {
+    width: 100%;
+    justify-content: center;
+  }
+  .joining-period-note {
+    width: 100%;
+    text-align: center;
+  }
+}
+
 @media print {
   .page-header-bar { display: none; }
 }
@@ -94,15 +129,33 @@
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
         <div v-auto-animate class="content-section">
-          <div class="w-100 h-100 d-flex justify-content-center gap-3">
-            <div>
-              <VueDatePicker v-model="from" month-picker placeholder="Select From" />
+          <div class="wage-filter-bar">
+            <div class="wage-filter-field">
+              <VueDatePicker
+                v-model="from"
+                month-picker
+                auto-apply
+                :min-date="employeeJoiningMonthDate"
+                teleport="body"
+                @update-month-year="handlePickerYearChange('from', $event)"
+                placeholder="Select From"
+              />
             </div>
-            <div>
-              <div>
-                <VueDatePicker v-model="to" month-picker placeholder="Select To" />
-              </div>
+            <div class="wage-filter-field">
+              <VueDatePicker
+                v-model="to"
+                month-picker
+                auto-apply
+                :min-date="employeeJoiningMonthDate"
+                teleport="body"
+                @update-month-year="handlePickerYearChange('to', $event)"
+                placeholder="Select To"
+              />
             </div>
+
+            <small v-if="joiningMonthLabel" class="joining-period-note text-muted align-self-center">
+              Available from {{ joiningMonthLabel }}
+            </small>
 
             <div>
               <button
@@ -536,7 +589,7 @@
 <script>
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import { months } from '../../months';
+import { getDaysInMonth, months } from '../../months';
 
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -545,8 +598,7 @@ import 'vue3-toastify/dist/index.css';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import axiosClient from '../../axiosClient';
-import { pa } from 'element-plus/es/locales.mjs';
-import { treeCellPrefix } from 'element-plus/es/components/table/src/config.mjs';
+import { calculatePayroll, roundCurrency } from '../../utils/payroll';
 
 export default {
   name: 'WageSlip',
@@ -573,6 +625,7 @@ export default {
       attendance: {},
       attendanceData: '',
       employee: '',
+      employeeJoiningMonth: null,
       columns: [
         { title: 'Name', field: 'name', sortable: true },
         { title: 'Actions', field: 'actions', sortable: false, slot: 'actions' },
@@ -621,6 +674,8 @@ export default {
     try {
       const employee = await axiosClient.get(`/api/v1/employee/get/${this.employeeId}`);
       this.employee = employee.data.data;
+      this.employeeJoiningMonth = this.getMonthPickerValue(this.employee.date_of_joining);
+      this.clampDateRangeToJoiningMonth();
 
       console.log('employee: ', this.employee);
 
@@ -651,15 +706,123 @@ export default {
 
   setup() {},
 
+  computed: {
+    employeeJoiningMonthDate() {
+      if (!this.employeeJoiningMonth) return null;
+
+      return new Date(
+        Number(this.employeeJoiningMonth.year),
+        Number(this.employeeJoiningMonth.month),
+        1
+      );
+    },
+
+    joiningMonthLabel() {
+      if (!this.employeeJoiningMonth) return '';
+
+      const month = months[Number(this.employeeJoiningMonth.month)];
+      return `${month?.name || ''} ${this.employeeJoiningMonth.year}`.trim();
+    },
+  },
+
   methods: {
+    getMonthPickerValue(dateValue) {
+      const match = String(dateValue || '').match(/^(\d{4})-(\d{2})/);
+      if (!match) return null;
+
+      return {
+        month: String(Number(match[2]) - 1),
+        year: match[1],
+      };
+    },
+
+    compareMonths(left, right) {
+      if (!left || !right) return 0;
+      const leftValue = Number(left.year) * 12 + Number(left.month);
+      const rightValue = Number(right.year) * 12 + Number(right.month);
+      return leftValue - rightValue;
+    },
+
+    clampDateRangeToJoiningMonth() {
+      if (!this.employeeJoiningMonth) return;
+
+      if (this.compareMonths(this.from, this.employeeJoiningMonth) < 0) {
+        this.from = { ...this.employeeJoiningMonth };
+      }
+
+      if (this.compareMonths(this.to, this.employeeJoiningMonth) < 0) {
+        this.to = { ...this.employeeJoiningMonth };
+      }
+
+      if (this.compareMonths(this.from, this.to) > 0) {
+        this.to = { ...this.from };
+      }
+    },
+
+    handlePickerYearChange(field, payload) {
+      // The date picker changes its internal year before a month is selected.
+      // Reflect that year immediately while preserving the currently selected month.
+      if (!payload || payload.fromNav || payload.year === undefined) return;
+
+      const selectedMonth = payload.month === undefined
+        ? this[field].month
+        : String(payload.month);
+
+      this[field] = {
+        month: selectedMonth,
+        year: String(payload.year),
+      };
+      this.clampDateRangeToJoiningMonth();
+    },
+
+    hasUsableAttendanceData(row) {
+      if (!row || !row.month_year) return false;
+
+      const present = Number(row.present);
+      const leaveDays = [
+        row.numberOfLOP,
+        row.numberOfCL,
+        row.numberOfPL,
+        row.numberOfSL,
+      ].some((value) => Number(value) > 0);
+      const otherPayData = [
+        row.gross,
+        row.otEarnings,
+        row.overtime,
+        row.reimbursement,
+        row.advances,
+      ].some((value) => Number(value) > 0);
+
+      // totalWorkingDays alone is not enough: zero-attendance rows otherwise
+      // render as completely empty wage slips with every amount equal to zero.
+      return (
+        present > 0 ||
+        leaveDays ||
+        otherPayData
+      );
+    },
+
     async handleGenerateSlip() {
       console.log('this.from: ', this.from, ' this.to: ', this.to);
 
+      if (
+        this.employeeJoiningMonth &&
+        (this.compareMonths(this.from, this.employeeJoiningMonth) < 0 ||
+          this.compareMonths(this.to, this.employeeJoiningMonth) < 0)
+      ) {
+        this.clampDateRangeToJoiningMonth();
+        toast.info(`Salary slip is available from ${this.joiningMonthLabel}.`, {
+          autoClose: 1800,
+        });
+        return;
+      }
+
       let temp = parseInt(this.to.month);
+      const toMonth = temp + 1;
       if (temp >= 9) {
-        this.form.to = this.to.year + '-' + (temp + 1) + '-' + months[temp].days;
+        this.form.to = this.to.year + '-' + toMonth + '-' + getDaysInMonth(this.to.year, toMonth);
       } else {
-        this.form.to = this.to.year + '-' + '0' + (temp + 1) + '-' + months[temp].days;
+        this.form.to = this.to.year + '-' + '0' + toMonth + '-' + getDaysInMonth(this.to.year, toMonth);
       }
       console.log('form: ', this.form);
       temp = parseInt(this.from.month);
@@ -691,15 +854,39 @@ export default {
         let totalDays = 0;
         let totalPresent = 0;
         for (let i = fromDate - 1; i < toDate; i++) {
-          totalDays += this.months[i].days;
+          totalDays += getDaysInMonth(this.from.year, i + 1);
         }
         this.attendance.totalDays = totalDays;
-        this.attendanceData = response.data;
+        const attendanceRows = Array.isArray(response.data)
+          ? response.data
+          : Array.isArray(response.data?.data)
+            ? response.data.data
+            : [];
+        const joiningMonthKey = this.employeeJoiningMonth
+          ? `${this.employeeJoiningMonth.year}-${String(Number(this.employeeJoiningMonth.month) + 1).padStart(2, '0')}`
+          : '';
+
+        // Do not render blank or pre-joining months even if old attendance data exists.
+        this.attendanceData = attendanceRows.filter((row) => {
+          if (!this.hasUsableAttendanceData(row)) return false;
+          if (!joiningMonthKey) return true;
+          return String(row.month_year).slice(0, 7) >= joiningMonthKey;
+        });
+
+        if (this.attendanceData.length === 0) {
+          this.showSlip = false;
+          toast.info('No attendance data is available for the selected period.', {
+            autoClose: 1500,
+          });
+          return;
+        }
+
         for (let i = 0; i < this.attendanceData.length; i++) {
           this.attendanceData[i].month_year = this.attendanceData[i].month_year.slice(0, 10);
 
-          this.attendanceData[i].totalDays =
-            months[parseInt(this.attendanceData[i].month_year.slice(5, 7)) - 1].days;
+          const attendanceYear = Number(this.attendanceData[i].month_year.slice(0, 4));
+          const attendanceMonth = Number(this.attendanceData[i].month_year.slice(5, 7));
+          this.attendanceData[i].totalDays = getDaysInMonth(attendanceYear, attendanceMonth);
           const temp = parseInt(this.attendanceData[i].present);
 
           this.attendanceData[i].wagePeriod =
@@ -709,113 +896,71 @@ export default {
           totalPresent += temp;
         }
 
-        //calculating salarys
+        // Calculate each month with the same guarded payroll rules used by the single slip.
         for (let i = 0; i < this.attendanceData.length; i++) {
           const gross = this.attendanceData[i].gross;
           const days = this.attendanceData[i].totalWorkingDays;
           const attendance = this.attendanceData[i].present;
 
-          //const basic = Math.round((gross * 40) / 100);
-          //const hra = Math.round((gross * 30) / 100);
-          //const DA = Math.round((gross * 10) / 100);
-          //const conveyance = Math.round((gross * 10) / 100);
-          //const FoodAllow = Math.round((gross * 10) / 100);
-          const basic = this.employee.basic;
-          const hra = this.employee.hra;
-          const DA = this.employee.da;
-          const conveyance = this.employee.conveyance;
-          const FoodAllow = this.employee.food_allow;
+          const payroll = calculatePayroll({
+            components: {
+              basic: this.employee.basic,
+              hra: this.employee.hra,
+              da: this.employee.da,
+              conveyance: this.employee.conveyance,
+              foodAllow: this.employee.food_allow,
+            },
+            periodDays: days,
+            payableDays: attendance,
+            esiEligible: true,
+            lwfEligible: this.employee.lwf === true,
+          });
 
-          const payableBasic = Math.round((basic / days) * attendance);
-          const payableDA = Math.round((DA / days) * attendance);
-
-          let pfBasic = payableBasic + payableDA;
-          if (pfBasic > 15000) pfBasic = 15000;
-          const pf = Math.round((pfBasic * 12) / 100);
-          const e_pf = Math.round((pfBasic * 13) / 100);
-
-          const payableHra = Math.round((hra / days) * attendance);
-          const payableConveyance = Math.round((conveyance / days) * attendance);
-          const payableFoodAllow = Math.round((FoodAllow / days) * attendance);
-          const payableOtherAllowance = 0;
-          const otEarnings = 0;
-
-          const reimbursement = 0;
-
-          const grossSalary =
-            payableBasic +
-            payableDA +
-            payableHra +
-            payableConveyance +
-            payableFoodAllow +
-            payableOtherAllowance +
-            otEarnings +
-            reimbursement;
-
-          let esi = 0;
-          if (grossSalary <= 21000) esi = Math.round((grossSalary * 0.75) / 100);
-          let lwf = 0;
-          if (this.employee.lwf == true) lwf = 10;
-          const tdsOther = 0;
-          const totalDeduction = esi + pf + lwf + tdsOther;
-
-          const netWages = grossSalary - totalDeduction;
-
-          this.attendanceData[i].minimum_basic = basic;
-          this.attendanceData[i].minimum_hra = hra;
-          this.attendanceData[i].minimum_DA = DA;
-          this.attendanceData[i].minimum_conveyance = conveyance;
-          this.attendanceData[i].minimum_FoodAllow = FoodAllow;
+          this.attendanceData[i].minimum_basic = payroll.minimumBasic;
+          this.attendanceData[i].minimum_hra = payroll.minimumHra;
+          this.attendanceData[i].minimum_DA = payroll.minimumDA;
+          this.attendanceData[i].minimum_conveyance = payroll.minimumConveyance;
+          this.attendanceData[i].minimum_FoodAllow = payroll.minimumFoodAllow;
           this.attendanceData[i].minimum_gross = gross;
-          this.attendanceData[i].pfBasic = pfBasic;
-          this.attendanceData[i].pf = pf;
-          this.attendanceData[i].e_pf = e_pf;
+          this.attendanceData[i].pfBasic = payroll.pfBasic;
+          this.attendanceData[i].pf = payroll.pf;
+          this.attendanceData[i].e_pf = roundCurrency(payroll.pfBasic * 0.13);
           this.attendanceData[i].e_esic = 0;
           this.attendanceData[i].daysInMonth = days;
-          this.attendanceData[i].attendance = attendance;
-          this.attendanceData[i].payableBasic = payableBasic;
-          this.attendanceData[i].payableDA = payableDA;
-          this.attendanceData[i].payableHra = payableHra;
-          this.attendanceData[i].payableConveyance = payableConveyance;
-          this.attendanceData[i].payableFoodAllow = payableFoodAllow;
-          this.attendanceData[i].payableOtherAllowance = payableOtherAllowance;
-          this.attendanceData[i].otEarnings = otEarnings;
-          this.attendanceData[i].reimbursement = reimbursement;
-          this.attendanceData[i].grossSalary = grossSalary;
-          this.attendanceData[i].esi = esi;
-          this.attendanceData[i].pf = pf;
-          this.attendanceData[i].lwf = lwf;
-          this.attendanceData[i].tdsOther = tdsOther;
-          this.attendanceData[i].totalDeduction = totalDeduction;
-          this.attendanceData[i].netWages = netWages;
-          this.attendanceData[i].advances = 0;
+          this.attendanceData[i].attendance = payroll.payableDays;
+          this.attendanceData[i].payableBasic = payroll.payableBasic;
+          this.attendanceData[i].payableDA = payroll.payableDA;
+          this.attendanceData[i].payableHra = payroll.payableHra;
+          this.attendanceData[i].payableConveyance = payroll.payableConveyance;
+          this.attendanceData[i].payableFoodAllow = payroll.payableFoodAllow;
+          this.attendanceData[i].payableOtherAllowance = payroll.payableOtherAllowance;
+          this.attendanceData[i].otEarnings = payroll.otEarnings;
+          this.attendanceData[i].reimbursement = payroll.reimbursement;
+          this.attendanceData[i].grossSalary = payroll.grossSalary;
+          this.attendanceData[i].esi = payroll.esi;
+          this.attendanceData[i].pf = payroll.pf;
+          this.attendanceData[i].lwf = payroll.lwf;
+          this.attendanceData[i].tdsOther = payroll.tdsOther;
+          this.attendanceData[i].totalDeduction = payroll.totalDeduction;
+          this.attendanceData[i].netWages = payroll.netWages;
+          this.attendanceData[i].advances = payroll.advances;
+        }
 
-          /*  tempItems.push({
-          name: this.originalItems[i].name,
-          minimum_basic: basic,
-          minimum_hra: hra,
-          minimum_DA: DA,
-          minimum_conveyance: conveyance,
-          minimum_FoodAllow: FoodAllow,
-          minimum_gross: gross,
-          daysInMonth: days,
-          attendance: attendance,
-          payableBasic: payableBasic,
-          payableDA: payableDA,
-          payableHra: payableHra,
-          payableConveyance: payableConveyance,
-          payableFoodAllow: payableFoodAllow,
-          payableOtherAllowance: payableOtherAllowance,
-          otEarnings: otEarnings,
-          reimbursement: reimbursement,
-          grossSalary: grossSalary,
-          esi: esi,
-          pf: pf,
-          lwf: lwf,
-          tdsOther: tdsOther,
-          totalDeduction: totalDeduction,
-          netWages: netWages,
-        }); */
+        // Remove rows that still produce an all-zero wage slip after payroll calculation.
+        this.attendanceData = this.attendanceData.filter((row) =>
+          Number(row.present) > 0 ||
+          Number(row.grossSalary) > 0 ||
+          Number(row.totalDeduction) > 0 ||
+          Number(row.reimbursement) > 0 ||
+          Number(row.otEarnings) > 0
+        );
+
+        if (this.attendanceData.length === 0) {
+          this.showSlip = false;
+          toast.info('No wage slip data is available for the selected period.', {
+            autoClose: 1500,
+          });
+          return;
         }
 
         console.log('this.attendanceData: ', this.attendanceData);
@@ -835,7 +980,12 @@ export default {
         this.showSlip = true;
       } catch (err) {
         console.log('error: ', err);
-        toast.error('something went wrong', {
+        this.attendanceData = [];
+        this.showSlip = false;
+        const message = err.response?.status === 404
+          ? 'No attendance data is available for the selected period.'
+          : 'Unable to generate the salary slip.';
+        toast.info(message, {
           autoClose: 1500,
         });
       }

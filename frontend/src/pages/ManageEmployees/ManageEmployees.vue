@@ -50,7 +50,8 @@
   border-radius: 12px;
   border: 1px solid var(--border-color, #e2e8f0);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .toolbar {
@@ -124,6 +125,36 @@
 
 .table-icon.action_icon_color {
   color: var(--primary, #1e3a5f);
+}
+
+.employee-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 0.15rem;
+  min-width: 220px;
+}
+
+/* Keep row actions available while the wider employee table is swiped on mobile. */
+.table-container :deep(.vue3-easy-data-table__header th:last-child),
+.table-container :deep(.vue3-easy-data-table__body td:last-child) {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  box-shadow: -8px 0 12px -12px rgba(15, 23, 42, 0.55);
+}
+
+.table-container :deep(.vue3-easy-data-table__header th:last-child) {
+  z-index: 3;
+  background: #f8fafc;
+}
+
+.table-container :deep(.vue3-easy-data-table__body td:last-child) {
+  background: #ffffff;
+}
+
+.table-container :deep(.vue3-easy-data-table__body tr.even-row td:last-child) {
+  background: #f8fafc;
 }
 
 .thumbs-down {
@@ -513,7 +544,6 @@
             <input
               v-model="search"
               class="form-control search-input"
-              size="small"
               placeholder="Search employees..."
             />
             <div v-if="role != 'super_admin'" class="action-buttons">
@@ -584,7 +614,7 @@
                   />
                 </template>
                 <template #item-actions="item">
-                  <div class="d-flex justify-content-evenly">
+                  <div class="employee-actions">
                     <div class="table-icon action_icon_color" @click="handleViewEmployee(item._id)">
                       <el-tooltip placement="bottom" popper-class="mini-card-tooltip">
                         <template #content>
@@ -635,6 +665,7 @@
                     </div> -->
 
                     <div
+                      v-if="item.active !== false && item.approved !== false"
                       class="table-icon action_icon_color"
                       @click="updateEmployee = JSON.parse(JSON.stringify(item))"
                     >
@@ -877,16 +908,17 @@ export default {
     async toggleUserApproved(id) {
       try {
         const res = await axiosClient.put(`/api/v1/employee/app_dis/${id}`);
-        if (res) {
-          toast.success(`Updated Client `, {
+        if (res?.data?.data) {
+          toast.success(`Employee status updated`, {
             autoClose: 1000,
           });
-          this.items = this.items.map((emp) => {
-            if (emp.user_id === id || emp._id === id) {
-              return { ...emp, approved: !emp.approved, active: emp.approved ? false : true };
-            }
-            return emp;
-          });
+          const updateApproval = (emp) => emp._id === res.data.data._id
+            ? { ...emp, approved: res.data.data.approved, active: res.data.data.active }
+            : emp;
+          this.items = this.items.map(updateApproval);
+          this.originalItems = this.originalItems.map(updateApproval);
+        } else {
+          toast.error('Employee not found', { autoClose: 1500 });
         }
       } catch (err) {
         console.log('error: ', err);
@@ -1064,7 +1096,7 @@ export default {
   computed: {
     filteredItems() {
       if (this.showDisapprovedOnly) {
-        return this.items;
+        return this.items.filter((emp) => emp.approved === false || emp.active === false);
       }
       return this.items.filter((emp) => emp.approved !== false);
     },

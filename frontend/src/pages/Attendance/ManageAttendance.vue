@@ -31,7 +31,7 @@
 
 .table-container {
   background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color); overflow: hidden;
+  border: 1px solid var(--border-color); overflow-x: auto; overflow-y: visible;
 }
 
 .toolbar {
@@ -73,6 +73,36 @@
 
 .table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
 .table-icon:hover { background: #f1f5f9; }
+
+.attendance-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 84px;
+}
+
+/* Keep row actions available while the attendance table is swiped on mobile. */
+.table-container :deep(.vue3-easy-data-table__header th:last-child),
+.table-container :deep(.vue3-easy-data-table__body td:last-child) {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  box-shadow: -8px 0 12px -12px rgba(15, 23, 42, 0.55);
+}
+
+.table-container :deep(.vue3-easy-data-table__header th:last-child) {
+  z-index: 3;
+  background: #f8fafc;
+}
+
+.table-container :deep(.vue3-easy-data-table__body td:last-child) {
+  background: #ffffff;
+}
+
+.table-container :deep(.vue3-easy-data-table__body tr.even-row td:last-child) {
+  background: #f8fafc;
+}
 
 .manage-attendance-modal .modal-content {
   max-height: calc(100vh - 2rem);
@@ -460,12 +490,12 @@
                 </template>
                 <template #item-absent="item">
                   <div>
-                    {{ months[month - 1].days - item.present }}
+                    {{ absentDays(item) }}
                   </div>
                 </template>
                 
                 <template #item-action="item">
-                  <div class="d-flex justify-content-evenly">
+                  <div class="attendance-actions">
                     <div
                       class="table-icon action_icon_color"
                       @click="handleRedirect(item.month_year)"
@@ -842,6 +872,13 @@ export default {
       const modalElement = document.getElementById('ModalLeaveDates');
       const modal = new bootstrap.Modal(modalElement);
       modal.show();
+    },
+    absentDays(item) {
+      const monthNumber = Number(item?.month);
+      const yearNumber = Number(item?.year) || new Date().getFullYear();
+      if (!Number.isInteger(monthNumber) || monthNumber < 1 || monthNumber > 12) return 0;
+      const totalDays = new Date(yearNumber, monthNumber, 0).getDate();
+      return Math.max(0, totalDays - Math.max(0, Number(item?.present) || 0));
     },
     getMonths() {
       const months = [

@@ -59,7 +59,7 @@ router.post(
     body("uan_no", "Enter a Valid uan_no"),
     body("pf_no", "Enter a Valid pf_no"),
     body("esic_no", "Enter a Valid esic_no"),
-    body("ip_number").optional().isLength({ min: 10, max: 10 }).withMessage("ESIC IP Number must be 10 digits").isNumeric().withMessage("ESIC IP Number must be numeric"),
+    body("ip_number").optional({ checkFalsy: true }).isLength({ min: 10, max: 10 }).withMessage("ESIC IP Number must be 10 digits").isNumeric().withMessage("ESIC IP Number must be numeric"),
     body("bank_name", "Enter a Valid bank_name"),
     body("bank_ac_no", "Enter a Valid bank_ac_no"),
     body("bank_ifsc", "Enter a Valid bank_ifsc"),
@@ -93,7 +93,7 @@ router.post(
     body("team", "team required"),
     body("department", "department required"),
     body("roleType", "roleType required"),
-    body("employeeData", "Enter a valid employeeData"),
+    body("employeeData", "Upload at least one employee row").isArray({ min: 1 }),
   ],
   validateToken,
   createEmployeesByExcel

@@ -177,15 +177,16 @@
         <div class="brand-title">DigitalHR</div>
         <div class="brand-subtitle">Business Automation Platform</div>
       </div>
-      <form class="form-container">
+      <form class="form-container" @submit.prevent="handleLogin">
         <div class="login-title">Admin Login</div>
         <div class="form-group">
-          <label for="email">Email or Username</label>
+          <label for="login-identifier">Email or Username</label>
           <input
             v-model="form.email"
-            type="email"
+            type="text"
             class="form-control"
-            id="email"
+            id="login-identifier"
+            autocomplete="username"
             placeholder="Enter your email or username"
           />
         </div>
@@ -201,8 +202,7 @@
         </div>
         <div class="w-100 mt-3">
           <button
-            type="button"
-            @click="handleLogin"
+            type="submit"
             class="btn btn-login"
           >
             Sign In

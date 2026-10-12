@@ -100,7 +100,7 @@
           </div>
 
           <div v-if="clientsNotToSelect.length > 0 && showResponse == false">
-            <div class="p-2 mt-3 source-500">Cleints With Required Feilds Missing</div>
+            <div class="p-2 mt-3 source-500">Clients With Required Fields Missing</div>
 
             <div class="table border rounded">
               <div class="w-100">
@@ -497,7 +497,6 @@ export default {
 
         // Console the Excel data
         let tempClientToSelect = jsonData;
-        console.log('Excel Data:', tempClientToSelect);
         let tempEmployeesNotToSelect = [];
 
         for (let i = 0; i < tempClientToSelect.length; i++) {
@@ -529,7 +528,6 @@ export default {
           }
         }
 
-        console.log(' this.clientToSelect: ', this.clientsToSelect);
         this.showSpinner = false;
         console.log(' this.showSpinner : ', this.showSpinner);
       };
@@ -540,6 +538,13 @@ export default {
     },
 
     async uploadFile() {
+      if (this.itemsSelected.length === 0) {
+        toast.info('Select at least one client to upload', {
+          autoClose: 1500,
+        });
+        return;
+      }
+
       this.form.clientData = this.itemsSelected;
       try {
         const res = await axiosClient.post(`/api/v1/client/upload`, this.form);

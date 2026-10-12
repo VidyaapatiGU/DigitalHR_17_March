@@ -28,7 +28,11 @@ router.post(
   validateToken,
   [
     body("name", "Enter a valid name").isLength({ min: 3 }),
+    body("username", "Enter a username with at least 3 characters")
+      .trim()
+      .isLength({ min: 3, max: 50 }),
     body("email", "Enter a Valid Email").isEmail(),
+    body("adhar_card", "Enter a valid 12-digit Aadhaar number").matches(/^\d{12}$/),
     body("whatsapp_no", "Enter a Valid Whatsapp Number").notEmpty().isNumeric(),
     body("password", "Password must have atlest 5 character").isLength({
       min: 5,

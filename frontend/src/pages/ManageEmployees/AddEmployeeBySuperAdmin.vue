@@ -7,9 +7,14 @@
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
 .form-container {
-  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  width: 100%; padding: 2rem; margin: 0;
   background: #fff; border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+}
+
+.employee-form-layout {
+  width: 100%;
+  padding-inline: 1rem;
 }
 
 .form-title {
@@ -89,8 +94,8 @@
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
-      <div class="h-100 overflow-y-auto d-flex justify-content-center align-items-start my-auto">
-        <div class="container">
+      <div class="h-100 overflow-y-auto d-flex justify-content-start align-items-start my-auto">
+        <div class="employee-form-layout">
           <form class="form-container">
             <div class="row source-400">
               <div class="form-group col-12 col-sm-6 col-md-4">

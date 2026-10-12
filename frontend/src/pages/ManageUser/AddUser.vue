@@ -58,6 +58,18 @@
               </div>
 
               <div class="form-group col-12 col-sm-6 col-md-4 col-lg-3">
+                <label for="username">Username</label>
+                <input
+                  v-model.trim="form.username"
+                  type="text"
+                  class="form-control border"
+                  id="username"
+                  autocomplete="username"
+                  placeholder="Enter username"
+                />
+              </div>
+
+              <div class="form-group col-12 col-sm-6 col-md-4 col-lg-3">
                 <label for="email" class="mt-2 mt-sm-2 mt-md-0">Email address</label>
                 <input
                   v-model="form.email"
@@ -65,6 +77,20 @@
                   class="form-control border"
                   id="email"
                   placeholder="Enter email"
+                />
+              </div>
+
+              <div class="form-group col-12 col-sm-6 col-md-4 col-lg-3">
+                <label for="adhar_card" class="mt-2 mt-sm-2 mt-md-0">Aadhaar Number</label>
+                <input
+                  v-model.trim="form.adhar_card"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="12"
+                  class="form-control border"
+                  id="adhar_card"
+                  autocomplete="off"
+                  placeholder="Enter 12-digit Aadhaar number"
                 />
               </div>
 
@@ -219,8 +245,10 @@ export default {
     return {
       form: {
         name: '',
+        username: '',
         email: '',
         password: '',
+        adhar_card: '',
         whatsapp_no: '',
         roleType: '',
         team: '',
@@ -296,13 +324,11 @@ export default {
       this.form.roleType = this.selected_roleType._id;
       this.form.department = this.selected_department._id;
       this.form.team = this.selected_team._id;
-      console.log('form: ', this.form);
 
       try {
         const res = await axiosClient.post(`api/v1/user/add`, this.form);
 
         if (res) {
-          console.log(res);
           toast.success(`User Added`, {
             autoClose: 1500,
           });
@@ -312,9 +338,12 @@ export default {
           }, 2000);
         }
       } catch (err) {
-        console.log('error: ', err);
-        if (err.response.status == 409) {
-          toast.error(`User Already Exist`, {
+        if (err.response?.status == 409) {
+          toast.error(`Username, email, or Aadhaar number is already registered`, {
+            autoClose: 1500,
+          });
+        } else if (err.response?.status == 400) {
+          toast.error(`Check the entered user details`, {
             autoClose: 1500,
           });
         } else {
@@ -331,12 +360,20 @@ export default {
         toast.info(`Enter Name`, { autoClose: 1000 });
         return false;
       }
+      if (this.form.username.trim().length < 3) {
+        toast.info(`Enter a username with at least 3 characters`, { autoClose: 1000 });
+        return false;
+      }
       if (this.form.whatsapp_no == '') {
         toast.info(`Enter Number`, { autoClose: 1000 });
         return false;
       }
       if (this.form.email == '') {
         toast.info(`Enter Email`, { autoClose: 1000 });
+        return false;
+      }
+      if (!/^\d{12}$/.test(this.form.adhar_card)) {
+        toast.info(`Enter a valid 12-digit Aadhaar number`, { autoClose: 1000 });
         return false;
       }
 

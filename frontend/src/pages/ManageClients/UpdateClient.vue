@@ -350,7 +350,7 @@
             <div class="row source-400">
               <div class="form-group col-12 col-md-6">
                 <label for="contact_person.name" class="mt-2">
-                  Conatact Name
+                  Contact Name
                   <span class="text-danger">*</span>
                 </label>
                 <input
@@ -361,7 +361,7 @@
                   placeholder="Enter Contact Name"
                 />
                 <label for="contact_person.contact_no" class="mt-2">
-                  Conatct Number
+                  Contact Number
                   <span class="text-danger">*</span>
                 </label>
                 <input
@@ -369,12 +369,12 @@
                   type="number"
                   class="form-control border"
                   id="contact_person.contact_no"
-                  placeholder="Enter Conatct Number"
+                  placeholder="Enter Contact Number"
                 />
               </div>
               <div class="form-group col-12 col-md-6">
                 <label for="contact_person.email" class="mt-2">
-                  Conatct Email
+                  Contact Email
                   <span class="text-danger">*</span>
                 </label>
                 <input
@@ -382,7 +382,7 @@
                   type="email"
                   class="form-control border"
                   id="contact_person.email"
-                  placeholder="Enter Conatct Email "
+                  placeholder="Enter Contact Email "
                 />
                 <label for="contact_person.designation" class="mt-2">
                   Contact Designation
@@ -440,7 +440,7 @@
                     />
                   </div>
                   <div class="d-flex align-items-end">
-                    <butto @click="uploadFile" type="button" class="btn btn-dark btn-sm">Add</butto>
+                    <button @click="uploadFile" type="button" class="btn btn-dark btn-sm">Add</button>
                   </div>
                 </div>
               </div>
@@ -542,12 +542,14 @@ export default {
       UpdateDocuments: false,
       client: '',
       form: {
-        user_id: '66d7f425ad326a6f50ef00d5',
+        user_id: '',
         name: '',
         email: '',
         whatsapp_no: '',
         password: '',
         address: '',
+        pf_enable: true,
+        esic_enable: true,
         pan_card: '',
         adhar_card: '',
         gst_no: '',
@@ -604,89 +606,74 @@ export default {
 
   async created() {
     const UpdateDocuments = localStorage.getItem('UpdateDocuments');
-    if (UpdateDocuments) {
+    if (UpdateDocuments !== null) {
       this.UpdateDocuments = JSON.parse(UpdateDocuments);
     }
     this.getCurrent();
     try {
-      try {
-        const clientRes = await axiosClient.get(`/api/v1/client/get/${this.clientId}`);
-        const clientData = clientRes.data.data[0];
-        this.client = clientRes.data.data[0];
-        console.log('res: ', clientData);
+      const clientRes = await axiosClient.get(`/api/v1/client/get/${this.clientId}`);
+      const clientData = clientRes.data?.data?.[0];
+      if (!clientData) {
+        throw new Error('The client record was not returned by the server.');
+      }
 
-        this.client = clientData;
-        console.log('client: ', this.client);
+      this.client = clientData;
+      const contact = clientData.contact_person || {};
+      this.form = {
+        ...this.form,
+        user_id: clientData.user_id || '',
+        name: clientData.name ?? '',
+        email: clientData.email ?? '',
+        whatsapp_no: clientData.whatsapp_no ?? '',
+        address: clientData.address ?? '',
+        city: clientData.city ?? '',
+        state: clientData.state ?? '',
+        country: clientData.country ?? '',
+        pin_code: clientData.pin_code ?? '',
+        pan_card: clientData.pan_card ?? '',
+        adhar_card: clientData.adhar_card ?? '',
+        gst_no: clientData.gst_no ?? '',
+        cin_no: clientData.cin_no ?? '',
+        pf_enable: clientData.pf_enable ?? true,
+        esic_enable: clientData.esic_enable ?? true,
+        industry_type: clientData.industry_type ?? '',
+        employee_count_range: clientData.employee_count_range ?? '',
+        incorporation_type: clientData.incorporation_type ?? '',
+        contact_person: {
+          name: contact.name ?? '',
+          email: contact.email ?? '',
+          contact_no: contact.contact_no ?? '',
+          designation: contact.designation ?? '',
+        },
+      };
 
-        console.log('form: ', this.form);
-        this.form = {
-          user_id: clientData.user_id || '',
-          pf_enable: clientData.pf_enable,
-          esic_enable: clientData.esic_enable,
-          name: clientData.name || '',
-          email: clientData.email || '',
-          whatsapp_no: clientData.whatsapp_no || '',
-          pin_code: clientData.pin_code || '',
-          country: clientData.country || '',
-          state: clientData.state || '',
-          city: clientData.city || '',
-          address: clientData.address || '',
-          /*  pan_card: clientData.pan_card || '',
-          adhar_card: clientData.adhar_card || '',
-          gst_no: clientData.gst_no || '',
-          cin_no: clientData.cin_no || '',
-          industry_type: clientData.industry_type || '',
-          employee_count_range: clientData.employee_count_range || '',
-          contact_person: {
-            name: clientData.contact_person.name || '',
-            email: clientData.contact_person.email || '',
-            contact_no: clientData.contact_person.contact_no || '',
-            designation: clientData.contact_person.designation || '',
-          },
-          incorporation_type: clientData.incorporation_type || '', */
-        };
-
-        if (clientData.pan_card) this.form.pan_card = clientData.pan_card;
-        /* if (clientData.adhar_card) this.form.adhar_card = clientData.adhar_card; */
-        if (clientData.gst_no) this.form.gst_no = clientData.gst_no;
-        if (clientData.cin_no) this.form.cin_no = clientData.cin_no;
-
-        if (clientData.incorporation_type) {
-          this.form.incorporation_type = clientData.incorporation_type;
-        }
-        if (clientData.industry_type) {
-          this.form.industry_type = clientData.industry_type;
-        }
-        if (clientData.employee_count_range) {
-          this.form.employee_count_range = clientData.employee_count_range;
-        }
-
-        if (clientData.contact_person) {
-          console.log('clientData.contact_person: ', clientData.contact_person);
-          if (clientData.contact_person.name) {
-            this.form.contact_person.name = clientData.contact_person.name;
+      // Older client records may keep address/contact details on the linked user.
+      if (clientData.user_id) {
+        try {
+          const userRes = await axiosClient.get(`/api/v1/user/get/${clientData.user_id}`);
+          const userData = userRes.data?.data?.[0];
+          if (userData) {
+            this.form.email = this.form.email || userData.email || '';
+            this.form.whatsapp_no = this.form.whatsapp_no || userData.whatsapp_no || '';
+            this.form.address = this.form.address || userData.address || '';
+            this.form.city = this.form.city || userData.city || '';
+            this.form.state = this.form.state || userData.state || '';
+            this.form.country = this.form.country || userData.country || '';
+            this.form.pin_code = this.form.pin_code || userData.pin_code || '';
           }
-          if (clientData.contact_person.email) {
-            this.form.contact_person.email = clientData.contact_person.email;
-          }
-          if (clientData.contact_person.contact_no) {
-            this.form.contact_person.contact_no = clientData.contact_person.contact_no;
-          }
-          if (clientData.contact_person.designation) {
-            this.form.contact_person.designation = clientData.contact_person.designation;
-          }
+        } catch (err) {
+          console.warn('Linked user details could not be loaded:', err.message);
         }
+      }
+    } catch (err) {
+      console.error('Unable to load client for editing:', err.message);
+      toast.error(err.response?.data?.message || 'Unable to load client information. Please try again.', {
+        autoClose: 2500,
+      });
+      return;
+    }
 
-        this.$nextTick(() => {
-          console.log('Form Updated:', this.form);
-        });
-        console.log('form: ', this.form.name);
-        const userRes = await axiosClient.get(`/api/v1/user/get/${clientData.user_id}`);
-
-        const userData = userRes.data.data[0];
-        this.form.address = userData.address;
-      } catch (err) {}
-
+    try {
       const departments = await axiosClient.get(`/api/v1/department/getall`);
       this.departments = departments.data.data;
 
@@ -700,7 +687,9 @@ export default {
       if (this.client.gst_proof == false) this.documentOptions.push('gst');
       if (this.client.pan_proof == false) this.documentOptions.push('pan');
       if (this.client.cin_proof == false) this.documentOptions.push('cin');
-    } catch (err) {}
+    } catch (err) {
+      console.warn('Client detail lookup lists could not be loaded:', err.message);
+    }
   },
 
   mounted() {
@@ -720,13 +709,12 @@ export default {
 
   methods: {
     async handleDeleteDocument(document_proof_url, document_type) {
-      console.log('delete document: ', document_proof_url, document_type);
+      const clientId = this.client.user_id || this.client._id || this.clientId;
       try {
-        const res = await axiosClient.delete(
-          `/api/v1/document/delete/${this.client.user_id}/${document_proof_url}/${document_type}`
+        await axiosClient.delete(
+          `/api/v1/document/delete/${clientId}/${document_proof_url}/${document_type}`
         );
-        this.documentOptions.push(document_type);
-        console.log('res: ', res);
+        if (!this.documentOptions.includes(document_type)) this.documentOptions.push(document_type);
         toast.success('Document deleted successfully', {
           autoClose: 1500,
         });
@@ -736,8 +724,7 @@ export default {
         }, 2000);
         return;
       } catch (err) {
-        console.log('error: ', err);
-        toast.error('Failed to delete document', {
+        toast.error(err.response?.data?.message || 'Failed to delete document', {
           autoClose: 1500,
         });
         return;
@@ -765,18 +752,17 @@ export default {
 
       const formData = new FormData();
       formData.append('file', this.file);
+      const clientId = this.client.user_id || this.client._id || this.clientId;
 
       try {
         const documentRes = await axiosClient.post(
-          `/api/v1/document/upload/${this.form.document_type}/${this.client.user_id}`,
+          `/api/v1/document/upload/${this.form.document_type}/${clientId}`,
           formData
         );
-        console.log(documentRes);
         this.form.document_url = documentRes.data.location.Location;
         this.form.document_url_id = documentRes.data.file_id;
-        console.log('form', this.form);
-        const res = await axiosClient.put(
-          `/api/v1/client/update/document/${this.client.user_id}`,
+        await axiosClient.put(
+          `/api/v1/client/update/document/${this.client._id || clientId}`,
           this.form
         );
 
@@ -793,16 +779,17 @@ export default {
             this.submitedDocuments[i].uploaded = true;
           }
         }
-        this.documentOoptions = this.documentOoptions.filter(
+        this.documentOptions = this.documentOptions.filter(
           (option) => option != this.form.document_type
         );
         this.documentUploaded = true;
         this.file = null;
         this.form.document_type = '';
-
-        console.log('this.submitedDocuments: ', this.submitedDocuments);
+        if (this.$refs.file) this.$refs.file.value = '';
       } catch (err) {
-        console.log('error: ', err);
+        toast.error(err.response?.data?.message || 'Unable to upload document', {
+          autoClose: 2000,
+        });
       }
     },
 

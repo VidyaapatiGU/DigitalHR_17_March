@@ -12,3 +12,10 @@ export const months = [
   { month: 11, name: 'November', short: 'Nov', days: 30 },
   { month: 12, name: 'December', short: 'Dec', days: 31 },
 ];
+
+export const getDaysInMonth = (year, month) => {
+  const yearNumber = Number(year);
+  const monthNumber = Number(month);
+  if (!Number.isInteger(yearNumber) || !Number.isInteger(monthNumber)) return 0;
+  return new Date(yearNumber, monthNumber, 0).getDate();
+};

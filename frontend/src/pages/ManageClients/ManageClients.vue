@@ -168,11 +168,12 @@
         <div class="modal-body">
           <div class="">
             <input
-              type="text"
+              type="password"
               class="form-control"
               placeholder="Enter New Password"
               aria-label="Enter New Password"
               aria-describedby="addon-wrapping"
+              autocomplete="new-password"
               v-model="newPassword"
             />
           </div>
@@ -185,7 +186,6 @@
             @click="handleChangePassword"
             type="button"
             class="btn text-light border-0 button_bg btn-sm"
-            data-bs-dismiss="modal"
           >
             Update
           </button>
@@ -559,7 +559,7 @@
                     </div>
 
                     <div
-                      v-if="user.roleType.name == 'super_admin'"
+                      v-if="['admin', 'super_admin'].includes(user.roleType?.name)"
                       class="table-icon action_icon_color"
                       @click="updateClient = item"
                       data-bs-toggle="modal"
@@ -762,15 +762,18 @@ export default {
     async handleDelete(id) {
       try {
         const res = await axiosClient.put(`/api/v1/client/delete/${id}`);
-        if (res) {
-          toast.success(`Client Deleted`, {
-            autoClose: 1000,
-          });
-          this.items = this.items.filter((item) => item.user_id != id && item._id != id);
+        if (!res.data?.data) {
+          toast.error(res.data?.message || 'Unable to delete client');
+          return;
         }
+
+        const matchesDeletedClient = (item) => item.user_id !== id && item._id !== id;
+        this.items = this.items.filter(matchesDeletedClient);
+        this.originalItems = this.originalItems.filter(matchesDeletedClient);
+        toast.success('Client deleted', { autoClose: 1000 });
       } catch (err) {
-        console.log('error: ', err);
-        toast.error(`Some Thing Went Wrong`);
+        console.error('Unable to delete client:', err.message);
+        toast.error(err.response?.data?.message || 'Unable to delete client');
       }
     },
 

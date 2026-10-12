@@ -154,6 +154,10 @@ const ClientSchema = new Schema({
     type: Boolean,
     default: true,
   },
+  deletedAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 module.exports = mongoose.model("Client", ClientSchema);

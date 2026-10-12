@@ -7,9 +7,14 @@
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
 .form-container {
-  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
+  width: 100%; padding: 2rem; margin: 0;
   background: #fff; border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+}
+
+.employee-form-layout {
+  width: 100%;
+  padding-inline: 1rem;
 }
 
 .form-title {
@@ -57,8 +62,8 @@
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
-      <div class="h-100 overflow-y-auto d-flex justify-content-center align-items-start my-auto">
-        <div class="container">
+      <div class="h-100 overflow-y-auto d-flex justify-content-start align-items-start my-auto">
+        <div class="employee-form-layout">
           <form class="form-container">
             <div class="row source-400">
               <div class="form-group col-12 col-sm-6 col-md-4">
@@ -641,17 +646,21 @@ export default {
       this.form.gross = food_allow + basic + da + hra + conveyance;
     },
     async validatePinCode() {
-      if (this.form.pin_code.length >= 6) {
+      if (/^\d{6}$/.test(String(this.form.pin_code))) {
         try {
           const res = await axiosClient.get(`https://dev.apiman.in/pincode/${this.form.pin_code}`);
-          console.log('res: ', res);
-          if (res.data[0]) {
-            // this.form.city = res.data[0].PostOffice[0].name;
-            this.form.state = res.data.PostOffice[0].State;
-            this.form.country = res.data.PostOffice[0].Country;
+          const result = Array.isArray(res.data) ? res.data[0] : res.data;
+          const office = result?.PostOffice?.[0] || result?.postOffice?.[0];
+          if (office) {
+            this.form.city = office.District || office.Block || office.Name || office.name || this.form.city;
+            this.form.state = office.State || office.state || this.form.state;
+            this.form.country = office.Country || office.country || this.form.country;
+          } else {
+            toast.info('No location was found for this postal code. Enter the address fields manually.', { autoClose: 2500 });
           }
         } catch (err) {
-          console.log('error: ', err);
+          console.warn('Postal-code lookup unavailable:', err.message);
+          toast.info('Postal-code lookup is unavailable. Enter city, state and country manually.', { autoClose: 2500 });
         }
       }
     },
@@ -689,13 +698,15 @@ export default {
           }, 2000);
         }
       } catch (err) {
-        console.log('error: ', err);
-        if (err.response.status == 409) {
+        const status = err.response?.status;
+        const validationMessage = err.response?.data?.errors?.[0]?.msg;
+        console.error('Unable to add employee:', validationMessage || err.message);
+        if (status == 409) {
           toast.error(`User Already Exist`, {
             autoClose: 1500,
           });
         } else {
-          toast.error(`Something Went Wrong`, {
+          toast.error(validationMessage || err.response?.data?.message || `Unable to add employee. Please try again.`, {
             autoClose: 1500,
           });
         }
@@ -710,6 +721,10 @@ export default {
       }
       if (this.form.fatherHusband_name == '') {
         toast.info(`Enter Fathers Name, Field Cannot Be Empty!`, { autoClose: 1000 });
+        return false;
+      }
+      if (!this.form.gender) {
+        toast.info(`Select Gender!`, { autoClose: 1000 });
         return false;
       }
       if (this.form.whatsapp_no == '') {
@@ -748,6 +763,10 @@ export default {
       }
       if (this.form.pin_code == '') {
         toast.info(`Enter Pin Code, Field Cannot Be Empty!`, { autoClose: 1000 });
+        return false;
+      }
+      if (!/^\d{6}$/.test(String(this.form.pin_code))) {
+        toast.info(`Enter a valid 6-digit Pin Code!`, { autoClose: 1500 });
         return false;
       }
       if (this.form.city == '') {

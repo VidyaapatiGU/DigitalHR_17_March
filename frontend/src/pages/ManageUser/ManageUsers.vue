@@ -83,11 +83,12 @@
         <div class="modal-body">
           <div class="">
             <input
-              type="text"
+              type="password"
               class="form-control"
               placeholder="Enter New Password"
               aria-label="Enter New Password"
               aria-describedby="addon-wrapping"
+              autocomplete="new-password"
               v-model="newPassword"
             />
           </div>
@@ -100,7 +101,6 @@
             @click="handleChangePassword"
             type="button"
             class="btn text-light border-0 button_bg btn-sm"
-            data-bs-dismiss="modal"
           >
             Update
           </button>
@@ -618,7 +618,7 @@ export default {
       }
 
       if (this.newPassword.length < 6) {
-        toast.info(`Password Must Contain At Least 5 Characters`, {
+        toast.info(`Password must contain at least 6 characters`, {
           autoClose: 1500,
         });
         return;
@@ -632,6 +632,7 @@ export default {
           toast.success(`Password Updated! `, {
             autoClose: 1000,
           });
+          this.newPassword = '';
         }
       } catch (err) {
         console.log('error: ', err);

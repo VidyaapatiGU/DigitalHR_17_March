@@ -155,15 +155,16 @@
         <div class="brand-title">DigitalHR</div>
         <div class="brand-subtitle">Employee Portal</div>
       </div>
-      <form class="form-container">
+      <form class="form-container" @submit.prevent="handleLogin">
         <div class="login-title">Employee Login</div>
         <div class="form-group">
-          <label for="email">User Name</label>
+          <label for="username">User Name</label>
           <input
             v-model="form.username"
-            type="email"
+            type="text"
             class="form-control"
-            id="email"
+            id="username"
+            autocomplete="username"
             placeholder="Enter Username"
           />
         </div>
@@ -179,8 +180,7 @@
         </div>
         <div class="w-100 mt-3">
           <button
-            type="button"
-            @click="handleLogin"
+            type="submit"
             class="btn btn-login"
           >
             Sign In

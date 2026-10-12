@@ -1,15 +1,32 @@
 <template>
   <div class="reports-bg container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="reports-hero mb-3">
       <div>
-        <h1 class="reports-title mb-1">Download Reports</h1>
-        <p class="text-muted mb-0">Quick access to compliance forms, attendance, ESIC, PF, and employee exports.</p>
+        <div class="reports-eyebrow"><i class="bi bi-stars me-1"></i>PEOPLE OPERATIONS</div>
+        <h1 class="reports-title mb-1">Reports & documents</h1>
+        <p class="mb-0">Your compliance paperwork and workforce exports, together in one place.</p>
       </div>
+      <label class="report-search">
+        <i class="bi bi-search"></i>
+        <input v-model="reportSearch" type="search" placeholder="Find a report or document…" aria-label="Search reports" />
+        <button v-if="reportSearch" type="button" aria-label="Clear report search" @click="reportSearch = ''"><i class="bi bi-x-lg"></i></button>
+      </label>
+    </div>
+
+    <section class="report-overview" aria-label="Workspace report data">
+      <article v-for="stat in reportOverview" :key="stat.label" class="overview-card">
+        <span :class="['overview-icon', stat.tone]"><i :class="['bi', stat.icon]"></i></span>
+        <span class="overview-copy"><small>{{ stat.label }}</small><strong>{{ stat.value }}</strong><em>{{ stat.note }}</em></span>
+      </article>
+    </section>
+
+    <div v-if="reportSearch && !matchedReportGroups.length" class="report-no-results" role="status">
+      <i class="bi bi-search"></i><strong>No matching report groups</strong><span>Try “employee”, “attendance”, “notice”, or “PF”.</span>
     </div>
 
     <div class="reports-grid">
       <!-- Compliance PDFs -->
-      <div class="reports-card">
+      <div v-if="matchesReportGroup('compliance')" class="reports-card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
             <span class="icon-circle text-primary"><i class="bi bi-file-earmark-text"></i></span>
@@ -39,7 +56,7 @@
       </div>
 
       <!-- Notices & Settings -->
-      <div class="reports-card">
+      <div v-if="matchesReportGroup('notices')" class="reports-card">
         <div class="card-header d-flex align-items-center gap-2">
           <span class="icon-circle text-warning"><i class="bi bi-gear"></i></span>
           <div>
@@ -72,7 +89,7 @@
       </div>
 
       <!-- PF / EPFO -->
-      <div class="reports-card">
+      <div v-if="matchesReportGroup('pf')" class="reports-card">
         <div class="card-header d-flex align-items-center gap-2">
           <span class="icon-circle text-info"><i class="bi bi-bank"></i></span>
           <div>
@@ -88,7 +105,7 @@
       </div>
 
       <!-- Attendance & ESIC -->
-      <div class="reports-card">
+      <div v-if="matchesReportGroup('attendance')" class="reports-card">
         <div class="card-header d-flex align-items-center gap-2">
           <span class="icon-circle text-success"><i class="bi bi-clipboard-check"></i></span>
           <div>
@@ -131,7 +148,7 @@
       </div>
 
       <!-- Employee & Holidays -->
-      <div class="reports-card">
+      <div v-if="matchesReportGroup('employees')" class="reports-card">
         <div class="card-header d-flex align-items-center gap-2">
           <span class="icon-circle text-secondary"><i class="bi bi-people"></i></span>
           <div>
@@ -171,7 +188,16 @@ export default {
       user: {},
       settings: {},
       holidays: [],
+      employeeSummary: [],
+      reportSearch: '',
       employeeHolidayAssignments: [],
+      reportGroups: [
+        { key: 'compliance', label: 'Compliance PDFs', terms: 'compliance pdf form abstract payment wages downloadable' },
+        { key: 'notices', label: 'Notices & Settings', terms: 'notices settings close day hours salary minimum wages holidays' },
+        { key: 'pf', label: 'PF / EPFO', terms: 'pf epfo challan provident fund' },
+        { key: 'attendance', label: 'Attendance & ESIC', terms: 'attendance esic leaves balance csv excel challan' },
+        { key: 'employees', label: 'Employee & Holidays', terms: 'employee employees roster holidays weekly notice excel export' },
+      ],
       
       // PDF Reports list
       pdfReportsList: [
@@ -190,6 +216,19 @@ export default {
     };
   },
   computed: {
+    matchedReportGroups() {
+      const query = this.reportSearch.trim().toLowerCase();
+      if (!query) return this.reportGroups;
+      return this.reportGroups.filter(group => `${group.label} ${group.terms}`.toLowerCase().includes(query));
+    },
+    reportOverview() {
+      return [
+        { label: 'Active employees', value: this.employeeSummary.length, note: 'Current workforce', icon: 'bi-people', tone: 'blue' },
+        { label: 'Holiday records', value: this.holidays.length, note: 'Configured holidays', icon: 'bi-sun', tone: 'amber' },
+        { label: 'Attendance periods', value: this.availableAttendancePeriods.length, note: 'Periods with uploaded data', icon: 'bi-calendar2-check', tone: 'green' },
+        { label: 'Report collections', value: this.reportGroups.length, note: 'Ready-to-use categories', icon: 'bi-folder2-open', tone: 'violet' },
+      ];
+    },
     pdfDownloadUrl() {
       if (!this.selectedPdfReport) return null;
       return `/reports/${this.selectedPdfReport}`;
@@ -201,10 +240,27 @@ export default {
   },
   async created() {
     await this.getCurrent();
-    await this.loadSettingsData();
-    await this.fetchAttendancePeriods();
+    await Promise.all([this.loadSettingsData(), this.fetchAttendancePeriods(), this.loadEmployeeSummary()]);
   },
   methods: {
+    matchesReportGroup(key) {
+      return this.matchedReportGroups.some(group => group.key === key);
+    },
+
+    async loadEmployeeSummary() {
+      try {
+        const isClient = Boolean(this.user?.industry_type);
+        const endpoint = isClient
+          ? `/api/v1/employee/client/${this.user._id}`
+          : `/api/v1/employee/getall`;
+        const response = await axiosClient.get(endpoint);
+        this.employeeSummary = response.data.data || [];
+      } catch (error) {
+        this.employeeSummary = [];
+        console.warn('Employee report summary unavailable:', error.response?.data?.message || error.message);
+      }
+    },
+
     async getCurrent() {
       try {
         const token = await axiosClient.get(`api/v1/user/getCurrent/`);
@@ -982,6 +1038,18 @@ export default {
           }
         });
 
+        // The selected period's attendance sheet is the source of truth here.
+        // Do not emit zero-day rows for employees hired after this month or
+        // employees omitted from that period's uploaded attendance.
+        const reportEmployees = employees.filter((emp) => {
+          const empCode = emp.emp_no || emp.empCode || '';
+          return empCode && Object.prototype.hasOwnProperty.call(presentDaysMap, String(empCode));
+        });
+        if (!reportEmployees.length) {
+          toast.error('No employees match attendance records for the selected period.', { autoClose: 3000 });
+          return;
+        }
+
         const formatDate = (d) => {
           if (!d) return '';
           const dt = (d instanceof Date) ? d : new Date(d);
@@ -1004,7 +1072,7 @@ export default {
           { header: 'Last Working Day (Format DD/MM/YYYY or DD-MM-YYYY)', key: 'last_working_day', width: 18 },
         ];
 
-        employees.forEach(emp => {
+        reportEmployees.forEach(emp => {
           const empCode = emp.emp_no || emp.empCode || '';
           const ipNumber = emp.esic_no || emp.ip_number || emp.ipNumber || '';
           const name = emp.name || '';
@@ -1120,9 +1188,10 @@ export default {
           { header: 'Employee Code', key: 'emp_no', width: 15 },
           { header: 'Name', key: 'name', width: 25 },
           { header: 'Designation', key: 'designation', width: 20 },
-          { header: 'Department', key: 'department', width: 20 },
           { header: 'Email', key: 'email', width: 25 },
-          { header: 'Phone', key: 'phone', width: 15 },
+          { header: 'WhatsApp', key: 'whatsapp_no', width: 15 },
+          { header: 'Date Joined', key: 'date_of_joining', width: 16 },
+          { header: 'Monthly Gross', key: 'gross', width: 16 },
         ];
 
         employees.forEach(emp => {
@@ -1130,9 +1199,10 @@ export default {
             emp_no: emp.emp_no,
             name: emp.name,
             designation: emp.designation,
-            department: emp.department,
             email: emp.email,
-            phone: emp.phone,
+            whatsapp_no: emp.whatsapp_no,
+            date_of_joining: emp.date_of_joining,
+            gross: Number(emp.gross) || 0,
           });
         });
 
@@ -1228,32 +1298,69 @@ export default {
 
 <style scoped>
 .reports-bg {
-  background: #f6f8fb;
-  min-height: 100vh;
+  background: #f4f6fb;
+  min-height: 100%;
   overflow-y: auto;
   padding-bottom: 3rem;
 }
 
+.reports-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+  border: 1px solid #e8ebf3;
+  border-radius: 16px;
+  background: radial-gradient(circle at 92% 0%, rgba(96, 119, 255, .12), transparent 32%), #fff;
+  box-shadow: 0 5px 18px rgba(34, 49, 84, .035);
+}
+.reports-eyebrow { color: #7887a3; font-size: 10px; font-weight: 800; letter-spacing: .13em; }
 .reports-title {
   font-weight: 700;
-  color: #0f172a;
+  color: #17243b;
+  letter-spacing: -.035em;
+  font-size: clamp(23px, 3vw, 30px);
 }
+.reports-hero p { color: #818da2; font-size: 13px; }
+.report-search { display: flex; align-items: center; gap: 9px; width: min(340px, 100%); min-height: 42px; padding: 0 12px; border: 1px solid #e3e8f1; border-radius: 10px; background: #fff; color: #8b96a9; }
+.report-search:focus-within { border-color: #9ba9ff; box-shadow: 0 0 0 3px rgba(83, 109, 254, .1); }
+.report-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: #263550; background: transparent; font-size: 12px; }
+.report-search input::placeholder { color: #9ba5b5; }
+.report-search button { border: 0; padding: 3px; color: #8490a4; background: transparent; }
+.report-overview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
+.overview-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid #e8ebf3; border-radius: 13px; background: #fff; }
+.overview-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border-radius: 11px; font-size: 16px; }
+.overview-icon.blue { color: #536dfe; background: #edf0ff; }
+.overview-icon.amber { color: #e39131; background: #fff4e5; }
+.overview-icon.green { color: #13a989; background: #e6f8f3; }
+.overview-icon.violet { color: #9461dd; background: #f3ebff; }
+.overview-copy { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.overview-copy small { overflow: hidden; color: #8692a6; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.overview-copy strong { color: #263550; font-size: 21px; line-height: 1.15; }
+.overview-copy em { overflow: hidden; color: #9aa4b3; font-size: 10px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.report-no-results { display: flex; align-items: center; flex-direction: column; gap: 6px; padding: 48px 16px; border: 1px dashed #d6ddeb; border-radius: 14px; color: #8290a5; background: rgba(255,255,255,.6); text-align: center; }
+.report-no-results i { margin-bottom: 3px; color: #7485e4; font-size: 22px; }
+.report-no-results strong { color: #4b5972; font-size: 13px; }
+.report-no-results span { font-size: 11px; }
 
 .reports-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 14px;
 }
 
 .reports-card {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  border-radius: 14px;
+  box-shadow: 0 5px 18px rgba(34, 49, 84, .035);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: transform .16s ease, box-shadow .16s ease;
 }
+.reports-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(34, 49, 84, .08); }
 
 .reports-card .card-header {
   background: #f8fafc;
@@ -1288,5 +1395,14 @@ export default {
 
 .reports-btn {
   font-weight: 500;
+}
+
+@media (max-width: 760px) {
+  .reports-hero { align-items: stretch; flex-direction: column; padding: 18px; }
+  .report-search { width: 100%; }
+  .report-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .overview-card { gap: 9px; padding: 11px 9px; }
+  .overview-icon { width: 33px; height: 33px; flex-basis: 33px; }
+  .overview-copy strong { font-size: 18px; }
 }
 </style>

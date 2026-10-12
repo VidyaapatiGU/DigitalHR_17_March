@@ -12,6 +12,13 @@ const logger = require("../config/logger.js");
 const secret = process.env.ACCESS_TOKEN_SECERT;
 const defaultPassword = process.env.DEFAULT_PASSWORD;
 
+const sanitizeEmployee = (employee) => {
+  if (!employee) return employee;
+  const safeEmployee = employee.toObject ? employee.toObject() : { ...employee };
+  delete safeEmployee.password;
+  return safeEmployee;
+};
+
 //@desc Test Employee API
 //@route GET /api/v1/employee
 //@access Private: Needs Login
@@ -40,7 +47,6 @@ const createEmployee = async (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const user = req.user;
   const data = matchedData(req);
-  console.log("data", data);
 
   if (!errors.isEmpty()) {
     logger.error(
@@ -88,6 +94,20 @@ const createEmployee = async (req, res) => {
     const existingClient = await Client.findOne({
       _id: data.client_user_id,
     });
+
+    if (!existingClient) {
+      return res.status(400).json({ message: "Client not found for employee" });
+    }
+
+    const duplicateEmployee = await Employee.findOne({
+      $or: [
+        { email: data.email },
+        { adhar_card: Number(data.adhar_card) },
+      ],
+    }).select("_id");
+    if (duplicateEmployee) {
+      return res.status(409).json({ message: "An employee with this email or Aadhaar number already exists" });
+    }
 
     let lastCount = 0;
 
@@ -180,12 +200,12 @@ const createEmployee = async (req, res) => {
       weeklyOff: data.weeklyOff || [],
     });
 
-    console.log("newEmployee", newEmployee);
-
     logger.info(
       `${ip}: API /api/v1/employee/add | User: ${user.name} | Responded with Success`
     );
-    return res.status(201).json(newEmployee);
+    const employeeResponse = newEmployee.toObject();
+    delete employeeResponse.password;
+    return res.status(201).json(employeeResponse);
   } catch (err) {
     logger.error(
       `${ip}: API /api/v1/employee/add | User: ${
@@ -261,13 +281,20 @@ const createEmployeesByExcel = async (req, res) => {
   }
 
   for (let i in data.employeeData) {
+    const employeeRow = data.employeeData[i];
     const existingUser = await User.findOne({
-      adhar_card: data.employeeData[i].adhar_card,
-    });
+      $or: [
+        { email: employeeRow.email },
+        { adhar_card: employeeRow.adhar_card },
+      ],
+    }).select("_id");
 
     const existingEmployee = await Employee.findOne({
-      adhar_card: data.employeeData[i].adhar_card,
-    });
+      $or: [
+        { email: employeeRow.email },
+        { adhar_card: employeeRow.adhar_card },
+      ],
+    }).select("_id");
 
     if (existingUser || existingEmployee) {
       logger.error(
@@ -354,6 +381,16 @@ const createEmployeesByExcel = async (req, res) => {
             "",
         });
 
+        newUsers.push({
+          _id: newEmployee._id,
+          name: newEmployee.name,
+          email: newEmployee.email,
+          emp_no: newEmployee.emp_no,
+          username: newEmployee.username,
+          designation: newEmployee.designation,
+          adhar_card: newEmployee.adhar_card,
+        });
+
         logger.info(
           `${ip}: API /api/v1/employee/add | User: ${user.name} | Responded with Success`
         );
@@ -379,7 +416,6 @@ const updateCreatedEmployee = async (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const user = req.user;
   const data = matchedData(req);
-  console.log("data", data);
 
   if (!errors.isEmpty()) {
     logger.error(
@@ -414,7 +450,8 @@ const updateCreatedEmployee = async (req, res) => {
         roleType: data.roleType,
         department: data.department,
         weeklyOff: data.weeklyOff,
-      }
+      },
+      { new: true }
     );
 
     const newEmployee = await Employee.findOneAndUpdate(
@@ -440,12 +477,12 @@ const updateCreatedEmployee = async (req, res) => {
       }
     );
 
-    console.log("newEmployee", newEmployee);
-
     logger.info(
       `${ip}: API /api/v1/employee/add | User: ${newUser.name} | Responded with Success`
     );
-    return res.status(201).json(newUser);
+    const userResponse = newUser?.toObject?.() || newUser;
+    if (userResponse) delete userResponse.password;
+    return res.status(201).json(userResponse);
   } catch (err) {
     logger.error(
       `${ip}: API /api/v1/employee/add | User: ${
@@ -558,7 +595,7 @@ const getClientEmployees = async (req, res) => {
       let employees = await Employee.find({
         client_id: client_id,
         ...activeFilter,
-      });
+      }).select("-password");
       logger.info(`Found ${employees.length} employee(s) for client_id query`, {
         client_id: client_id,
         queryType: "client_id",
@@ -571,7 +608,7 @@ const getClientEmployees = async (req, res) => {
         employees = await Employee.find({
           client_user_id: client_id,
           ...activeFilter,
-        });
+        }).select("-password");
         logger.info(`Found ${employees.length} employee(s) for client_user_id query`, {
           client_id: client_id,
           queryType: "client_user_id",
@@ -579,8 +616,6 @@ const getClientEmployees = async (req, res) => {
           timestamp: new Date().toISOString(),
         });
       }
-
-      console.log("employees:", employees);
 
       // Log success with detailed information
       logger.info(
@@ -635,7 +670,7 @@ const getAllEmployees = async (req, res) => {
     if (user && ["super_admin", "admin"].includes(user.roleType?.name)) {
       //console.log("user: ", user);
 
-      const employees = await Employee.find({ active: true });
+      const employees = await Employee.find({ active: true }).select("-password");
 
       logger.info(
         `${ip}: API /api/v1/employee/getall | User: ${user.name} | responnded with Success `
@@ -669,12 +704,12 @@ const getEmployee = async (req, res) => {
     if (loggedin_user) {
       let employee = await Employee.findOne({
         _id: id,
-      });
+      }).select("-password");
 
       if (!employee || employee.length <= 0) {
         employee = await Employee.findOne({
           user_id: id,
-        });
+        }).select("-password");
       }
 
       if (employee) {
@@ -717,11 +752,9 @@ const getEmployeeByEmail = async (req, res) => {
 
   try {
     if (loggedin_user) {
-      console.log(email);
       let emp = await Employee.findOne({
         email,
-      });
-      console.log(emp);
+      }).select("-password");
 
       if (emp) {
         logger.info(
@@ -763,7 +796,6 @@ const updateEmployee = async (req, res) => {
   logger.info(`ID from URL: ${id}`);
 
   const data = matchedData(req);
-  console.log("data: ", data);
 
   const errors = validationResult(req);
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -843,16 +875,21 @@ const updateEmployee = async (req, res) => {
         ["name", "whatsapp_no", "city", "address", "country", "state", "pin_code", "weeklyOff"].forEach((f) => {
           if (data[f] !== undefined) userUpdate[f] = data[f];
         });
-        if (Object.keys(userUpdate).length > 0) {
-          await User.findOneAndUpdate({ _id: oldUser.user_id || id }, userUpdate);
+        if (
+          Object.keys(userUpdate).length > 0 &&
+          oldUser.user_id &&
+          String(oldUser.user_id) !== String(oldUser.client_user_id)
+        ) {
+          await User.findOneAndUpdate({ _id: oldUser.user_id }, userUpdate);
         }
 
         logger.info(
           `${ip}: API /api/v1/employee/update/:${id} | User: ${loggedin_user.name} | responnded with Success `
         );
-        return res
-          .status(200)
-          .json({ data: result, message: "Employee Updated Successfully" });
+        return res.status(200).json({
+          data: sanitizeEmployee(result),
+          message: "Employee Updated Successfully",
+        });
       } else {
         logger.info(
           `${ip}: API /api/v1/employee/update/:${id} | User: ${loggedin_user.name} | responnded with Employee Not Found `
@@ -889,7 +926,6 @@ const updateEmployeeWithEmpCode = async (req, res) => {
 
   // Extract only the validated data from the request body
   const data = matchedData(req);
-  console.log("data: ", data);
 
   const errors = validationResult(req);
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -919,9 +955,10 @@ const updateEmployeeWithEmpCode = async (req, res) => {
         logger.info(
           `${ip}: API /api/v1/employee/updateempwithcode/${id} | User: ${loggedin_user.name} | responded with Success (Leaves Updated)`
         );
-        return res
-          .status(200)
-          .json({ data: result, message: "Employee Leaves Updated Successfully" });
+        return res.status(200).json({
+          data: sanitizeEmployee(result),
+          message: "Employee Leaves Updated Successfully",
+        });
       } else {
         logger.info(
           `${ip}: API /api/v1/employee/updateempwithcode/${id} | User: ${loggedin_user.name} | responded with Employee Not Found`
@@ -959,15 +996,23 @@ const deleteEmployee = async (req, res) => {
       const employee = await Employee.findOne({ _id: id });
       if (employee) {
         const employeeRes = await Employee.findOneAndDelete({ _id: id });
-        const userId = employee.user_id || id;
-        await User.findOneAndDelete({ _id: userId });
+        // Client-created employees currently share the client's user_id placeholder.
+        // Never cascade-delete the organization login when removing one employee.
+        const linkedUserId = employee.user_id &&
+          String(employee.user_id) !== String(employee.client_user_id)
+          ? employee.user_id
+          : null;
+        if (linkedUserId) {
+          await User.findOneAndDelete({ _id: linkedUserId });
+        }
 
         logger.info(
           `${ip}: API /api/v1/employee/delete/:${id} | User: ${loggedin_user.name} | responnded with Success `
         );
-        return res
-          .status(200)
-          .json({ data: employeeRes, message: "User Deleted Successfully" });
+        return res.status(200).json({
+          data: sanitizeEmployee(employeeRes),
+          message: "User Deleted Successfully",
+        });
       } else {
         logger.info(
           `${ip}: API /api/v1/employee/delete/:${id} | User: ${loggedin_user.name} | responnded with Employee Not Found `
@@ -1006,7 +1051,6 @@ const AppDisEmployee = async (req, res) => {
       });
 
       if (oldUser) {
-        console.log("olduser: ", oldUser);
         if (oldUser.approved) {
           const updatedEmployee = {
             approved: false,
@@ -1024,19 +1068,19 @@ const AppDisEmployee = async (req, res) => {
             }
           );
 
-          await User.findOneAndUpdate(
-            { _id: oldUser.user_id || id },
-            updatedUser,
-            {
-              new: true,
-            }
-          );
+          if (oldUser.user_id && String(oldUser.user_id) !== String(oldUser.client_user_id)) {
+            await User.findOneAndUpdate(
+              { _id: oldUser.user_id },
+              updatedUser,
+              { new: true }
+            );
+          }
 
           logger.info(
             `${ip}: API /api/v1/employee/app_dis/:${id} | User: ${loggedin_user.name} | responnded with Success `
           );
           return res.status(200).json({
-            data: employeeRes,
+            data: sanitizeEmployee(employeeRes),
             message: "User Approved/Disapproved Successfully",
           });
         } else {
@@ -1054,19 +1098,19 @@ const AppDisEmployee = async (req, res) => {
               new: true,
             }
           );
-          await User.findOneAndUpdate(
-            { _id: oldUser.user_id || id },
-            updatedUser,
-            {
-              new: true,
-            }
-          );
+          if (oldUser.user_id && String(oldUser.user_id) !== String(oldUser.client_user_id)) {
+            await User.findOneAndUpdate(
+              { _id: oldUser.user_id },
+              updatedUser,
+              { new: true }
+            );
+          }
 
           logger.info(
             `${ip}: API /api/v1/employee/app_dis/:${id} | User: ${loggedin_user.name} | responnded with Success `
           );
           return res.status(200).json({
-            data: employeeRes,
+            data: sanitizeEmployee(employeeRes),
             message: "User Approved/Disapproved Successfully",
           });
         }
@@ -1125,7 +1169,7 @@ const changePass = async (req, res) => {
           `${ip}: API /api/v1/employee/change/pass/:${id} | User: ${loggedin_user.name} | responnded with Success `
         );
         return res.status(200).json({
-          data: result,
+          data: sanitizeEmployee(result),
           message: "Employee Password Changed Successfully",
         });
       } else {
@@ -1158,7 +1202,6 @@ const updateDocument = async (req, res) => {
   const { id } = req.params;
 
   const data = matchedData(req);
-  console.log("data: ", data, id);
 
   const errors = validationResult(req);
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -1173,7 +1216,6 @@ const updateDocument = async (req, res) => {
   if (loggedin_user) {
     try {
       const oldUser = await Employee.findOne({ user_id: id });
-      console.log("oldUser: ", oldUser);
       if (oldUser) {
         let client = "";
 
@@ -1227,7 +1269,7 @@ const updateDocument = async (req, res) => {
         );
         return res
           .status(200)
-          .json({ data: client, message: "User Updated Successfully" });
+          .json({ data: sanitizeEmployee(client), message: "User Updated Successfully" });
       } else {
         logger.info(
           `${ip}: API /api/v1/client/update/:${id} | User: ${loggedin_user.name} | responnded with Client Not Found `
@@ -1321,9 +1363,11 @@ const logIn = async (req, res) => {
     logger.info(
       `${ip}: API /api/v1/employee/login responnded with Login Successfull for the user: ${username}`
     );
-    return res
-      .status(200)
-      .json({ data: oldUser, token, message: "Login Successfull" });
+    return res.status(200).json({
+      data: sanitizeEmployee(oldUser),
+      token,
+      message: "Login Successfull",
+    });
   } catch (error) {
     logger.info(`${ip}: API /api/v1/employee/login responnded with error`);
     console.log(error);

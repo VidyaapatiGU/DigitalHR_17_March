@@ -102,7 +102,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title source-400" id="ModalAddLabel">Add Departmennt</h5>
+          <h5 class="modal-title source-400" id="ModalAddLabel">Add Department</h5>
           <button
             type="button"
             class="btn-close"

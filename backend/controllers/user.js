@@ -10,6 +10,13 @@ const Employee = require("../models/Employee");
 
 const secret = process.env.ACCESS_TOKEN_SECERT;
 
+const omitPassword = (record) => {
+  if (!record) return record;
+  const safeRecord = typeof record.toObject === "function" ? record.toObject() : { ...record };
+  delete safeRecord.password;
+  return safeRecord;
+};
+
 //@desc Test User API
 //@route GET /api/v1/user
 //@access Private: Needs Login
@@ -47,18 +54,26 @@ const createUser = async (req, res) => {
 
   if (user) {
     const data = matchedData(req);
+    const username = data.username.trim().toLowerCase();
 
-    const oldUser = await User.findOne({ email: data.email });
+    const oldUser = await User.findOne({
+      $or: [
+        { email: data.email },
+        { username },
+        { adhar_card: Number(data.adhar_card) },
+      ],
+    });
     if (oldUser) {
       logger.error(
-        `${ip}: API /api/v1/user/add | User: ${user.name} | responnded with User already registered! for email: ${data.email} `
+        `${ip}: API /api/v1/user/add | User: ${user.name} | responded with duplicate user identity`
       );
-      return res.status(400).json({ message: "User already registered!" });
+      return res.status(409).json({ message: "Username, email, or Aadhaar number is already registered" });
     }
 
     const salt = await bcrypt.genSalt(10);
     const securedPass = await bcrypt.hash(data.password, salt);
     await User.create({
+      username,
       name: data.name,
       email: data.email,
       whatsapp_no: data.whatsapp_no,
@@ -73,16 +88,21 @@ const createUser = async (req, res) => {
       address: data.address,
       pin_code: data.pin_code,
     })
-      .then((user) => {
+      .then((createdUser) => {
         logger.info(
-          `${ip}: API /api/v1/user/add | User: ${user.name} | responnded with Success `
+          `${ip}: API /api/v1/user/add | User: ${createdUser.name} | responded with Success `
         );
-        return res.status(201).json(user);
+        const userResponse = createdUser.toObject();
+        delete userResponse.password;
+        return res.status(201).json({ data: userResponse, message: "User created successfully" });
       })
       .catch((err) => {
         logger.error(
           `${ip}: API /api/v1/user/add | User: ${user.name} | responnded with Error `
         );
+        if (err.code === 11000) {
+          return res.status(409).json({ message: "Username, email, or Aadhaar number is already registered" });
+        }
         return res.status(500).json({ error: "Error", message: err.message });
       });
   } else {
@@ -112,7 +132,7 @@ const getUsers = async (req, res) => {
         `${ip}: API /api/v1/user/getall | User: ${user.name} | responnded with Success `
       );
       return await res.status(200).json({
-        data: users,
+        data: users.map(omitPassword),
         message: "User retrived successfully",
       });
     } else {
@@ -149,7 +169,7 @@ const getUser = async (req, res) => {
           `${ip}: API /api/v1/user/get/:${id} | User: ${loggedin_user.name} | responnded with Success `
         );
         return await res.status(200).json({
-          data: user,
+          data: user.map(omitPassword),
           message: "User retrived successfully",
         });
       } else {
@@ -231,7 +251,7 @@ const updateUser = async (req, res) => {
         );
         return res
           .status(200)
-          .json({ data: result, message: "User Updated Successfully" });
+          .json({ data: omitPassword(result), message: "User Updated Successfully" });
       } else {
         // attempt updating Admin document
         const admin = await Admin.findById(id);
@@ -245,7 +265,7 @@ const updateUser = async (req, res) => {
           );
           return res
             .status(200)
-            .json({ data: admin, message: "User Updated Successfully" });
+            .json({ data: omitPassword(admin), message: "User Updated Successfully" });
         }
 
         // attempt updating Client document
@@ -266,7 +286,7 @@ const updateUser = async (req, res) => {
           );
           return res
             .status(200)
-            .json({ data: client, message: "User Updated Successfully" });
+            .json({ data: omitPassword(client), message: "User Updated Successfully" });
         }
 
         logger.info(
@@ -316,7 +336,7 @@ const deleteUser = async (req, res) => {
         );
         return res
           .status(200)
-          .json({ data: result, message: "User Deleted Successfully" });
+          .json({ data: omitPassword(result), message: "User Deleted Successfully" });
       } else {
         logger.info(
           `${ip}: API /api/v1/user/delete/:${id} | User: ${loggedin_user.name} | responnded with User Not Found `
@@ -461,9 +481,11 @@ const logIn = async (req, res) => {
     logger.info(
       `${ip}: API /api/v1/user/login responnded with Login Successfull for the user: ${loginId}`
     );
+    const userResponse = oldUser.toObject();
+    delete userResponse.password;
     return res
       .status(200)
-      .json({ data: oldUser, token, message: "Login Successfull" });
+      .json({ data: userResponse, token, message: "Login Successfull" });
   } catch (error) {
     logger.info(`${ip}: API /api/v1/user/login responnded with error`);
     console.log(error);
@@ -490,7 +512,7 @@ const getCurrent = async (req, res) => {
         `${ip}: API /api/v1/user/getCurrent/:${req.user._id}  responnded with Success `
       );
       return await res.status(200).json({
-        user: user[0],
+          user: omitPassword(user[0]),
       });
     } else {
       const client = await Client.find({
@@ -502,7 +524,7 @@ const getCurrent = async (req, res) => {
           `${ip}: API /api/v1/client/getCurrent/:${req.user._id}  responnded with Success `
         );
         return await res.status(200).json({
-          user: client[0],
+          user: omitPassword(client[0]),
         });
       } else {
         const emp = await Employee.find({
@@ -513,7 +535,7 @@ const getCurrent = async (req, res) => {
             `${ip}: API /api/v1/client/getCurrent/:${req.user._id}  responnded with Success `
           );
           return await res.status(200).json({
-            user: emp[0],
+            user: omitPassword(emp[0]),
           });
         }
       }
@@ -521,7 +543,7 @@ const getCurrent = async (req, res) => {
       // Check Admin collection for auth tokens issued to Admin model users
       const admin = await Admin.find({ _id: req.user._id });
       if (admin.length > 0) {
-        const adminObj = admin[0].toObject();
+        const adminObj = omitPassword(admin[0]);
         adminObj.roleType = { name: adminObj.role || "admin" };
         logger.info(
           `${ip}: API /api/v1/admin/getCurrent/:${req.user._id}  responnded with Success `
@@ -568,7 +590,7 @@ const AppDisUser = async (req, res) => {
             `${ip}: API /api/v1/user/app_dis/:${id} | User: ${loggedin_user.name} | responnded with Success `
           );
           return res.status(200).json({
-            data: result,
+            data: omitPassword(result),
             message: "User Approved/Disapproved Successfully",
           });
         } else {
@@ -583,7 +605,7 @@ const AppDisUser = async (req, res) => {
             `${ip}: API /api/v1/user/app_dis/:${id} | User: ${loggedin_user.name} | responnded with Success `
           );
           return res.status(200).json({
-            data: result,
+            data: omitPassword(result),
             message: "User Approved/Disapproved Successfully",
           });
         }
@@ -645,7 +667,7 @@ const changePass = async (req, res) => {
           `${ip}: API /api/v1/user/change/pass/:${id} | User: ${loggedin_user.name} | responnded with Success `
         );
         return res.status(200).json({
-          data: result,
+          data: omitPassword(result),
           message: "User Password Changed Successfully",
         });
       } else {

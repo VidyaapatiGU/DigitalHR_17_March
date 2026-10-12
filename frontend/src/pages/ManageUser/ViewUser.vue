@@ -212,7 +212,11 @@ export default {
       email: 'xyz@gmail.com',
 
       profile_url: '',
-      user: {},
+      user: {
+        team: { name: '' },
+        department: { name: '' },
+        roleType: { name: '' },
+      },
       form: {
         name: '',
         email: '',

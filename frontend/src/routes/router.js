@@ -14,9 +14,7 @@ import PFChallan from '../pages/Reports/PFChallan.vue';
 import DashboardView from '../views/DashboardView.vue';
 import DefaultView from '../views/DefaultView.vue';
 
-import Teams from '../pages/Teams/Teams.vue';
-import Role from '../pages/Role/Role.vue';
-import Department from '../pages/Department/Department.vue';
+import OrganizationSetup from '../pages/OrganizationSetup.vue';
 
 import ManageUsers from '../pages/ManageUser/ManageUsers.vue';
 import AddUser from '../pages/ManageUser/AddUser.vue';
@@ -134,16 +132,20 @@ const routes = [
         }),
       },
       {
+        path: '/organization',
+        component: OrganizationSetup,
+      },
+      {
         path: '/teams',
-        component: Teams,
+        redirect: { path: '/organization', query: { tab: 'teams' } },
       },
       {
         path: '/role',
-        component: Role,
+        redirect: { path: '/organization', query: { tab: 'roles' } },
       },
       {
         path: '/department',
-        component: Department,
+        redirect: { path: '/organization', query: { tab: 'departments' } },
       },
       {
         path: '/data/table',

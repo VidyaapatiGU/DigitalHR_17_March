@@ -222,7 +222,7 @@
                           data-bs-toggle="modal"
                           data-bs-target="#Modal"
                         >
-                          <el-tooltip content="Update Role" placement="bottom">
+            <el-tooltip content="Update Team" placement="bottom">
                             <i class="bi bi-pen-fill pointer" style="font-size"></i>
                           </el-tooltip>
                         </div>
@@ -233,7 +233,7 @@
                           data-bs-toggle="modal"
                           data-bs-target="#ModalDelete"
                         >
-                          <el-tooltip content="Delete Role" placement="bottom">
+            <el-tooltip content="Delete Team" placement="bottom">
                             <i class="bi bi-trash-fill pointer" style="font-size"></i>
                           </el-tooltip>
                         </div>

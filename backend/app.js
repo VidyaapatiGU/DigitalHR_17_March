@@ -1,6 +1,5 @@
 const AWS = require("aws-sdk");
 const express = require("express");
-const dotenv = require("dotenv").config();
 const cors = require("cors");
 const logger = require("./config/logger.js");
 const connectToMongo = require("./config/db.js");
@@ -8,6 +7,10 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
+
+const envPath =
+  process.env.DOTENV_CONFIG_PATH || path.resolve(__dirname, "../.env");
+require("dotenv").config({ path: envPath });
 
 connectToMongo();
 

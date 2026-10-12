@@ -143,7 +143,7 @@
           </div>
 
           <div v-if="employeesNotToSelect.length > 0 && showResponse == false">
-            <div class="p-2 mt-3 source-500">Employess With Required Feilds Missing</div>
+            <div class="p-2 mt-3 source-500">Rows Needing Correction</div>
 
             <div class="table-container">
               <div class="w-100">
@@ -246,6 +246,12 @@
               </div>
             </div>
           </div>
+          <div v-if="uploadErrors.length > 0 && showResponse" class="alert alert-warning mt-3" role="status">
+            <div class="fw-semibold">Some rows could not be saved</div>
+            <ul class="mb-0 mt-1">
+              <li v-for="(error, index) in uploadErrors" :key="`${index}-${error}`">{{ error }}</li>
+            </ul>
+          </div>
           <div v-if="showResponse == true">
             <div class="row w-100">
               <div class="col-12 col-sm-6 col-md-3 d-flex align-items-center"></div>
@@ -323,6 +329,7 @@ export default {
       employeesNotToSelect: [],
       savedEmployees: [],
       unSavedEmployees: [],
+      uploadErrors: [],
 
       month_year: {
         month: new Date().getMonth() - 1,
@@ -419,11 +426,16 @@ export default {
     async handleFileUpload(event) {
       this.handleUploadButton = true;
       this.file = event.target.files[0];
+      // Clearing the native input after capturing the File lets users retry the same file.
+      event.target.value = '';
       this.showSpinner = true;
       this.employeesToSelect = [];
       this.employeesNotToSelect = [];
       this.itemsSelected = [];
       this.excelData = [];
+      this.savedEmployees = [];
+      this.unSavedEmployees = [];
+      this.uploadErrors = [];
       setTimeout(async () => {
         this.showResponse = false;
         await this.extractEmployeesFromExcel();
@@ -519,35 +531,24 @@ export default {
     },
 
     prepareRowForUpload(row) {
-      const normalized = { ...row };
-      if (!normalized.gender) {
-        normalized.gender = 'Other';
-      }
-      if (!normalized.address) {
-        normalized.address = 'N/A';
-      }
-      if (!normalized.date_of_joining) {
-        normalized.date_of_joining = new Date().toISOString().slice(0, 10);
-      }
-      if (normalized.gross === undefined || normalized.gross === null || normalized.gross === '') {
-        normalized.gross = 0;
-      }
-      if (!normalized.designation) {
-        normalized.designation = 'Employee';
-      }
-      return normalized;
+      return { ...row };
     },
 
     getMissingRequiredFields(row) {
       const missing = [];
       if (!row.name) missing.push('name');
       if (!row.email) missing.push('email');
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(row.email).trim())) missing.push('email (invalid format)');
       if (!row.whatsapp_no) missing.push('whatsapp_no');
+      else if (!/^\d+$/.test(String(row.whatsapp_no).trim())) missing.push('whatsapp_no (digits only)');
       if (!row.adhar_card) missing.push('adhar_card');
+      else if (!/^\d+$/.test(String(row.adhar_card).trim())) missing.push('adhar_card (digits only)');
       if (!row.gender) missing.push('gender');
       if (!row.date_of_joining) missing.push('date_of_joining');
+      else if (Number.isNaN(new Date(row.date_of_joining).getTime())) missing.push('date_of_joining (invalid date)');
       if (!row.address) missing.push('address');
       if (row.gross === undefined || row.gross === null || row.gross === '') missing.push('gross');
+      else if (!Number.isFinite(Number(row.gross)) || Number(row.gross) < 0) missing.push('gross (must be a non-negative number)');
       return missing;
     },
 
@@ -633,11 +634,17 @@ export default {
         this.itemsSelected.length > 0 ? this.itemsSelected : this.employeesToSelect;
       try {
         const res = await axiosClient.post(`/api/v1/employee/add/employees/excel`, this.form);
-        toast.success(`Employees Added`, {
-          autoClose: 1500,
-        });
         this.savedEmployees = res.data.newUsers;
         this.unSavedEmployees = res.data.existingUsers;
+        this.uploadErrors = res.data.Errors || [];
+
+        if (this.uploadErrors.length) {
+          toast.warning(`${this.savedEmployees.length} added; ${this.uploadErrors.length} could not be saved`, { autoClose: 2500 });
+        } else {
+          toast.success(`${this.savedEmployees.length} employees added; ${this.unSavedEmployees.length} duplicates skipped`, {
+            autoClose: 2000,
+          });
+        }
 
         this.handleUploadButton = false;
         this.showResponse = true;

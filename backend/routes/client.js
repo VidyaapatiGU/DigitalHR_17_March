@@ -51,7 +51,12 @@ router.post(
 //@desc Create New Clients excel upload
 //@route POST /api/v1/client/add/upload
 //@access Private: Needs Login
-router.post("/upload", validateToken, [body("clientData")], uploadClient);
+router.post(
+  "/upload",
+  validateToken,
+  [body("clientData", "Select at least one client to upload").isArray({ min: 1 })],
+  uploadClient
+);
 
 //@desc User Login with email and password
 //@route POST /api/v1/client/login/
@@ -174,7 +179,11 @@ router.put(
     ),
     body("incorporation_type", "Enter a valid incorporation type"),
     body("user_id", "Select a valid Client id"),
+    body("address"),
     body("city"),
+    body("state"),
+    body("country"),
+    body("pin_code"),
   ],
   validateToken,
   updateClient

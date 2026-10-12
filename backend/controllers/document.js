@@ -54,7 +54,7 @@ const uploadDocument = async (req, res) => {
   const user = req.user;
   const { document, id } = req.params;
 
-  console.log(document, id);
+  const supportedDocumentTypes = new Set(["pan", "adhar", "gst", "cin", "asci", "bank"]);
 
   if (!user) {
     logger.error(
@@ -65,22 +65,30 @@ const uploadDocument = async (req, res) => {
 
   try {
     const file = req.file;
+    if (!supportedDocumentTypes.has(document)) {
+      return res.status(400).json({ message: "Unsupported document type" });
+    }
 
     if (!file || !file.originalname || !file.buffer) {
-      throw new Error("File upload failed");
+      return res.status(400).json({ message: "Select a document to upload" });
+    }
+    if (!["application/pdf", "image/jpeg", "image/png"].includes(file.mimetype)) {
+      return res.status(400).json({ message: "Only PDF, JPEG, or PNG files are supported" });
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      return res.status(413).json({ message: "Documents must be 10 MB or smaller" });
     }
 
     const uploadParams = {
       Bucket: process.env.AWS_BUCKET_NAME,
       Key: `documents/${document + id + file.originalname}`,
       Body: file.buffer,
-      ContentType: "application/pdf",
+      ContentType: file.mimetype,
     };
 
     const data = await s3.upload(uploadParams).promise();
 
     res.setHeader("Content-Disposition", "");
-    console.log("data: ", data);
 
     logger.info(
       `${ip}: API /api/v1/document/upload | User:  ${user.name}| document uploaded successfully`
@@ -92,7 +100,9 @@ const uploadDocument = async (req, res) => {
     logger.error(
       `${ip}: API /api/v1/document/upload | User: ${user.name} | error uploading document: ${err.message}`
     );
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      message: "Document storage is unavailable. Please verify the storage configuration and retry.",
+    });
   }
 };
 
@@ -104,52 +114,48 @@ const deleteDocument = async (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const user = req.user;
   const { filename, client_id, file_type } = req.params;
-  console.log(
-    "filename: ",
-    filename,
-    " client_id: ",
-    client_id,
-    " file_type: ",
-    file_type
-  );
 
-  const file_proof = file_type + "_proof";
-  const file_proof_url = file_type + "_proof_url";
-  const file_proof_url_id = file_type + "_proof_url_id";
+  if (!user) {
+    return res.status(401).json({ message: "User is not authorized" });
+  }
+  if (!["pan", "adhar", "gst", "cin"].includes(file_type)) {
+    return res.status(400).json({ message: "Unsupported document type" });
+  }
 
-  const params = {
-    Bucket: process.env.AWS_BUCKET_NAME,
-    Key: `documents/${filename}`,
-  };
+  const file_proof = `${file_type}_proof`;
+  const file_proof_url = `${file_type}_proof_url`;
+  const file_proof_url_id = `${file_type}_proof_url_id`;
 
   try {
-    const deleted = await s3.deleteObject(params).promise();
-    console.log("deleted: ", deleted);
-    let client = "";
-    if (deleted) {
-      client = await Client.findOneAndUpdate(
-        { user_id: client_id },
-        {
-          [file_proof]: false,
-          [file_proof_url]: null,
-          [file_proof_url_id]: null,
-        },
-        { new: true }
-      );
+    const selectors = [{ user_id: client_id }];
+    if (/^[a-f\d]{24}$/i.test(client_id)) selectors.unshift({ _id: client_id });
+    const client = await Client.findOne({ $or: selectors });
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    if (client[file_proof_url_id] !== filename) {
+      return res.status(404).json({ message: "Document not found for this client" });
     }
 
+    await s3.deleteObject({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: `documents/${filename}`,
+    }).promise();
+    await Client.findByIdAndUpdate(client._id, {
+      [file_proof]: false,
+      [file_proof_url]: null,
+      [file_proof_url_id]: null,
+    });
+
     logger.info(
-      `${ip}: API /api/v1/document/delete | User:  ${user.name}| document deleted successfully`
+      `${ip}: API /api/v1/document/delete | User: ${user.name} | document deleted successfully`
     );
-    return res
-      .status(200)
-      .json({ result: client, message: "Document deleted successfully" });
+    return res.status(200).json({ message: "Document deleted successfully" });
   } catch (err) {
-    console.log(err);
     logger.error(
-      `${ip}: API /api/v1/document/delete | User: ${user.name} | error deleting document: ${err.message}`
+      `${ip}: API /api/v1/document/delete | User: ${user?.name || "Unknown"} | error deleting document: ${err.message}`
     );
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ message: "Unable to delete document" });
   }
 };
 

@@ -162,7 +162,7 @@
                 <input
                   disabled
                   v-model="form.employee_count_range"
-                  type="number"
+                  type="text"
                   class="form-control border"
                   id="employee_count_range"
                   placeholder="Number Of Employees"
@@ -173,12 +173,12 @@
                   v-model="form.industry_type"
                   type="text"
                   class="form-control border"
-                  id="employee_count_range"
+                  id="industry_type"
                   placeholder="N/A"
                 />
               </div>
               <div class="form-group col-12 col-md-6 col-lg-4">
-                <label for="contact_person.name" class="source-500 mt-0">Conatact Name</label>
+                <label for="contact_person.name" class="source-500 mt-0">Contact Name</label>
                 <input
                   disabled
                   v-model="form.contact_person.name"
@@ -188,7 +188,7 @@
                   placeholder="Enter Contact Name"
                 />
                 <label for="contact_person.contact_no" class="source-500 mt-2">
-                  Conatct Number
+                  Contact Number
                 </label>
                 <input
                   disabled
@@ -196,16 +196,16 @@
                   type="number"
                   class="form-control border"
                   id="contact_person.contact_no"
-                  placeholder="Enter Conatct Number"
+                  placeholder="Enter Contact Number"
                 />
-                <label for="contact_person.email" class="source-500 mt-2">Conatct Email</label>
+                <label for="contact_person.email" class="source-500 mt-2">Contact Email</label>
                 <input
                   disabled
                   v-model="form.contact_person.email"
                   type="text"
                   class="form-control border"
                   id="contact_person.email"
-                  placeholder="Enter Conatct Email "
+                  placeholder="Enter Contact Email "
                 />
                 <label for="contact_person.designation" class="source-500 mt-2">
                   Contact Designation
@@ -220,6 +220,7 @@
                 />
                 <label for="address" class="source-500 mt-2">Address</label>
                 <textarea
+                  disabled
                   v-model="form.address"
                   type="text"
                   class="form-control border"

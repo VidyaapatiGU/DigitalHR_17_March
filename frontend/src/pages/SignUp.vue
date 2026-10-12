@@ -140,7 +140,7 @@
         <div class="brand-logo">D</div>
         <div class="brand-title">DigitalHR</div>
       </div>
-      <form class="form-container">
+      <form class="form-container" @submit.prevent="handleSignup">
         <div class="signup-title">Create Account</div>
         <div class="row">
           <div class="form-group col-12 col-md-6">
@@ -217,8 +217,7 @@
         </div>
         <div class="w-100 d-flex justify-content-center align-items-center mt-2">
           <button
-            @click="handleSignup"
-            type="button"
+            type="submit"
             class="btn btn-signup w-50"
           >
             Sign Up

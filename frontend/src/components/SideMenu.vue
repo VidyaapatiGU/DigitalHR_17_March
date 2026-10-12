@@ -63,6 +63,8 @@ ul {
   font-weight: 450;
   cursor: pointer;
   gap: 0.5rem;
+  font-family: inherit;
+  line-height: 1.25;
 }
 
 .nav-item:hover {
@@ -107,16 +109,39 @@ ul {
   font-size: 0.8125rem;
   font-weight: 450;
   cursor: pointer;
+  font-family: inherit;
+  line-height: 1.25;
+  background: transparent;
 }
 
-.section-header:hover {
+.section-header:hover,
+.section-header-active,
+.section-header[aria-expanded='true'] {
   background: var(--sidebar-hover);
   color: var(--sidebar-text-active);
+}
+
+.section-header-active,
+.section-header[aria-expanded='true'] {
+  background: rgba(59, 130, 246, 0.16);
+  box-shadow: inset 3px 0 0 #60a5fa;
+  font-weight: 650;
 }
 
 .section-header i.bi-chevron-down {
   font-size: 0.625rem;
   transition: transform 200ms ease;
+}
+
+.section-header[aria-expanded='true'] i.bi-chevron-down {
+  transform: rotate(180deg);
+}
+
+.sidebar-submenu {
+  width: calc(100% - 0.55rem);
+  margin: 0.1rem 0 0.25rem 0.55rem;
+  padding: 0.25rem 0 0.25rem 0.4rem;
+  border-left: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .section-label {
@@ -221,6 +246,8 @@ ul {
   <div
     class="main font-14px h-100 rounded-3 sidebar-main overflow-y-hidden"
     :class="{ collapsed }"
+    role="navigation"
+    aria-label="Primary navigation"
   >
     <div class="d-flex h-100 justify-content-between flex-column">
       <div class="header">
@@ -229,7 +256,14 @@ ul {
           <span v-if="!collapsed">DigitalHR</span>
         </div>
         <div class="d-flex align-items-center gap-2 user-row">
-          <div @click="handleRedirect('account')" class="flex-shrink-0">
+          <div
+            @click="handleRedirect('account')"
+            @keydown.enter="handleRedirect('account')"
+            class="flex-shrink-0"
+            role="button"
+            tabindex="0"
+            aria-label="Open account"
+          >
             <img
               v-if="profile"
               class="img-account-profile profile-image pointer rounded-circle"
@@ -254,21 +288,26 @@ ul {
       <div class="body px-2 pt-3 h-100 overflow-y-auto">
         <div v-if="!collapsed" class="d-flex flex-column gap-1">
           <div class="section-label">Main</div>
-          <div
+          <button
+            type="button"
             @click="handleRedirect('dashboard')"
-            class="nav-item"
+            class="nav-item border-0 bg-transparent w-100 text-start"
             :class="{ active: isMenuActive('dashboard') }"
           >
             <i class="bi bi-grid-1x2-fill"></i>
             <span class="nav-item-label">Dashboard</span>
-          </div>
+          </button>
 
           <template v-if="isAdminRole">
             <div class="section-label">Management</div>
-            <div
+            <button
+              type="button"
               data-bs-toggle="collapse"
-              class="section-header"
-              href="#multiCollapseUser"
+              class="section-header border-0 w-100 text-start"
+              data-bs-target="#multiCollapseUser"
+              :class="{
+                'section-header-active': isMenuActive('manage/users') || isMenuActive('organization'),
+              }"
               aria-expanded="false"
               aria-controls="multiCollapseUser"
             >
@@ -277,80 +316,72 @@ ul {
                 <span class="nav-item-label">Users</span>
               </div>
               <i class="bi bi-chevron-down"></i>
-            </div>
+            </button>
 
             <div class="w-100">
               <div class="collapse multi-collapse" id="multiCollapseUser">
-                <div class="card card-body">
-                  <div
+                <div class="sidebar-submenu">
+                  <button
+                    type="button"
                     @click="handleRedirect('manage/users')"
-                    class="nav-item"
+                    class="nav-item border-0 bg-transparent w-100 text-start"
                     :class="{ active: isMenuActive('manage/users') }"
                   >
                     <i class="bi bi-card-list"></i>
                     <span class="nav-item-label">Manage Users</span>
-                  </div>
-                  <div
-                    @click="handleRedirect('teams')"
-                    class="nav-item"
-                    :class="{ active: isMenuActive('teams') }"
+                  </button>
+                  <button
+                    type="button"
+                    @click="handleRedirect('organization')"
+                    class="nav-item border-0 bg-transparent w-100 text-start"
+                    :class="{ active: isMenuActive('organization') }"
                   >
-                    <i class="bi bi-people-fill"></i>
-                    <span class="nav-item-label">Teams</span>
-                  </div>
-                  <div
-                    @click="handleRedirect('role')"
-                    class="nav-item"
-                    :class="{ active: isMenuActive('role') }"
-                  >
-                    <i class="bi bi-award-fill"></i>
-                    <span class="nav-item-label">Role</span>
-                  </div>
-                  <div
-                    @click="handleRedirect('department')"
-                    class="nav-item"
-                    :class="{ active: isMenuActive('department') }"
-                  >
-                    <i class="bi bi-building-fill"></i>
-                    <span class="nav-item-label">Department</span>
-                  </div>
+                    <i class="bi bi-diagram-3-fill"></i>
+                    <span class="nav-item-label">Organization Setup</span>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div
+            <button
+              type="button"
               data-bs-toggle="collapse"
-              class="section-header"
-              href="#multiCollapseClient"
+              class="section-header border-0 w-100 text-start"
+              data-bs-target="#multiCollapseClient"
+              :class="{
+                'section-header-active': isMenuActive('manage/clients') || isMenuActive('add/client'),
+              }"
               aria-expanded="false"
               aria-controls="multiCollapseClient"
             >
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-briefcase-fill" style="font-size: 0.9375rem"></i>
-                <span class="nav-item-label">Clients</span>
+                <span class="nav-item-label">Manage Clients</span>
               </div>
               <i class="bi bi-chevron-down"></i>
-            </div>
+            </button>
 
             <div class="w-100">
               <div class="collapse multi-collapse" id="multiCollapseClient">
-                <div class="card card-body">
-                  <div
+                <div class="sidebar-submenu">
+                  <button
+                    type="button"
                     @click="handleRedirect('manage/clients')"
-                    class="nav-item"
+                    class="nav-item border-0 bg-transparent w-100 text-start"
                     :class="{ active: isMenuActive('manage/clients') }"
                   >
                     <i class="bi bi-person-rolodex"></i>
                     <span class="nav-item-label">Manage Clients</span>
-                  </div>
-                  <div
+                  </button>
+                  <button
+                    type="button"
                     @click="handleRedirect('add/client')"
-                    class="nav-item"
+                    class="nav-item border-0 bg-transparent w-100 text-start"
                     :class="{ active: isMenuActive('add/client') }"
                   >
                     <i class="bi bi-person-fill-add"></i>
                     <span class="nav-item-label">Add Client</span>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -358,10 +389,17 @@ ul {
 
           <template v-if="role == 'client'">
             <div class="section-label">Workforce</div>
-            <div
+            <button
+              type="button"
               data-bs-toggle="collapse"
-              class="section-header"
-              href="#multiCollapseEmployee"
+              class="section-header border-0 w-100 text-start"
+              data-bs-target="#multiCollapseEmployee"
+              :class="{
+                'section-header-active':
+                  isMenuActive('add/employee') ||
+                  isMenuActive('manage/employees') ||
+                  isMenuActive('manage/attendance'),
+              }"
               aria-expanded="false"
               aria-controls="multiCollapseEmployee"
             >
@@ -370,75 +408,82 @@ ul {
                 <span class="nav-item-label">Employees</span>
               </div>
               <i class="bi bi-chevron-down"></i>
-            </div>
+            </button>
 
             <div class="w-100">
               <div class="collapse multi-collapse" id="multiCollapseEmployee">
-                <div class="card card-body">
-                  <div
+                <div class="sidebar-submenu">
+                  <button
+                    type="button"
                     @click="handleRedirect('add/employee')"
-                    class="nav-item"
+                    class="nav-item border-0 bg-transparent w-100 text-start"
                     :class="{ active: isMenuActive('add/employee') }"
                   >
                     <i class="bi bi-person-fill-add"></i>
                     <span class="nav-item-label">Add Employee</span>
-                  </div>
-                  <div
+                  </button>
+                  <button
+                    type="button"
                     @click="handleRedirect('manage/employees')"
-                    class="nav-item"
+                    class="nav-item border-0 bg-transparent w-100 text-start"
                     :class="{ active: isMenuActive('manage/employees') }"
                   >
                     <i class="bi bi-person-rolodex"></i>
                     <span class="nav-item-label">Manage Employees</span>
-                  </div>
-                  <div
+                  </button>
+                  <button
+                    type="button"
                     @click="handleRedirect('manage/attendance')"
-                    class="nav-item"
+                    class="nav-item border-0 bg-transparent w-100 text-start"
                     :class="{ active: isMenuActive('manage/attendance') }"
                   >
                     <i class="bi bi-calendar-check-fill"></i>
                     <span class="nav-item-label">Manage Attendance</span>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
 
             <div class="section-label">Analytics</div>
-            <div
+            <button
+              type="button"
               @click="handleRedirect('reports')"
-              class="nav-item"
+              class="nav-item border-0 bg-transparent w-100 text-start"
               :class="{ active: isMenuActive('reports') }"
             >
               <i class="bi bi-bar-chart-fill"></i>
               <span class="nav-item-label">Reports</span>
-            </div>
+            </button>
           </template>
         </div>
 
         <div v-else class="d-flex flex-column gap-2">
-          <div
-            v-for="item in collapsedMenuItems"
-            :key="item.link"
-            class="nav-item icon-only"
-            :class="{ active: isMenuActive(item.link) }"
-            :title="item.label"
-            @click="handleRedirect(item.link)"
-          >
-            <i :class="item.icon"></i>
-          </div>
+            <button
+              type="button"
+              v-for="item in collapsedMenuItems"
+              :key="item.link"
+              class="nav-item icon-only border-0 bg-transparent"
+              :class="{ active: isMenuActive(item.link) }"
+              :title="item.label"
+              :aria-label="item.label"
+              @click="handleRedirect(item.link)"
+            >
+              <i :class="item.icon"></i>
+            </button>
         </div>
       </div>
 
       <div class="footer">
-        <div
+        <button
+          type="button"
           @click="handleRedirect('setting')"
-          class="nav-item"
+          class="nav-item border-0 bg-transparent w-100 text-start"
           :class="{ active: isMenuActive('setting'), 'icon-only': collapsed }"
           :title="collapsed ? 'Settings' : null"
         >
           <i class="bi bi-gear-fill"></i>
           <span v-if="!collapsed" class="nav-item-label">Settings</span>
-        </div>
+        </button>
       </div>
     </div>
   </div>
@@ -493,19 +538,9 @@ export default {
             label: 'Manage Users',
           },
           {
-            link: 'teams',
-            icon: 'bi bi-people-fill',
-            label: 'Teams',
-          },
-          {
-            link: 'role',
-            icon: 'bi bi-award-fill',
-            label: 'Role',
-          },
-          {
-            link: 'department',
-            icon: 'bi bi-building-fill',
-            label: 'Department',
+            link: 'organization',
+            icon: 'bi bi-diagram-3-fill',
+            label: 'Organization Setup',
           },
           {
             link: 'manage/clients',

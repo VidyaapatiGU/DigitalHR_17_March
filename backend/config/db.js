@@ -1,10 +1,9 @@
 const mongoose = require("mongoose");
 const logger = require("../config/logger.js");
-const mongoDBURI = process.env.MONGOURL;
 
 const connectToMongo = async () => {
   try {
-    const connect = await mongoose.connect(mongoDBURI);
+    const connect = await mongoose.connect(process.env.MONGOURL);
     console.log(
       "Connected to Mongo Successfully!",
       connect.connection.host,

@@ -8,6 +8,13 @@ const logger = require("../config/logger.js");
 
 const secret = process.env.ACCESS_TOKEN_SECERT;
 
+const omitPassword = (record) => {
+  if (!record) return record;
+  const safeRecord = typeof record.toObject === "function" ? record.toObject() : { ...record };
+  delete safeRecord.password;
+  return safeRecord;
+};
+
 //@desc Test Client API
 //@route GET /api/v1/client
 //@access Private: Needs Login
@@ -36,7 +43,6 @@ const createClient = async (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const user = req.user;
   const data = matchedData(req);
-  console.log("data", data);
 
   if (!errors.isEmpty()) {
     logger.error(
@@ -86,12 +92,10 @@ const createClient = async (req, res) => {
       pin_code: data.pin_code,
     });
 
-    console.log("newClient", newClient);
-
     logger.info(
       `${ip}: API /api/v1/client/add | User: ${user.name} | Responded with Success`
     );
-    return res.status(201).json(newClient);
+    return res.status(201).json(omitPassword(newClient));
   } catch (err) {
     logger.error(
       `${ip}: API /api/v1/client/add | User: ${
@@ -108,8 +112,6 @@ const uploadClient = async (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const user = req.user;
   const data = matchedData(req);
-  console.log("data", data);
-  console.log(data.clientData.length);
 
   if (!user) {
     logger.error(
@@ -122,7 +124,9 @@ const uploadClient = async (req, res) => {
       active: true,
     });
     const nextCLientNumber = allClients.length + 1;
-    const userName = data.clientData[i].username_prefix + nextCLientNumber;
+    const usernamePrefix =
+      data.clientData[i].username_prefix || data.username_prefix || "CL";
+    const userName = `${usernamePrefix}${nextCLientNumber}`;
 
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
@@ -242,9 +246,11 @@ const logIn = async (req, res) => {
     logger.info(
       `${ip}: API /api/v1/client/login responnded with Login Successfull for the username: ${username}`
     );
+    const clientResponse = oldClient.toObject();
+    delete clientResponse.password;
     return res
       .status(200)
-      .json({ data: oldClient, token, message: "Login Successfull" });
+      .json({ data: clientResponse, token, message: "Login Successfull" });
   } catch (error) {
     logger.info(`${ip}: API /api/v1/client/login responnded with error`);
     console.log(error);
@@ -260,7 +266,6 @@ const updateCreatedClient = async (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const user = req.user;
   const data = matchedData(req);
-  console.log("data", data);
 
   if (!errors.isEmpty()) {
     logger.error(
@@ -315,12 +320,10 @@ const updateCreatedClient = async (req, res) => {
       }
     );
 
-    console.log("newClient", newClient);
-
     logger.info(
       `${ip}: API /api/v1/client/add | User: ${newUser.name} | Responded with Success`
     );
-    return res.status(201).json(newUser);
+    return res.status(201).json(omitPassword(newUser));
   } catch (err) {
     logger.error(
       `${ip}: API /api/v1/client/add | User: ${
@@ -394,7 +397,7 @@ const AddClientDetails = async (req, res) => {
     logger.info(
       `${ip}: API /api/v1/client/add/details/:${id} | User: ${user.name} | Responded with Success`
     );
-    return res.status(200).json(client);
+    return res.status(200).json(omitPassword(client));
   } catch (err) {
     logger.error(
       `${ip}: API /api/v1/client/add/details/:${id} | User: ${
@@ -414,8 +417,11 @@ const getAllClients = async (req, res) => {
 
   try {
     if (user && ["super_admin", "admin"].includes(user.roleType?.name)) {
-      // Return all clients (active and inactive) so admins can manage/toggle them
-      const clients = await Client.find({})
+      // Keep disapproved clients available for re-approval, while excluding new and legacy soft-deletes.
+      const clients = await Client.find({
+        deletedAt: null,
+        $or: [{ active: { $ne: false } }, { approved: false }],
+      })
         .populate("contact_person")
         .sort({ createdAt: -1 });
 
@@ -423,7 +429,7 @@ const getAllClients = async (req, res) => {
         `${ip}: API /api/v1/client/getall | User: ${user.name} | responnded with Success `
       );
       return await res.status(200).json({
-        data: clients,
+        data: clients.map(omitPassword),
         message: "User retrived successfully",
       });
     } else {
@@ -459,7 +465,7 @@ const getClients = async (req, res) => {
         `${ip}: API /api/v1/client/getall | User: ${user.name} | responnded with Success `
       );
       return await res.status(200).json({
-        data: clients,
+        data: clients.map(omitPassword),
         message: "User retrived successfully",
       });
     } else {
@@ -495,13 +501,12 @@ const getClient = async (req, res) => {
         }).populate("contact_person");
       }
 
-      console.log("client", client);
       if (client.length > 0) {
         logger.info(
           `${ip}: API /api/v1/client/get/:${id} | User: ${loggedin_user.name} | responnded with Success `
         );
         return await res.status(200).json({
-          data: client,
+          data: client.map(omitPassword),
           message: "User retrived successfully",
         });
       } else {
@@ -534,7 +539,6 @@ const updateClient = async (req, res) => {
   const { id } = req.params;
 
   const data = matchedData(req);
-  console.log("data: ", data);
 
   const errors = validationResult(req);
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -587,7 +591,7 @@ const updateClient = async (req, res) => {
         );
         return res
           .status(200)
-          .json({ data: result, message: "Client Updated Successfully" });
+          .json({ data: omitPassword(result), message: "Client Updated Successfully" });
       } else {
         logger.info(
           `${ip}: API /api/v1/client/update/:${id} | User: ${loggedin_user.name} | responnded with Client Not Found `
@@ -618,56 +622,50 @@ const deleteClient = async (req, res) => {
   const { id } = req.params;
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
+  if (!loggedin_user) {
+    return res.status(401).json({ message: "User is not authorized" });
+  }
+  if (!["admin", "super_admin"].includes(loggedin_user.roleType?.name)) {
+    logger.info(
+      `${ip}: API /api/v1/client/delete/:${id} | User: ${loggedin_user.name} | denied for role ${loggedin_user.roleType?.name || "unknown"}`
+    );
+    return res.status(403).json({ message: "Admin access is required to delete a client" });
+  }
+
   try {
-    if (loggedin_user) {
-      const updated = {
-        active: false,
-      };
-      // Try matching by user_id first, else fall back to client _id
-      let oldUser = await Client.findOne({ user_id: id });
-      if (!oldUser) {
-        oldUser = await Client.findOne({ _id: id });
-      }
-      if (oldUser) {
-        console.log("oldUser: ", oldUser);
-        const clientRes = await Client.findOneAndUpdate(
-          { _id: oldUser._id },
-          updated,
-          {
-            new: true,
-          }
-        );
-
-        // also mark linked User inactive if exists
-        await User.findOneAndUpdate({ _id: oldUser.user_id || id }, updated, {
-          new: true,
-        });
-
-        logger.info(
-          `${ip}: API /api/v1/client/delete/:${id} | User: ${loggedin_user.name} | responnded with Success `
-        );
-        return res
-          .status(200)
-          .json({ data: clientRes, message: "User Deleted Successfully" });
-      } else {
-        logger.info(
-          `${ip}: API /api/v1/client/delete/:${id} | User: ${loggedin_user.name} | responnded with Client Not Found `
-        );
-        return res.status(200).json({ message: "User Not Found" });
-      }
-    } else {
-      logger.error(
-        `${ip}: API /api/v1/client/delete/:${id} | User: ${loggedin_user.name} | responnded with Client is not Autherized `
-      );
-      return res.status(401).send({ message: "User is not Autherized" });
+    const updated = { active: false, deletedAt: new Date() };
+    // Soft-delete the client and any linked user; try user_id before the client _id.
+    let client = await Client.findOne({ user_id: id });
+    if (!client) {
+      client = await Client.findOne({ _id: id });
     }
+
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    const clientRes = await Client.findOneAndUpdate(
+      { _id: client._id },
+      updated,
+      { new: true }
+    );
+
+    if (client.user_id) {
+      await User.findByIdAndUpdate(client.user_id, { active: false }, { new: true });
+    }
+
+    logger.info(
+      `${ip}: API /api/v1/client/delete/:${id} | User: ${loggedin_user.name} | responded with Success`
+    );
+    return res.status(200).json({
+      data: omitPassword(clientRes),
+      message: "Client deleted successfully",
+    });
   } catch (error) {
     logger.error(
-      `${ip}: API /api/v1/client/delete/:${id} | User: ${loggedin_user.name} | responnded with Error `
+      `${ip}: API /api/v1/client/delete/:${id} | User: ${loggedin_user.name} | responded with Error`
     );
-    return res
-      .status(500)
-      .json({ data: error, message: "Something went wrong" });
+    return res.status(500).json({ message: "Unable to delete client" });
   }
 };
 
@@ -679,17 +677,14 @@ const getCurrent = async (req, res) => {
   try {
     const user = await Client.find({
       _id: req.user._id,
-    })
-      .populate("department")
-      .populate("roleType")
-      .populate("team");
+    });
 
     if (user.length > 0) {
       logger.info(
         `${ip}: API /api/v1/client/getCurrent/:${req.user._id}  responnded with Success `
       );
       return await res.status(200).json({
-        user: user[0],
+        user: omitPassword(user[0]),
       });
     }
   } catch (error) {
@@ -717,7 +712,6 @@ const AppDisClient = async (req, res) => {
       }
 
       if (oldUser) {
-        console.log("olduser: ", oldUser);
         if (oldUser.approved) {
           const updatedClient = {
             approved: false,
@@ -747,7 +741,7 @@ const AppDisClient = async (req, res) => {
             `${ip}: API /api/v1/client/app_dis/:${id} | User: ${loggedin_user.name} | responnded with Success `
           );
           return res.status(200).json({
-            data: clientRes,
+            data: omitPassword(clientRes),
             message: "User Approved/Disapproved Successfully",
           });
         } else {
@@ -777,7 +771,7 @@ const AppDisClient = async (req, res) => {
             `${ip}: API /api/v1/client/app_dis/:${id} | User: ${loggedin_user.name} | responnded with Success `
           );
           return res.status(200).json({
-            data: clientRes,
+            data: omitPassword(clientRes),
             message: "User Approved/Disapproved Successfully",
           });
         }
@@ -836,7 +830,7 @@ const changePass = async (req, res) => {
           `${ip}: API /api/v1/client/change/pass/:${id} | User: ${loggedin_user.name} | responnded with Success `
         );
         return res.status(200).json({
-          data: result,
+          data: omitPassword(result),
           message: "Client Password Changed Successfully",
         });
       } else {
@@ -865,13 +859,10 @@ const changePass = async (req, res) => {
 //@route PUT /api/v1/client/update/document/:id
 //@access Private: Needs Login
 const updateDocument = async (req, res) => {
-  console.log("In update doc");
   const loggedin_user = req.user;
   const { id } = req.params;
-  console.log("client ID: ", id);
 
   const data = matchedData(req);
-  console.log("data: ", data, id);
 
   const errors = validationResult(req);
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -886,7 +877,6 @@ const updateDocument = async (req, res) => {
   if (loggedin_user) {
     try {
       const oldUser = await Client.findOne({ _id: id });
-      console.log("oldUser: ", oldUser);
       if (oldUser) {
         let client = "";
 
@@ -955,7 +945,7 @@ const updateDocument = async (req, res) => {
         );
         return res
           .status(200)
-          .json({ data: client, message: "Client Updated Successfully" });
+          .json({ data: omitPassword(client), message: "Client Updated Successfully" });
       } else {
         logger.info(
           `${ip}: API /api/v1/client/update/:${id} | User: ${loggedin_user.name} | responnded with Client Not Found `

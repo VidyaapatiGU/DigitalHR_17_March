@@ -130,7 +130,7 @@
 
             <div v-if="formPage == 2" class="row">
               <div class="form-group col-12 col-md-6">
-                <label for="contact_person.name" class="source-500 mt-2">Conatact Name</label>
+                <label for="contact_person.name" class="source-500 mt-2">Contact Name</label>
                 <input
                   v-model="form.contact_person.name"
                   type="text"
@@ -139,24 +139,24 @@
                   placeholder="Enter Contact Name"
                 />
                 <label for="contact_person.contact_no" class="source-500 mt-2">
-                  Conatct Number
+                  Contact Number
                 </label>
                 <input
                   v-model="form.contact_person.contact_no"
                   type="number"
                   class="form-control border"
                   id="contact_person.contact_no"
-                  placeholder="Enter Conatct Number"
+                  placeholder="Enter Contact Number"
                 />
               </div>
               <div class="form-group col-12 col-md-6">
-                <label for="contact_person.email" class="source-500 mt-2">Conatct Email</label>
+                <label for="contact_person.email" class="source-500 mt-2">Contact Email</label>
                 <input
                   v-model="form.contact_person.email"
                   type="email"
                   class="form-control border"
                   id="contact_person.email"
-                  placeholder="Enter Conatct Email "
+                  placeholder="Enter Contact Email "
                 />
                 <label for="contact_person.designation" class="source-500 mt-2">
                   Contact Designation
@@ -377,23 +377,20 @@ export default {
 
   async created() {
     await this.getCurrent();
-    console.log('after current');
-    console.log(this.userId);
     if (this.userId) {
       try {
-        console.log('created after current');
-        const userRes = await axiosClient.get(`/api/v1/user/get/${this.form.user_id}`);
-        console.log(userRes);
-        this.user = userRes.data.data[0];
-        console.log('res: ', this.user);
+        const clientRes = await axiosClient.get(`/api/v1/client/get/${this.userId}`);
+        this.user = clientRes.data.data?.[0];
+        if (!this.user) {
+          this.$router.push('/manage/clients');
+          return;
+        }
         this.form.user_id = this.user._id;
         this.form.name = this.user.name;
         this.form.email = this.user.email;
         this.form.whatsapp_no = this.user.whatsapp_no;
-        console.log('end current');
       } catch (err) {
-        console.log('error: ', err);
-        this.$router.push('/manage/users');
+        this.$router.push('/manage/clients');
       }
     } else {
       this.$router.push('/manage/clients');
@@ -424,7 +421,7 @@ export default {
         return;
       }
       if (this.file == undefined) {
-        toast.error(`Please Select Document Type!`, {
+        toast.error(`Please select a file`, {
           autoClose: 1500,
         });
         return;
@@ -459,9 +456,11 @@ export default {
         this.documentUploaded = true;
         this.file = null;
         this.form.document_type = '';
-        console.log('this.submitedDocuments: ', this.submitedDocuments);
+        if (this.$refs.file) this.$refs.file.value = '';
       } catch (err) {
-        console.log('error: ', err);
+        toast.error(err.response?.data?.message || 'Unable to upload document', {
+          autoClose: 2000,
+        });
       }
     },
 
@@ -471,15 +470,12 @@ export default {
     },
 
     async handleAddClientDetails() {
-      console.log('form: ', this.form);
       if (this.validateForm() == false) {
         return;
       }
 
       try {
         const res = await axiosClient.put(`/api/v1/client/add/details/${this.userId}`, this.form);
-        console.log(res);
-
         if (res) {
           toast.success(`Client Added`, {
             autoClose: 1500,
@@ -487,8 +483,7 @@ export default {
         }
         this.formPage = 3;
       } catch (err) {
-        console.log('error: ', err);
-        if (err.response.status == 409) {
+        if (err.response?.status == 409) {
           toast.error(`User Already Exist`, {
             autoClose: 1500,
           });
@@ -605,10 +600,7 @@ export default {
         if (!token) {
           this.$router.push('/login');
         }
-        this.form.user_id = token.data.user._id;
-        console.log('User is: ', this.form.user_id);
       } catch (err) {
-        console.log('error: ', err);
         this.$router.push('/login');
       }
     },

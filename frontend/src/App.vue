@@ -1,11 +1,14 @@
 <script setup>
-import SideBar from './components/NavAndSideBar.vue';
 </script>
 
 <template>
   <div class="hind-regular main">
     <div class="router h-100">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </router-view>
     </div>
   </div>
 </template>

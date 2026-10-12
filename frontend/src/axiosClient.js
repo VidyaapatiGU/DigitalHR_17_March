@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const axiosClient = axios.create({
-  //baseURL: 'http://localhost:5001/',
-  baseURL: 'https://digitalhr-17-march.onrender.com',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001',
 });
 // Add a request interceptor to set the Authorization header before each request
 axiosClient.interceptors.request.use(

@@ -621,21 +621,56 @@ export default {
 
     async processAndUpload(jsonData, leaveRecords) {
       try {
-        // First, upload the attendance sheet data if available
-        if (this.form.employeeData.length > 0) {
-          console.log("Uploading attendance data...");
-          try {
-            const res = await axiosClient.post(
-              `/api/v1/attendance/add/${this.user._id}`,
-              this.form
-            );
-            //toast.success("Attendance Data Added", { autoClose: 1500 });
-            console.log("Attendance res.data: ", res.data);
-          } catch (err) {
-            console.log("Error uploading attendance data: ", err);
-            toast.error("Something Went Wrong with Attendance Upload", { autoClose: 1500 });
+      // First, upload the attendance sheet data if available
+      if (this.form.employeeData.length > 0) {
+        const pickValue = (row, keys) => {
+          for (const key of keys) {
+            if (row[key] !== undefined && row[key] !== null && row[key] !== "") {
+              return row[key];
+            }
           }
+          return undefined;
+        };
+        this.form.employeeData = jsonData.map((row) => ({
+          ...row,
+          emp_code: pickValue(row, ["emp_code", "Emp Code", "Employee Code"]),
+          name: pickValue(row, ["name", "Name"]),
+          email: pickValue(row, ["email", "Email"]),
+          present: this.presentValue(row),
+          numberOfLOP: Number(pickValue(row, ["numberOfLOP", "NumberOfLOP", "NoOfLOP"]) || 0),
+          absentDaysLOP: pickValue(row, ["absentDaysLOP", "AbsentDaysLOP"]),
+          numberOfCL: Number(pickValue(row, ["numberOfCL", "NumberOfCL", "NoOfCL"]) || 0),
+          absentDaysCL: pickValue(row, ["absentDaysCL", "AbsentDaysCL"]),
+          numberOfSL: Number(pickValue(row, ["numberOfSL", "NumberOfSL", "NoOfSL"]) || 0),
+          absentDaysSL: pickValue(row, ["absentDaysSL", "AbsentDaysSL"]),
+          numberOfPL: Number(pickValue(row, ["numberOfPL", "NumberOfPL", "NoOfPL"]) || 0),
+          absentDaysPL: pickValue(row, ["absentDaysPL", "AbsentDaysPL"]),
+        }));
+
+        try {
+          const res = await axiosClient.post(
+            `/api/v1/attendance/add/${this.user._id}`,
+            this.form
+          );
+          if (Array.isArray(res.data.errors) && res.data.errors.length > 0) {
+            toast.error(
+              `Attendance saved for ${res.data.data?.length || 0} row(s); ${res.data.errors.length} row(s) failed.`,
+              { autoClose: 4000 }
+            );
+            return;
+          }
+          toast.success(`Attendance uploaded for ${this.form.employeeData.length} employees.`, {
+            autoClose: 2000,
+          });
+        } catch (err) {
+          console.error("Attendance upload failed:", err);
+          toast.error(
+            err.response?.data?.message || "Attendance upload failed. Check the file and try again.",
+            { autoClose: 3000 }
+          );
+          return;
         }
+      }
 
         console.log("this.leavesBalanceData", this.leavesBalanceData);
         const selectedYear = Number(this.month_year?.year);

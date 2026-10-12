@@ -373,7 +373,7 @@
             <div class="row source-400">
               <div class="form-group col-12 col-md-6">
                 <label for="contact_person.name" class="mt-2">
-                  Conatact Name
+                  Contact Name
                   <span class="text-danger">*</span>
                 </label>
                 <input
@@ -384,7 +384,7 @@
                   placeholder="Enter Contact Name"
                 />
                 <label for="contact_person.contact_no" class="mt-2">
-                  Conatct Number
+                  Contact Number
                   <span class="text-danger">*</span>
                 </label>
                 <input
@@ -392,12 +392,12 @@
                   type="number"
                   class="form-control border"
                   id="contact_person.contact_no"
-                  placeholder="Enter Conatct Number"
+                  placeholder="Enter Contact Number"
                 />
               </div>
               <div class="form-group col-12 col-md-6">
                 <label for="contact_person.email" class="mt-2">
-                  Conatct Email
+                  Contact Email
                   <span class="text-danger">*</span>
                 </label>
                 <input
@@ -405,7 +405,7 @@
                   type="email"
                   class="form-control border"
                   id="contact_person.email"
-                  placeholder="Enter Conatct Email "
+                  placeholder="Enter Contact Email "
                 />
                 <label for="contact_person.designation" class="mt-2">
                   Contact Designation
@@ -774,12 +774,9 @@ export default {
       this.form.department = this.selected_department._id;
       this.form.team = this.selected_team._id; */
 
-      console.log('Add Client');
-      console.log('form: ', this.form);
       try {
         const res = await axiosClient.post(`api/v1/client/add`, this.form);
         if (res) {
-          console.log('success: ', res);
           this.form.user_id = res.data._id;
         }
         this.formPage = 2;
@@ -812,7 +809,6 @@ export default {
     },
 
     async handleAddClientDetails() {
-      console.log('form: ', this.form);
       if (this.validateFormPage3() == false) {
         return;
       }
@@ -831,7 +827,6 @@ export default {
           this.$router.push(`/add/client/details/${this.form.user_id}`);
         }, 2000);
       } catch (err) {
-        console.log('error: ', err);
         if (err.response.status == 404) {
           toast.error(`Client Not Found!`, {
             autoClose: 1500,
@@ -862,8 +857,6 @@ export default {
       /* this.form.roleType = this.selected_roleType._id;
       this.form.department = this.selected_department._id;
       this.form.team = this.selected_team._id; */
-      console.log('form: ', this.form);
-
       try {
         const res = await axiosClient.post(`api/v1/client/update/created/client`, this.form);
         this.formPage = 2;

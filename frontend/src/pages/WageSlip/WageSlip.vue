@@ -497,7 +497,7 @@ import 'vue3-toastify/dist/index.css';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import axiosClient from '../../axiosClient';
-import { da } from 'element-plus/es/locales.mjs';
+import { calculatePayroll, roundCurrency } from '../../utils/payroll';
 
 export default {
   name: 'WageSlip',
@@ -670,107 +670,47 @@ export default {
 
   methods: {
     calculateSalary(gross, days, attendance) {
-      //const basic = Math.round((gross * 40) / 100);
-      //const hra = Math.round((gross * 30) / 100);
-      //const DA = Math.round((gross * 10) / 100);
-      //const conveyance = Math.round((gross * 10) / 100);
-      //const FoodAllow = Math.round((gross * 10) / 100);
+      const payroll = calculatePayroll({
+        components: {
+          basic: this.employee.basic,
+          hra: this.employee.hra,
+          da: this.employee.da,
+          conveyance: this.employee.conveyance,
+          foodAllow: this.employee.food_allow,
+        },
+        periodDays: days,
+        payableDays: attendance,
+        esiEligible: true,
+        lwfEligible: this.employee.lwf === true,
+      });
 
-      const basic = this.employee.basic;
-      const hra = this.employee.hra;
-      const DA = this.employee.da;
-      const conveyance = this.employee.conveyance;
-      const FoodAllow = this.employee.food_allow;
-
-      const payableBasic = Math.round((basic / days) * attendance);
-      const payableDA = Math.round((DA / days) * attendance);
-      const payableHra = Math.round((hra / days) * attendance);
-      const payableConveyance = Math.round((conveyance / days) * attendance);
-      const payableFoodAllow = Math.round((FoodAllow / days) * attendance);
-      const payableOtherAllowance = 0;
-
-      let pfBasic = payableBasic + payableDA;
-      if (pfBasic > 15000) pfBasic = 15000;
-      const pf = Math.round((pfBasic * 12) / 100);
-      const e_pf = Math.round((pfBasic * 13) / 100);
-
-      const otEarnings = 0;
-      const reimbursement = 0;
-
-      const grossSalary =
-        payableBasic +
-        payableDA +
-        payableHra +
-        payableConveyance +
-        payableFoodAllow +
-        payableOtherAllowance +
-        otEarnings +
-        reimbursement;
-
-      let esi = 0;
-      if (grossSalary <= 21000) esi = Math.round((grossSalary * 0.75) / 100);
-      let lwf = 0;
-
-      if (this.employee.lwf == true) lwf = 10;
-
-      const tdsOther = 0;
-      const totalDeduction = esi + pf + lwf + tdsOther;
-
-      const netWages = grossSalary - totalDeduction;
-
-      this.minimum_basic = basic;
-      this.minimum_hra = hra;
-      this.minimum_da = DA;
-      this.minimum_FoodAllow = FoodAllow;
-      this.minimum_ConveyanceAllow = conveyance;
-      this.otherAllowance = 0;
-      this.pfBasic = pfBasic;
-      this.pf = pf;
-      this.e_pf = e_pf;
-      this.e_esic = 0;
-      this.e_lwf = 30;
-      this.payableBasic = payableBasic;
-      this.payableDA = payableDA;
-      this.payableHra = payableHra;
-      this.payableConveyance = payableConveyance;
-      this.payableFoodAllow = payableFoodAllow;
-      this.payableOtherAllowance = payableOtherAllowance;
-      this.otEarnings = otEarnings;
-      this.reimbursement = reimbursement;
-      this.grossSalary = grossSalary;
-      this.esi = esi;
-      this.lwf = lwf;
-      this.tdsOther = tdsOther;
-      this.totalDeduction = totalDeduction;
-      this.netWages = netWages;
-
-      console.log('gross: ', gross);
-      console.log('basic: ', basic);
-      console.log('hra: ', hra);
-      console.log('DA: ', DA);
-      console.log('conveyance: ', conveyance);
-      console.log('FoodAllow: ', FoodAllow);
-
-      console.log('payableBasic: ', payableBasic);
-      console.log('payableDA: ', payableDA);
-      console.log('pfBasic: ', pfBasic);
-      console.log('pf: ', pf);
-
-      console.log('payableHra: ', payableHra);
-      console.log('payableConveyance: ', payableConveyance);
-      console.log('payableFoodAllow: ', payableFoodAllow);
-      console.log('payableOtherAllowance: ', payableOtherAllowance);
-      console.log('otEarnings: ', otEarnings);
-
-      console.log('reimbursement: ', reimbursement);
-
-      console.log('grossSalary: ', grossSalary);
-      console.log('esi: ', esi);
-      console.log('lwf: ', lwf);
-      console.log('tdsOther: ', tdsOther);
-      console.log('totalDeduction: ', totalDeduction);
-
-      console.log('netWages: ', netWages);
+      Object.assign(this, {
+        minimum_basic: payroll.minimumBasic,
+        minimum_hra: payroll.minimumHra,
+        minimum_da: payroll.minimumDA,
+        minimum_FoodAllow: payroll.minimumFoodAllow,
+        minimum_ConveyanceAllow: payroll.minimumConveyance,
+        otherAllowance: payroll.payableOtherAllowance,
+        pfBasic: payroll.pfBasic,
+        pf: payroll.pf,
+        e_pf: roundCurrency(payroll.pfBasic * 0.13),
+        e_esic: 0,
+        e_lwf: 30,
+        payableBasic: payroll.payableBasic,
+        payableDA: payroll.payableDA,
+        payableHra: payroll.payableHra,
+        payableConveyance: payroll.payableConveyance,
+        payableFoodAllow: payroll.payableFoodAllow,
+        payableOtherAllowance: payroll.payableOtherAllowance,
+        otEarnings: payroll.otEarnings,
+        reimbursement: payroll.reimbursement,
+        grossSalary: payroll.grossSalary,
+        esi: payroll.esi,
+        lwf: payroll.lwf,
+        tdsOther: payroll.tdsOther,
+        totalDeduction: payroll.totalDeduction,
+        netWages: payroll.netWages,
+      });
     },
 
     async handleDownload() {

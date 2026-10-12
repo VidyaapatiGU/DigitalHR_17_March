@@ -130,7 +130,7 @@
 
             <div v-if="formPage == 2" class="row">
               <div class="form-group col-12 col-md-6">
-                <label for="contact_person.name" class="source-500 mt-2">Conatact Name</label>
+                <label for="contact_person.name" class="source-500 mt-2">Contact Name</label>
                 <input
                   v-model="form.contact_person.name"
                   type="text"
@@ -139,24 +139,24 @@
                   placeholder="Enter Contact Name"
                 />
                 <label for="contact_person.contact_no" class="source-500 mt-2">
-                  Conatct Number
+                  Contact Number
                 </label>
                 <input
                   v-model="form.contact_person.contact_no"
                   type="number"
                   class="form-control border"
                   id="contact_person.contact_no"
-                  placeholder="Enter Conatct Number"
+                  placeholder="Enter Contact Number"
                 />
               </div>
               <div class="form-group col-12 col-md-6">
-                <label for="contact_person.email" class="source-500 mt-2">Conatct Email</label>
+                <label for="contact_person.email" class="source-500 mt-2">Contact Email</label>
                 <input
                   v-model="form.contact_person.email"
                   type="email"
                   class="form-control border"
                   id="contact_person.email"
-                  placeholder="Enter Conatct Email "
+                  placeholder="Enter Contact Email "
                 />
                 <label for="contact_person.designation" class="source-500 mt-2">
                   Contact Designation

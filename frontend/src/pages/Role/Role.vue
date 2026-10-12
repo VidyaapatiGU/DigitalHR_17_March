@@ -56,7 +56,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title source-400" id="ModalLabel">Update team</h5>
+          <h5 class="modal-title source-400" id="ModalLabel">Update Role</h5>
           <button
             type="button"
             class="btn-close"
