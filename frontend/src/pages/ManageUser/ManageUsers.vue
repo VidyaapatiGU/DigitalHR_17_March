@@ -369,6 +369,10 @@
               placeholder="Search users..."
             />
             <div class="action-buttons">
+              <a class="download-format-btn" href="/templates/user_upload_format.xlsx" download>
+                <i class="bi bi-download" aria-hidden="true"></i>
+                <span>Download Format</span>
+              </a>
               <router-link to="/add/user" class="d-flex align-items-center text-decoration-none">
                 <button type="button" class="btn btn-primary border-0 button_bg source-400">
                   Add User

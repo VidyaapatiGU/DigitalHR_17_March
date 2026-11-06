@@ -95,17 +95,6 @@
   color: #ffffff;
 }
 
-.format-link {
-  font-size: 0.75rem;
-  color: var(--primary-light, #2563eb);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.format-link:hover {
-  text-decoration: underline;
-}
-
 .table-icon {
   display: inline-flex;
   align-items: center;
@@ -450,8 +439,9 @@
               placeholder="Search clients..."
             />
             <div class="action-buttons">
-              <a href="https://technirmitisoftwares.com/client_format.xlsx" class="format-link">
-                Download Format
+              <a href="https://technirmitisoftwares.com/client_format.xlsx" class="download-format-btn">
+                <i class="bi bi-download" aria-hidden="true"></i>
+                <span>Download Format</span>
               </a>
               <router-link to="/upload/client/excel" class="text-decoration-none">
                 <button type="button" class="btn-action">
