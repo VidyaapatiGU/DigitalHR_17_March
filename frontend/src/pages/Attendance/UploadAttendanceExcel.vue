@@ -75,8 +75,6 @@
 .table-icon:hover { background: #f1f5f9; }
 
 .format-icon {
-  min-height: 38px;
-  padding: 0.45rem 0.9rem;
   justify-content: center;
   white-space: nowrap;
 }
@@ -225,10 +223,10 @@
             <el-tooltip content="Download Format" placement="bottom">
               <a
                 href="https://technirmitisoftwares.com/employeeAttendanceFormat.xlsx"
-                class="btn-action format-icon"
+                class="download-format-btn format-icon"
                 aria-label="Download format"
               >
-                <i class="bi bi-download"></i>
+                <i class="bi bi-download" aria-hidden="true"></i>
                 <span>Input Format</span>
               </a>
             </el-tooltip>
