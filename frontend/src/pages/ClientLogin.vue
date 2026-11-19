@@ -287,9 +287,7 @@ export default {
           autoClose: 1500,
         });
 
-        setTimeout(() => {
-          this.$router.push('/dashboard');
-        }, 2000);
+        this.$router.push('/dashboard');
       } catch (err) {
         if (err.response.status == 404) {
           toast.error(`Client dosen't exist`, {
