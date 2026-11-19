@@ -779,7 +779,7 @@ const pageTitle = computed(() => {
 const applyTheme = (theme) => {
   const supportedTheme = themes.some((item) => item.id === theme) ? theme : 'ocean';
   currentTheme.value = supportedTheme;
-  document.documentElement.dataset.theme = supportedTheme;
+  document.documentElement.dataset.cardTheme = supportedTheme;
 };
 
 const saveTheme = async (theme) => {
