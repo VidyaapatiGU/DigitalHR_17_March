@@ -38,7 +38,8 @@ ul {
 }
 
 .sidebar-main {
-  background: linear-gradient(180deg, var(--sidebar-bg) 0%, color-mix(in srgb, var(--sidebar-bg) 78%, var(--primary)) 100%);
+  background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-gradient-end) 100%);
+  transition: background var(--transition-base);
 }
 
 .card-body,
@@ -78,9 +79,9 @@ ul {
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, var(--sidebar-active), var(--primary-lighter));
+  background: linear-gradient(135deg, var(--sidebar-active), var(--sidebar-active-light));
   color: var(--sidebar-text-active);
-  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.35);
+  box-shadow: 0 2px 8px var(--sidebar-active-shadow);
   font-weight: 500;
 }
 
@@ -128,8 +129,8 @@ ul {
 
 .section-header-active,
 .section-header[aria-expanded='true'] {
-  background: rgba(var(--primary-rgb), 0.16);
-  box-shadow: inset 3px 0 0 var(--primary-lighter);
+  background: color-mix(in srgb, var(--sidebar-active) 16%, transparent);
+  box-shadow: inset 3px 0 0 var(--sidebar-active-light);
   font-weight: 650;
 }
 

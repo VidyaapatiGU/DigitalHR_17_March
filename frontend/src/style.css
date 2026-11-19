@@ -16,22 +16,34 @@
   --primary-700: #1e40af;
   --primary-rgb: 37, 99, 235;
 
-  /* Theme switcher is limited to colored surfaces inside card layouts. */
+  /* Theme accents are limited to colored card surfaces, the sidebar, and the workspace canvas. */
   --theme-card-accent: #2563eb;
   --theme-card-accent-dark: #1e3a5f;
   --theme-card-soft: #eff6ff;
   --theme-card-soft-text: #1d4ed8;
+
+  /* The workspace theme also colors the navigation and page canvas. */
+  --theme-sidebar-bg: #0f172a;
+  --theme-sidebar-gradient-end: #162640;
+  --theme-sidebar-hover: #1e293b;
+  --theme-sidebar-active: #1d4ed8;
+  --theme-sidebar-active-light: #3b82f6;
+  --theme-sidebar-active-shadow: rgba(37, 99, 235, 0.35);
+  --theme-workspace-bg: #f1f5f9;
   
   /* Sidebar */
-  --sidebar-bg: #0f172a;
-  --sidebar-hover: #1e293b;
-  --sidebar-active: #1d4ed8;
+  --sidebar-bg: var(--theme-sidebar-bg);
+  --sidebar-gradient-end: var(--theme-sidebar-gradient-end);
+  --sidebar-hover: var(--theme-sidebar-hover);
+  --sidebar-active: var(--theme-sidebar-active);
+  --sidebar-active-light: var(--theme-sidebar-active-light);
+  --sidebar-active-shadow: var(--theme-sidebar-active-shadow);
   --sidebar-text: #94a3b8;
   --sidebar-text-active: #ffffff;
   --sidebar-width: 260px;
 
   /* Backgrounds */
-  --bg-body: #f1f5f9;
+  --bg-body: var(--theme-workspace-bg);
   --bg-surface: #ffffff;
   --bg-muted: #ffffff;
   --bg-hover: #f1f5f9;
@@ -89,6 +101,13 @@
   --theme-card-accent-dark: #164e46;
   --theme-card-soft: #ecfdf5;
   --theme-card-soft-text: #0d6b61;
+  --theme-sidebar-bg: #102725;
+  --theme-sidebar-gradient-end: #183a34;
+  --theme-sidebar-hover: #1b403a;
+  --theme-sidebar-active: #0f766e;
+  --theme-sidebar-active-light: #20a58e;
+  --theme-sidebar-active-shadow: rgba(15, 118, 110, 0.35);
+  --theme-workspace-bg: #f0f6f4;
 }
 
 :root[data-card-theme='plum'] {
@@ -96,6 +115,13 @@
   --theme-card-accent-dark: #49365f;
   --theme-card-soft: #f7f3fb;
   --theme-card-soft-text: #68438f;
+  --theme-sidebar-bg: #21182f;
+  --theme-sidebar-gradient-end: #342344;
+  --theme-sidebar-hover: #382746;
+  --theme-sidebar-active: #7652a7;
+  --theme-sidebar-active-light: #9773c6;
+  --theme-sidebar-active-shadow: rgba(118, 82, 167, 0.35);
+  --theme-workspace-bg: #f5f1f8;
 }
 
 :root {

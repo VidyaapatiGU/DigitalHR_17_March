@@ -576,7 +576,7 @@
           </div>
         </div>
         <div class="content-topbar__actions">
-          <div v-if="currentUser._id" class="theme-switcher" role="group" aria-label="Colored card theme">
+          <div v-if="currentUser._id" class="theme-switcher" role="group" aria-label="Workspace color theme">
             <button
               v-for="theme in themes"
               :key="theme.id"
