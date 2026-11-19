@@ -31,7 +31,7 @@
 }
 
 .profile-card-header {
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  background: linear-gradient(135deg, var(--theme-card-accent-dark), var(--theme-card-accent));
   padding: 2rem 1.5rem 3rem;
   text-align: center;
   position: relative;

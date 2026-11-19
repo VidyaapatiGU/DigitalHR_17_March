@@ -95,6 +95,12 @@ import { markRaw, nextTick } from 'vue';
 import Chart from 'chart.js/auto';
 import axiosClient from '../axiosClient';
 
+const CHART_COLORS = ['#4f6fe8', '#20a58e', '#efa94f', '#9274d4', '#d96882', '#4aa4bf'];
+const CHART_ACCENT = '#2563eb';
+const CHART_ACCENT_HOVER = '#1e40af';
+const CHART_MUTED = '#94a3b8';
+const CHART_GRID = '#f1f5f9';
+
 export default {
   name: 'DashBoard',
   data() {
@@ -221,11 +227,7 @@ export default {
   async created() {
     await this.loadDashboard();
   },
-  mounted() {
-    window.addEventListener('digitalhr-theme-change', this.handleThemeChange);
-  },
   beforeUnmount() {
-    window.removeEventListener('digitalhr-theme-change', this.handleThemeChange);
     this.destroyCharts();
   },
   methods: {
@@ -280,38 +282,24 @@ export default {
       this.joinersChart = null;
       this.designationChart = null;
     },
-    themeColor(name) {
-      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    },
-    handleThemeChange() {
-      if (this.activeEmployees.length) this.renderCharts();
-    },
     renderCharts() {
       this.destroyCharts();
       if (!this.activeEmployees.length) return;
-
-      const chartColors = Array.from({ length: 6 }, (_, index) =>
-        this.themeColor(`--chart-series-${index + 1}`)
-      );
-      const primary = this.themeColor('--primary-light');
-      const primaryHover = this.themeColor('--primary-700');
-      const textMuted = this.themeColor('--text-muted');
-      const borderLight = this.themeColor('--border-light');
 
       if (this.$refs.joinersCanvas) {
         this.joinersChart = markRaw(new Chart(this.$refs.joinersCanvas, {
           type: 'bar',
           data: {
             labels: this.monthlyJoiners.labels,
-            datasets: [{ label: 'New employees', data: this.monthlyJoiners.values, backgroundColor: primary, hoverBackgroundColor: primaryHover, borderRadius: 8, maxBarThickness: 38 }],
+            datasets: [{ label: 'New employees', data: this.monthlyJoiners.values, backgroundColor: CHART_ACCENT, hoverBackgroundColor: CHART_ACCENT_HOVER, borderRadius: 8, maxBarThickness: 38 }],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false }, tooltip: { displayColors: false, callbacks: { label: context => `${context.parsed.y} ${context.parsed.y === 1 ? 'joiner' : 'joiners'}` } } },
             scales: {
-              x: { grid: { display: false }, border: { display: false }, ticks: { color: textMuted, autoSkip: true, maxTicksLimit: 6 } },
-              y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, color: textMuted }, grid: { color: borderLight }, border: { display: false } },
+              x: { grid: { display: false }, border: { display: false }, ticks: { color: CHART_MUTED, autoSkip: true, maxTicksLimit: 6 } },
+              y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, color: CHART_MUTED }, grid: { color: CHART_GRID }, border: { display: false } },
             },
           },
         }));
@@ -322,13 +310,13 @@ export default {
           type: 'doughnut',
           data: {
             labels: this.designationMix.map(([label]) => label),
-            datasets: [{ data: this.designationMix.map(([, count]) => count), backgroundColor: chartColors, borderColor: this.themeColor('--bg-surface'), borderWidth: 4, hoverOffset: 7 }],
+            datasets: [{ data: this.designationMix.map(([, count]) => count), backgroundColor: CHART_COLORS, borderColor: '#ffffff', borderWidth: 4, hoverOffset: 7 }],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             cutout: '68%',
-            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 18, color: textMuted, boxWidth: 8 } }, tooltip: { displayColors: false } },
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', padding: 18, color: CHART_MUTED, boxWidth: 8 } }, tooltip: { displayColors: false } },
           },
         }));
       }
@@ -354,10 +342,10 @@ export default {
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 17px; }
 .metric-card { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 18px; border: 1px solid var(--border-color); border-radius: 15px; background: var(--bg-surface); box-shadow: var(--shadow-sm); transition: background-color var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base); }
 .metric-icon { display: grid; place-items: center; width: 46px; height: 46px; flex: 0 0 46px; border-radius: 14px; font-size: 19px; }
-.metric-icon.blue { color: var(--primary-light); background: var(--primary-50); }
+.metric-icon.blue { color: var(--theme-card-soft-text); background: var(--theme-card-soft); }
 .metric-icon.green { color: var(--success); background: var(--success-light); }
 .metric-icon.amber { color: var(--warning); background: var(--warning-light); }
-.metric-icon.violet { color: var(--primary-700); background: var(--primary-100); }
+.metric-icon.violet { color: var(--theme-card-soft-text); background: var(--theme-card-soft); }
 .metric-copy { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
 .metric-label { color: var(--text-muted); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .metric-copy strong { overflow: hidden; color: var(--text-primary); font-size: clamp(19px, 2vw, 25px); line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }

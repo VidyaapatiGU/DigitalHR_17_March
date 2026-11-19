@@ -476,12 +476,12 @@ export default {
   width: 2.65rem;
   height: 2.65rem;
   border-radius: 0.8rem;
-  background: var(--primary-50);
-  color: var(--primary-light);
+  background: var(--theme-card-soft);
+  color: var(--theme-card-soft-text);
   font-size: 1.05rem;
 }
-.summary-icon-roles { background: var(--primary-50); color: var(--primary-light); }
-.summary-icon-departments { background: var(--primary-50); color: var(--primary-light); }
+.summary-icon-roles { background: var(--theme-card-soft); color: var(--theme-card-soft-text); }
+.summary-icon-departments { background: var(--theme-card-soft); color: var(--theme-card-soft-text); }
 .summary-copy { display: flex; flex-direction: column; min-width: 0; }
 .summary-label { color: var(--text-secondary); font-size: 0.76rem; font-weight: 600; }
 .summary-copy strong { margin-top: 0.05rem; font-size: 1.3rem; line-height: 1.35; }

@@ -576,7 +576,7 @@
           </div>
         </div>
         <div class="content-topbar__actions">
-          <div v-if="currentUser._id" class="theme-switcher" role="group" aria-label="Website color theme">
+          <div v-if="currentUser._id" class="theme-switcher" role="group" aria-label="Colored card theme">
             <button
               v-for="theme in themes"
               :key="theme.id"
@@ -780,7 +780,6 @@ const applyTheme = (theme) => {
   const supportedTheme = themes.some((item) => item.id === theme) ? theme : 'ocean';
   currentTheme.value = supportedTheme;
   document.documentElement.dataset.theme = supportedTheme;
-  window.dispatchEvent(new CustomEvent('digitalhr-theme-change', { detail: { theme: supportedTheme } }));
 };
 
 const saveTheme = async (theme) => {
