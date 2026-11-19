@@ -3,12 +3,12 @@
 .account-header { margin-bottom: 2rem; }
 .account-header h4 { font-weight: 700; color: var(--text-primary); margin: 0; }
 .account-header p { color: var(--text-secondary); margin: 0.25rem 0 0; font-size: 0.9rem; }
-.profile-card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); overflow: hidden; height: 100%; }
+.profile-card { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); overflow: hidden; height: 100%; }
 .profile-card-header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); padding: 2rem 1.5rem 3rem; }
 .profile-card-body { padding: 1.5rem; text-align: center; margin-top: -2.5rem; }
-.profile-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: var(--shadow-md); background: #fff; }
+.profile-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: var(--shadow-md); background: var(--bg-surface); }
 .profile-name { font-weight: 600; color: var(--text-primary); margin-top: 0.75rem; font-size: 1.15rem; }
-.details-card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); overflow: hidden; }
+.details-card { background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); overflow: hidden; }
 .details-card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-primary); font-size: 1rem; }
 .details-card-body { padding: 1.5rem; }
 .info-group { margin-bottom: 1.25rem; }

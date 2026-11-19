@@ -9,7 +9,7 @@
   display: flex;
   position: relative;
   overflow: hidden;
-  background: var(--bg-body, #f1f5f9);
+  background: var(--bg-body);
 }
 
 .dashboard-shell.sidebar-collapsed {
@@ -37,7 +37,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  background: var(--bg-body, #f1f5f9);
+  background: var(--bg-body);
 }
 
 .content-topbar {
@@ -50,8 +50,8 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(241, 245, 249, 0.88);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  background: color-mix(in srgb, var(--bg-body) 90%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 90%, transparent);
   backdrop-filter: blur(16px);
 }
 
@@ -171,7 +171,7 @@
   box-shadow: 0 0 0 2px var(--text-primary);
 }
 
-.theme-switcher__swatch--ocean { background: #2563eb; }
+.theme-switcher__swatch--ocean { background: var(--primary-light); }
 .theme-switcher__swatch--forest { background: #0f766e; }
 .theme-switcher__swatch--plum { background: #7652a7; }
 
@@ -210,7 +210,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #f1f5f9;
+  border: 2px solid var(--border-light);
   border-radius: 999px;
   background: #dc2626;
   color: #fff;
@@ -229,7 +229,7 @@
   padding: 1rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  background: #fff;
+  background: var(--bg-surface);
   box-shadow: var(--shadow-lg);
 }
 
@@ -285,10 +285,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--primary-200);
   border-radius: var(--radius-md);
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--primary-50);
+  color: var(--primary-600);
   font-size: 0.82rem;
   font-weight: 650;
 }
@@ -298,7 +298,7 @@
   padding: 0.85rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  background: #f8fafc;
+  background: var(--bg-muted);
 }
 
 .broadcast-form label,
@@ -323,7 +323,7 @@
   overflow-y: auto;
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: #fff;
+  background: var(--bg-surface);
 }
 
 .audience-option {
@@ -345,8 +345,8 @@
   margin: 0.6rem 0;
   padding: 0.55rem 0.65rem;
   border-radius: 8px;
-  background: #eff6ff;
-  color: #1e40af;
+  background: var(--primary-50);
+  color: var(--primary-700);
   font-size: 0.76rem;
 }
 
@@ -366,7 +366,7 @@
   border: 1px solid var(--border-color);
   border-left: 3px solid var(--primary);
   border-radius: 9px;
-  background: #fff;
+  background: var(--bg-surface);
 }
 
 .notification-card.warning { border-left-color: #f59e0b; }
@@ -402,8 +402,8 @@
   height: 44px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.45);
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -413,7 +413,7 @@
 }
 
 .sidebar-arrow:hover {
-  background: #eff6ff;
+  background: var(--primary-50);
 }
 
 .sidebar-arrow i {
@@ -454,8 +454,8 @@
   height: 44px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.5);
-  background: #ffffff;
-  color: #0f172a;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -780,6 +780,7 @@ const applyTheme = (theme) => {
   const supportedTheme = themes.some((item) => item.id === theme) ? theme : 'ocean';
   currentTheme.value = supportedTheme;
   document.documentElement.dataset.theme = supportedTheme;
+  window.dispatchEvent(new CustomEvent('digitalhr-theme-change', { detail: { theme: supportedTheme } }));
 };
 
 const saveTheme = async (theme) => {

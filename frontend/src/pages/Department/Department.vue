@@ -1,22 +1,22 @@
 <style scoped>
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .customize-table {
   --easy-table-border: none;
-  --easy-table-row-border: 1px solid #f1f5f9;
+  --easy-table-row-border: 1px solid var(--border-light);
   --easy-table-header-font-size: 13px;
-  --easy-table-header-font-color: #64748b;
-  --easy-table-header-background-color: #f8fafc;
+  --easy-table-header-font-color: var(--text-secondary);
+  --easy-table-header-background-color: var(--bg-muted);
   --easy-table-header-height: 44px;
   --easy-table-body-row-height: 52px;
   --easy-table-body-row-font-size: 13px;
-  --easy-table-body-row-font-color: #334155;
-  --easy-table-body-row-hover-background-color: #f8fafc;
-  --easy-table-footer-background-color: #f8fafc;
-  --easy-table-footer-font-color: #64748b;
+  --easy-table-body-row-font-color: var(--text-primary);
+  --easy-table-body-row-hover-background-color: var(--bg-muted);
+  --easy-table-footer-background-color: var(--bg-muted);
+  --easy-table-footer-font-color: var(--text-secondary);
   --easy-table-footer-font-size: 13px;
   --easy-table-footer-height: 44px;
 }
@@ -24,18 +24,18 @@
 .page-wrapper { height: 100%; }
 .page-header-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-  padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); background: #fff;
+  padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); background: var(--bg-surface);
 }
 .page-header-bar h5 { font-weight: 700; color: var(--text-primary); margin: 0; font-size: 1.1rem; }
 
 .table-container {
-  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color); overflow: hidden; padding: 1rem;
 }
 
 .toolbar {
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
-  background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 0.9rem 1rem;
+  background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 0.9rem 1rem;
   box-shadow: var(--shadow-sm);
 }
 .search-input { max-width: 320px; font-size: 0.875rem; border-radius: var(--radius-md) !important; }
@@ -44,11 +44,11 @@
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
   border-radius: var(--radius-md); border: 1px solid var(--border-color);
-  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
+  background: var(--bg-surface); color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
 }
 .btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
 .table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
-.table-icon:hover { background: #f1f5f9; }
+.table-icon:hover { background: var(--bg-body); }
 </style>
 
 <template>

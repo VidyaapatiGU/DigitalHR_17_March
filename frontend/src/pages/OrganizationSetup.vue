@@ -480,8 +480,8 @@ export default {
   color: var(--primary-light);
   font-size: 1.05rem;
 }
-.summary-icon-roles { background: #f3e8ff; color: #8b5cf6; }
-.summary-icon-departments { background: #ccfbf1; color: #0f9f8f; }
+.summary-icon-roles { background: var(--primary-50); color: var(--primary-light); }
+.summary-icon-departments { background: var(--primary-50); color: var(--primary-light); }
 .summary-copy { display: flex; flex-direction: column; min-width: 0; }
 .summary-label { color: var(--text-secondary); font-size: 0.76rem; font-weight: 600; }
 .summary-copy strong { margin-top: 0.05rem; font-size: 1.3rem; line-height: 1.35; }
@@ -528,7 +528,7 @@ export default {
   height: 1.3rem;
   padding: 0 0.3rem;
   border-radius: var(--radius-full);
-  background: #e9eef6;
+  background: var(--bg-muted);
   color: var(--text-secondary);
   font-size: 0.68rem;
   font-weight: 700;
@@ -570,7 +570,7 @@ export default {
   padding: 0 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--bg-surface);
   color: var(--text-muted);
 }
 .search-box:focus-within { border-color: var(--primary-light); box-shadow: 0 0 0 3px var(--primary-50); }
@@ -590,7 +590,7 @@ export default {
   text-transform: uppercase;
 }
 .organization-table td { padding: 0.75rem 1rem; border-top: 1px solid var(--border-light); font-size: 0.84rem; }
-.organization-table tbody tr:hover { background: #fbfdff; }
+.organization-table tbody tr:hover { background: var(--bg-surface); }
 .entity-cell { display: inline-flex; align-items: center; gap: 0.7rem; min-width: 0; }
 .entity-icon { width: 2rem; height: 2rem; border-radius: 0.6rem; font-size: 0.83rem; }
 .entity-name { overflow-wrap: anywhere; font-weight: 650; }
@@ -612,8 +612,8 @@ export default {
 .icon-action-danger:hover { border-color: #fecaca; background: #fff1f2; color: #dc2626; }
 .pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 0.9rem; color: var(--text-muted); font-size: 0.76rem; }
 .pagination-actions { display: flex; gap: 0.4rem; }
-.pagination-actions button, .btn-cancel, .btn-retry { border-color: var(--border-color); background: #fff; color: var(--text-secondary); }
-.pagination-actions button { min-height: 2rem; padding: 0.3rem 0.65rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: #fff; color: var(--text-secondary); font-size: 0.74rem; cursor: pointer; }
+.pagination-actions button, .btn-cancel, .btn-retry { border-color: var(--border-color); background: var(--bg-surface); color: var(--text-secondary); }
+.pagination-actions button { min-height: 2rem; padding: 0.3rem 0.65rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-surface); color: var(--text-secondary); font-size: 0.74rem; cursor: pointer; }
 .pagination-actions button:disabled { opacity: 0.45; cursor: not-allowed; }
 .table-state, .empty-state { display: flex; align-items: center; justify-content: center; gap: 0.55rem; min-height: 12rem; color: var(--text-muted); font-size: 0.85rem; }
 .table-state-error { color: #b91c1c; }
@@ -624,7 +624,7 @@ export default {
 .empty-state p { margin: 0; font-size: 0.8rem; }
 .btn-add-empty { margin-top: 0.55rem; }
 .dialog-backdrop { position: fixed; z-index: 1200; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgb(15 23 42 / 45%); backdrop-filter: blur(3px); }
-.organization-dialog { width: min(100%, 26rem); padding: 1.35rem; border: 1px solid var(--border-color); border-radius: var(--radius-xl); background: #fff; box-shadow: var(--shadow-xl); }
+.organization-dialog { width: min(100%, 26rem); padding: 1.35rem; border: 1px solid var(--border-color); border-radius: var(--radius-xl); background: var(--bg-surface); box-shadow: var(--shadow-xl); }
 .dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.25rem; }
 .dialog-heading h2, .organization-dialog > h2 { margin: 0; color: var(--text-primary); font-size: 1.15rem; font-weight: 750; }
 .dialog-close { margin-top: 0.2rem; border-color: var(--border-color); }

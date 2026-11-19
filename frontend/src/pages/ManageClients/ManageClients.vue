@@ -6,32 +6,32 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-color);
   border-radius: 3px;
 }
 
 .customize-table {
   --easy-table-header-font-size: 0.8125rem;
-  --easy-table-header-font-color: #475569;
-  --easy-table-header-background-color: #f8fafc;
+  --easy-table-header-font-color: var(--text-secondary);
+  --easy-table-header-background-color: var(--bg-muted);
   --easy-table-body-row-font-size: 0.875rem;
-  --easy-table-body-row-font-color: #1e293b;
-  --easy-table-body-row-hover-background-color: #eff6ff;
-  --easy-table-border-color: #e2e8f0;
-  --easy-table-row-border: 1px solid #f1f5f9;
-  --easy-table-footer-background-color: #f8fafc;
-  --easy-table-footer-font-color: #64748b;
+  --easy-table-body-row-font-color: var(--text-primary);
+  --easy-table-body-row-hover-background-color: var(--primary-50);
+  --easy-table-border-color: var(--border-color);
+  --easy-table-row-border: 1px solid var(--border-light);
+  --easy-table-footer-background-color: var(--bg-muted);
+  --easy-table-footer-font-color: var(--text-secondary);
   --easy-table-footer-font-size: 0.8125rem;
 }
 
 .page-wrapper {
-  background: var(--bg-body, #f1f5f9);
+  background: var(--bg-body);
 }
 
 .page-header-bar {
   padding: 1rem 1.5rem;
-  background: #ffffff;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -46,9 +46,9 @@
 }
 
 .table-container {
-  background: #ffffff;
+  background: var(--bg-surface);
   border-radius: 12px;
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
@@ -74,7 +74,7 @@
 }
 
 .btn-action {
-  background: var(--primary, #1e3a5f);
+  background: var(--primary);
   color: #ffffff;
   border: none;
   padding: 0.45rem 1rem;
@@ -89,9 +89,9 @@
 }
 
 .btn-action:hover {
-  background: var(--primary-light, #2563eb);
+  background: var(--primary-light);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.2);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.2);
   color: #ffffff;
 }
 
@@ -128,12 +128,12 @@
 }
 
 .table-icon:hover {
-  background: var(--primary-50, #eff6ff);
-  color: var(--primary-light, #2563eb);
+  background: var(--primary-50);
+  color: var(--primary-light);
 }
 
 .table-icon.action_icon_color {
-  color: var(--primary, #1e3a5f);
+  color: var(--primary);
 }
 
 .document-upload-action {

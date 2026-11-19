@@ -9,7 +9,7 @@ ul {
 }
 
 .top-navbar {
-  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  background: linear-gradient(135deg, var(--sidebar-bg), var(--primary));
   border: none;
   padding: 0.65rem 1.25rem;
 }
@@ -28,7 +28,7 @@ ul {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, var(--primary-lighter), var(--primary-light));
   margin-right: 0.5rem;
   font-size: 0.85rem;
 }
@@ -50,7 +50,7 @@ ul {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-color);
-  background: #fff;
+  background: var(--bg-surface);
   padding: 0.35rem;
 }
 
@@ -66,7 +66,7 @@ ul {
 }
 
 .offcanvas-nav {
-  background: linear-gradient(180deg, #0f172a, #1a1f35);
+  background: linear-gradient(180deg, var(--sidebar-bg) 0%, color-mix(in srgb, var(--sidebar-bg) 78%, var(--primary)) 100%);
   border-right: none;
 }
 

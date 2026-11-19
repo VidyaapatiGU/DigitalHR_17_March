@@ -1,6 +1,6 @@
 <style scoped>
 ul { list-style-type: none; padding-left: 0; }
-.offcanvas { width: 280px; background: linear-gradient(180deg, #0f172a, #1a1f35); border: none; }
+.offcanvas { width: 280px; background: linear-gradient(180deg, var(--sidebar-bg) 0%, color-mix(in srgb, var(--sidebar-bg) 78%, var(--primary)) 100%); border: none; }
 @media (max-width: 576px) { .side_bar { display: none; } }
 @media (min-width: 576px) { .side_bar { display: block; } }
 </style>

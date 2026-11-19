@@ -31,7 +31,7 @@
   word-break: keep-all;
   line-height: 1.25rem;
   scrollbar-width: thin;
-  scrollbar-color: #94a3b8 transparent;
+  scrollbar-color: var(--text-muted) transparent;
 }
 
 .attendance-date-cell::-webkit-scrollbar {

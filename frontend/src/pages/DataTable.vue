@@ -2,11 +2,11 @@
 .page-wrapper { height: 100%; }
 .page-header-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: var(--bg-surface);
 }
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 .table-container {
-  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color); overflow: hidden;
 }
 </style>

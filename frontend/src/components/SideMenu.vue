@@ -38,7 +38,7 @@ ul {
 }
 
 .sidebar-main {
-  background: linear-gradient(180deg, #0f172a 0%, #1a1f35 100%);
+  background: linear-gradient(180deg, var(--sidebar-bg) 0%, color-mix(in srgb, var(--sidebar-bg) 78%, var(--primary)) 100%);
 }
 
 .card-body,
@@ -80,7 +80,7 @@ ul {
 .nav-item.active {
   background: linear-gradient(135deg, var(--sidebar-active), var(--primary-lighter));
   color: var(--sidebar-text-active);
-  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.35);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.35);
   font-weight: 500;
 }
 
@@ -128,8 +128,8 @@ ul {
 
 .section-header-active,
 .section-header[aria-expanded='true'] {
-  background: rgba(59, 130, 246, 0.16);
-  box-shadow: inset 3px 0 0 #60a5fa;
+  background: rgba(var(--primary-rgb), 0.16);
+  box-shadow: inset 3px 0 0 var(--primary-lighter);
   font-weight: 650;
 }
 
@@ -172,7 +172,7 @@ ul {
 .sidebar-logo .logo-icon {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-lighter));
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -185,7 +185,7 @@ ul {
 .user-name {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--text-inverse);
 }
 
 .user-email {

@@ -22,7 +22,7 @@
 }
 
 .profile-card {
-  background: #fff;
+  background: var(--bg-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
@@ -50,7 +50,7 @@
   object-fit: cover;
   border: 4px solid #fff;
   box-shadow: var(--shadow-md);
-  background: #fff;
+  background: var(--bg-surface);
 }
 
 .document-list-row {
@@ -70,7 +70,7 @@
 }
 
 .details-card {
-  background: #fff;
+  background: var(--bg-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);

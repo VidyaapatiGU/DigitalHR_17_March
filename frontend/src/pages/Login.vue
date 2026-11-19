@@ -1,7 +1,7 @@
 <style scoped>
 .main {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%);
+  background: linear-gradient(135deg, var(--sidebar-bg) 0%, var(--primary) 50%, var(--primary-700) 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -16,7 +16,7 @@
   right: -50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--primary-rgb), 0.15) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -27,7 +27,7 @@
   left: -30%;
   width: 80%;
   height: 80%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--primary-rgb), 0.1) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -46,7 +46,7 @@
 .brand-logo {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-lighter));
   border-radius: 14px;
   display: inline-flex;
   align-items: center;
@@ -55,7 +55,7 @@
   font-weight: 800;
   color: white;
   margin-bottom: 1rem;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 8px 24px rgba(var(--primary-rgb), 0.3);
 }
 
 .brand-title {
@@ -88,34 +88,34 @@
   display: block;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-secondary);
   margin-bottom: 0.375rem;
 }
 
 .form-control {
-  background-color: #f8fafc;
-  border: 1.5px solid #e2e8f0;
+  background-color: var(--bg-muted);
+  border: 1.5px solid var(--border-color);
   border-radius: 10px;
   padding: 0.65rem 0.875rem;
   font-size: 0.875rem;
-  color: #1e293b;
+  color: var(--text-primary);
   transition: all 150ms ease;
 }
 
 .form-control:focus {
-  background-color: #ffffff;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background-color: var(--bg-surface);
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
 .form-control::placeholder {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .btn-login {
   width: 100%;
   padding: 0.7rem;
-  background: linear-gradient(135deg, #1e3a5f, #2563eb);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: #ffffff;
   border: none;
   border-radius: 10px;
@@ -126,9 +126,9 @@
 }
 
 .btn-login:hover {
-  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-lighter));
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.35);
   color: #ffffff;
 }
 
@@ -136,8 +136,8 @@
   width: 100%;
   padding: 0.6rem;
   background: transparent;
-  color: #475569;
-  border: 1.5px solid #e2e8f0;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-color);
   border-radius: 10px;
   font-weight: 500;
   font-size: 0.8125rem;
@@ -145,15 +145,15 @@
 }
 
 .btn-secondary-login:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #1e293b;
+  background: var(--bg-muted);
+  border-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 .login-title {
   font-size: 1.375rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 1.5rem;
   letter-spacing: -0.025em;

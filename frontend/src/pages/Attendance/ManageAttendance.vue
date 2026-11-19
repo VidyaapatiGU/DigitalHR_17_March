@@ -1,22 +1,22 @@
 <style scoped>
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .customize-table {
   --easy-table-border: none;
-  --easy-table-row-border: 1px solid #f1f5f9;
+  --easy-table-row-border: 1px solid var(--border-light);
   --easy-table-header-font-size: 13px;
-  --easy-table-header-font-color: #64748b;
-  --easy-table-header-background-color: #f8fafc;
+  --easy-table-header-font-color: var(--text-secondary);
+  --easy-table-header-background-color: var(--bg-muted);
   --easy-table-header-height: 44px;
   --easy-table-body-row-height: 52px;
   --easy-table-body-row-font-size: 13px;
-  --easy-table-body-row-font-color: #334155;
-  --easy-table-body-row-hover-background-color: #f8fafc;
-  --easy-table-footer-background-color: #f8fafc;
-  --easy-table-footer-font-color: #64748b;
+  --easy-table-body-row-font-color: var(--text-primary);
+  --easy-table-body-row-hover-background-color: var(--bg-muted);
+  --easy-table-footer-background-color: var(--bg-muted);
+  --easy-table-footer-font-color: var(--text-secondary);
   --easy-table-footer-font-size: 13px;
   --easy-table-footer-height: 44px;
 }
@@ -24,12 +24,12 @@
 .page-wrapper { height: 100%; }
 .page-header-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: var(--bg-surface);
 }
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 
 .table-container {
-  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color); overflow-x: auto; overflow-y: visible;
 }
 
@@ -42,13 +42,13 @@
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
   border-radius: var(--radius-md); border: none;
-  background: var(--primary, #1e3a5f); color: #fff; cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
+  background: var(--primary); color: #fff; cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
 }
-.btn-action:hover { background: var(--primary-light, #2563eb); color: #fff; }
+.btn-action:hover { background: var(--primary-light); color: #fff; }
 
 .form-container {
   width: 100%; max-width: 960px; padding: 2rem; margin: auto;
-  background: #fff; border-radius: var(--radius-lg);
+  background: var(--bg-surface); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
 }
 
@@ -71,7 +71,7 @@
 .btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
 
 .table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
-.table-icon:hover { background: #f1f5f9; }
+.table-icon:hover { background: var(--bg-body); }
 
 .attendance-actions {
   display: flex;
@@ -92,15 +92,15 @@
 
 .table-container :deep(.vue3-easy-data-table__header th:last-child) {
   z-index: 3;
-  background: #f8fafc;
+  background: var(--bg-muted);
 }
 
 .table-container :deep(.vue3-easy-data-table__body td:last-child) {
-  background: #ffffff;
+  background: var(--bg-surface);
 }
 
 .table-container :deep(.vue3-easy-data-table__body tr.even-row td:last-child) {
-  background: #f8fafc;
+  background: var(--bg-muted);
 }
 
 .manage-attendance-modal .modal-content {

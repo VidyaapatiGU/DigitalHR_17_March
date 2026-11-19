@@ -1,7 +1,7 @@
 <style scoped>
 .footer {
   padding: 0.75rem 1.5rem;
-  background: #fff;
+  background: var(--bg-surface);
   border-top: 1px solid var(--border-color);
   font-size: 0.82rem;
   color: var(--text-secondary);

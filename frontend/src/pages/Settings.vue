@@ -1,13 +1,16 @@
+Warning: truncated output (original token count: 32549)
+Total output lines: 3447
+
 <style scoped>
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .page-wrapper { height: 100%; }
 .page-header-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: var(--bg-surface);
 }
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 .time-input { width: 150px; }
@@ -22,14 +25,14 @@
 }
 
 .table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
-.table-icon:hover { background: #f1f5f9; }
+.table-icon:hover { background: var(--bg-body); }
 
 .thumbs-down { color: rgb(235, 46, 21); }
 
 .animated_input { height: 3rem; max-width: 19rem; }
 
 .settings-table {
-  background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color); overflow: hidden;
 }
 
@@ -37,7 +40,7 @@
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
   border-radius: var(--radius-md); border: 1px solid var(--border-color);
-  background: #fff; color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
+  background: var(--bg-surface); color: var(--text-primary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
 }
 .btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
 
@@ -1670,234 +1673,7 @@ export default {
       semiSkilled: { basic: '', vda: '', total: '' },
       skilled: { basic: '', vda: '', total: '' },
       highlySkilled: { basic: '', vda: '', total: '' }
-      };
-
-      if (res_holidayPolicy.data.data[0].minimumWages) {
-        this.minimumWagesRetrieved = true;
-      }
-
-      // Mark that settings document exists for this client
-      if (res_holidayPolicy.data && Array.isArray(res_holidayPolicy.data.data) && res_holidayPolicy.data.data.length > 0) {
-        this.settingsRetrieved = true;
-      }
-
-      // Set noticeOfHoursSet based on whether working hours are set
-      const workingHours = res_holidayPolicy.data.data[0].workingHours || {};
-      // Use only the extraShifts array if present; do NOT load numbered fields shift4..8 into arrays
-      // (to avoid duplication: numbered fields are for saving, arrays are for display/storage)
-      const extraShiftsFromArray = workingHours.extraShifts && Array.isArray(workingHours.extraShifts) ? workingHours.extraShifts.slice() : [];
-
-      const extraLunchFromArray = workingHours.extraLunchShifts && Array.isArray(workingHours.extraLunchShifts) ? workingHours.extraLunchShifts.slice() : [];
-
-      this.noticeOfHours = {
-        workingGeneralStart: workingHours.workingGeneralStart || '09:00',
-        workingGeneralEnd: workingHours.workingGeneralEnd || '18:00',
-        shift1Start: workingHours.shift1Start || '',
-        shift1End: workingHours.shift1End || '',
-        shift2Start: workingHours.shift2Start || '',
-        shift2End: workingHours.shift2End || '',
-        shift3Start: workingHours.shift3Start || '',
-        shift3End: workingHours.shift3End || '',
-        lunchGeneralStart: workingHours.lunchGeneralStart || '13:00',
-        lunchGeneralEnd: workingHours.lunchGeneralEnd || '14:00',
-        lunchShift1Start: workingHours.lunchShift1Start || '',
-        lunchShift1End: workingHours.lunchShift1End || '',
-        lunchShift2Start: workingHours.lunchShift2Start || '',
-        lunchShift2End: workingHours.lunchShift2End || '',
-        lunchShift3Start: workingHours.lunchShift3Start || '',
-        lunchShift3End: workingHours.lunchShift3End || '',
-        extraShifts: extraShiftsFromArray,
-        extraLunchShifts: extraLunchFromArray
-      };
-      // Mark as set if the backend returned any non-empty workingHours field
-      this.noticeOfHoursSet = Object.keys(workingHours).length > 0 &&
-        Object.values(workingHours).some((val) => val !== undefined && val !== null && String(val).trim() !== '');
-      // derive display strings for table
-      this.setNoticeDisplayStrings();
-
-      // Load employee holiday assignments if they exist
-      const employeeHolidayAssignments = res_holidayPolicy.data.data[0].employeeHolidayAssignments || [];
-      if (employeeHolidayAssignments && Array.isArray(employeeHolidayAssignments) && employeeHolidayAssignments.length > 0) {
-        this.employeeHolidayAssignments = employeeHolidayAssignments;
-      }
-
-    } catch (err) {
-      console.log('error: ', err);
-    }
-
-    this.fetchWeeklyOffSettings();
-    this.retrieveLeaveData();
-  },
-
-  mounted() {
-    gsap.registerPlugin(ScrollTrigger);
-    gsap.from('.scroll', {
-      opacity: 0,
-      y: 50,
-      duration: 1.2,
-      scrollTrigger: {
-        trigger: '.scroll',
-        delay: 0.7,
-        start: 'top center',
-        toggleActions: 'play none none reverse',
-      },
-    });
-  },
-
-  setup() {
-    return {}
-  },
-
-  computed: {
-  hasCustomLeaves() {
-    return this.clDays > 0 || this.slDays > 0 || this.plDays > 0;
-  },
-  showNoticeDownload() {
-    return this.noticeOfHoursSet || this.settingsRetrieved;
-  },
-  workingShiftsCount() {
-    let count = 0;
-    if (this.noticeOfHours.shift1Start || this.noticeOfHours.shift1End) count = 1;
-    if (this.noticeOfHours.shift2Start || this.noticeOfHours.shift2End) count = 2;
-    if (this.noticeOfHours.shift3Start || this.noticeOfHours.shift3End) count = 3;
-    return count;
-  },
-  lunchShiftsCount() {
-    let count = 0;
-    if (this.noticeOfHours.lunchShift1Start || this.noticeOfHours.lunchShift1End) count = 1;
-    if (this.noticeOfHours.lunchShift2Start || this.noticeOfHours.lunchShift2End) count = 2;
-    if (this.noticeOfHours.lunchShift3Start || this.noticeOfHours.lunchShift3End) count = 3;
-    return count;
-  }
-  },
-  methods: {
-    async handleDismiss(id) {
-      try {
-        const res = await axiosClient.put(`/api/v1/notification/dismiss/${id}`);
-        if (res.status === 201 || res.status === 200) {
-          this.notifications = this.notifications.filter((notification) => notification._id !== id);
-        }
-      } catch (err) {
-        console.error('Error dismissing notification:', err);
-        toast.error('Failed to dismiss notification', { autoClose: 1500 });
-      }
-    },
-    async DeleteHoliday(holiday_id) {
-      this.deleteHoliday = holiday_id;
-    },
-    formatTime(time) {
-      if (!time) return '';
-      const [hours, minutes] = time.split(':');
-      const period = hours >= 12 ? 'pm' : 'am';
-      const formattedHours = hours % 12 || 12;
-      return `${formattedHours}:${minutes} ${period}`;
-    },
-
-    setNoticeDisplayStrings() {
-      // workingGeneral and lunchGeneral are display values used in the settings table
-      try {
-        const w = this.noticeOfHours || {};
-        if (w.workingGeneralStart && w.workingGeneralEnd) {
-          this.noticeOfHours.workingGeneral = `${this.formatTime(w.workingGeneralStart)} to ${this.formatTime(w.workingGeneralEnd)}`;
-        } else {
-          this.noticeOfHours.workingGeneral = '';
-        }
-
-        if (w.lunchGeneralStart && w.lunchGeneralEnd) {
-          this.noticeOfHours.lunchGeneral = `${this.formatTime(w.lunchGeneralStart)} to ${this.formatTime(w.lunchGeneralEnd)}`;
-        } else {
-          this.noticeOfHours.lunchGeneral = '';
-        }
-      } catch (e) {
-        // ignore
-      }
-    },
-
-    async saveNoticeOfHours() {
-      try {
-        // Build payload workingHours mapping extraShifts into numbered shift fields (shift4Start, shift4End, ...)
-        const wh = {
-          workingGeneralStart: this.noticeOfHours.workingGeneralStart,
-          workingGeneralEnd: this.noticeOfHours.workingGeneralEnd,
-          shift1Start: this.noticeOfHours.shift1Start,
-          shift1End: this.noticeOfHours.shift1End,
-          shift2Start: this.noticeOfHours.shift2Start,
-          shift2End: this.noticeOfHours.shift2End,
-          shift3Start: this.noticeOfHours.shift3Start,
-          shift3End: this.noticeOfHours.shift3End,
-          lunchGeneralStart: this.noticeOfHours.lunchGeneralStart,
-          lunchGeneralEnd: this.noticeOfHours.lunchGeneralEnd,
-          lunchShift1Start: this.noticeOfHours.lunchShift1Start,
-          lunchShift1End: this.noticeOfHours.lunchShift1End,
-          lunchShift2Start: this.noticeOfHours.lunchShift2Start,
-          lunchShift2End: this.noticeOfHours.lunchShift2End,
-          lunchShift3Start: this.noticeOfHours.lunchShift3Start,
-          lunchShift3End: this.noticeOfHours.lunchShift3End,
-        };
-
-        // Map dynamic extraShifts to shift4..shiftN
-        if (this.noticeOfHours.extraShifts && Array.isArray(this.noticeOfHours.extraShifts)) {
-          this.noticeOfHours.extraShifts.forEach((s, i) => {
-            const num = 4 + i; // shift number
-            wh[`shift${num}Start`] = s.start || '';
-            wh[`shift${num}End`] = s.end || '';
-          });
-        }
-
-        // Map dynamic extraLunchShifts to lunchShift4..lunchShiftN
-        if (this.noticeOfHours.extraLunchShifts && Array.isArray(this.noticeOfHours.extraLunchShifts)) {
-          this.noticeOfHours.extraLunchShifts.forEach((s, i) => {
-            const num = 4 + i;
-            wh[`lunchShift${num}Start`] = s.start || '';
-            wh[`lunchShift${num}End`] = s.end || '';
-          });
-        }
-
-        // Also include the array form so backend stores unlimited extras reliably
-        wh.extraLunchShifts = Array.isArray(this.noticeOfHours.extraLunchShifts) ? this.noticeOfHours.extraLunchShifts.slice() : [];
-        wh.extraShifts = Array.isArray(this.noticeOfHours.extraShifts) ? this.noticeOfHours.extraShifts.slice() : [];
-
-        // Remove empty keys so backend doesn't store empty string fields
-        Object.keys(wh).forEach((k) => {
-          if (wh[k] === '' || (Array.isArray(wh[k]) && wh[k].length === 0)) delete wh[k];
-        });
-
-        const data = {
-          clientId: this.user._id,
-          workingHours: wh,
-        };
-
-        const res = await axiosClient.put(`/api/v1/settings/working-hours/${this.user._id}`, data);
-
-        console.log('saveNoticeOfHours response:', res && res.data);
-
-        if (res.status === 200) {
-          // Refresh from server to reflect persisted data
-          try {
-            const refreshRes = await axiosClient.get(`/api/v1/settings/holiday/to_from/${this.user._id}`);
-            const serverSettings = (refreshRes.data && Array.isArray(refreshRes.data.data) && refreshRes.data.data[0]) || null;
-            if (serverSettings && serverSettings.workingHours) {
-              const whServer = serverSettings.workingHours;
-              // Use only the extraShifts and extraLunchShifts arrays (do NOT convert numbered shift4..8 to arrays)
-              const extras = Array.isArray(whServer.extraShifts) ? whServer.extraShifts.slice() : [];
-              const lunchExtras = Array.isArray(whServer.extraLunchShifts) ? whServer.extraLunchShifts.slice() : [];
-
-              this.noticeOfHours = {
-                workingGeneralStart: whServer.workingGeneralStart || '09:00',
-                workingGeneralEnd: whServer.workingGeneralEnd || '18:00',
-                shift1Start: whServer.shift1Start || '',
-                shift1End: whServer.shift1End || '',
-                shift2Start: whServer.shift2Start || '',
-                shift2End: whServer.shift2End || '',
-                shift3Start: whServer.shift3Start || '',
-                shift3End: whServer.shift3End || '',
-                lunchGeneralStart: whServer.lunchGeneralStart || '13:00',
-                lunchGeneralEnd: whServer.lunchGeneralEnd || '14:00',
-                lunchShift1Start: whServer.lunchShift1Start || '',
-                lunchShift1End: whServer.lunchShift1End || '',
-                lunchShift2Start: whServer.lunchShift2Start || '',
-                lunchShift2End: whServer.lunchShift2End || '',
-                lunchShift3Start: whServer.lunchShift3Start || '',
+…2549 tokens truncated…                lunchShift3Start: whServer.lunchShift3Start || '',
                 lunchShift3End: whServer.lunchShift3End || '',
                 extraShifts: extras,
                 extraLunchShifts: lunchExtras,

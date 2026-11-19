@@ -1302,7 +1302,7 @@ export default {
 
 <style scoped>
 .reports-bg {
-  background: #f4f6fb;
+  background: var(--bg-body);
   min-height: 100%;
   overflow-y: auto;
   padding-bottom: 3rem;
@@ -1314,37 +1314,37 @@ export default {
   justify-content: space-between;
   gap: 20px;
   padding: 22px 24px;
-  border: 1px solid #e8ebf3;
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  background: radial-gradient(circle at 92% 0%, rgba(96, 119, 255, .12), transparent 32%), #fff;
+  background: radial-gradient(circle at 92% 0%, rgba(var(--primary-rgb), .14), transparent 32%), var(--bg-surface);
   box-shadow: 0 5px 18px rgba(34, 49, 84, .035);
 }
-.reports-eyebrow { color: #7887a3; font-size: 10px; font-weight: 800; letter-spacing: .13em; }
+.reports-eyebrow { color: var(--text-muted); font-size: 10px; font-weight: 800; letter-spacing: .13em; }
 .reports-title {
   font-weight: 700;
   color: #17243b;
   letter-spacing: -.035em;
   font-size: clamp(23px, 3vw, 30px);
 }
-.reports-hero p { color: #818da2; font-size: 13px; }
-.report-search { display: flex; align-items: center; gap: 9px; width: min(340px, 100%); min-height: 42px; padding: 0 12px; border: 1px solid #e3e8f1; border-radius: 10px; background: #fff; color: #8b96a9; }
-.report-search:focus-within { border-color: #9ba9ff; box-shadow: 0 0 0 3px rgba(83, 109, 254, .1); }
-.report-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: #263550; background: transparent; font-size: 12px; }
-.report-search input::placeholder { color: #9ba5b5; }
-.report-search button { border: 0; padding: 3px; color: #8490a4; background: transparent; }
+.reports-hero p { color: var(--text-muted); font-size: 13px; }
+.report-search { display: flex; align-items: center; gap: 9px; width: min(340px, 100%); min-height: 42px; padding: 0 12px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-surface); color: var(--text-muted); }
+.report-search:focus-within { border-color: var(--primary-200); box-shadow: 0 0 0 3px rgba(var(--primary-rgb), .12); }
+.report-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--text-primary); background: transparent; font-size: 12px; }
+.report-search input::placeholder { color: var(--text-muted); }
+.report-search button { border: 0; padding: 3px; color: var(--text-muted); background: transparent; }
 .report-overview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 14px 0 18px; }
-.overview-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid #e8ebf3; border-radius: 13px; background: #fff; }
+.overview-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid var(--border-color); border-radius: 13px; background: var(--bg-surface); transition: background-color var(--transition-base), border-color var(--transition-base); }
 .overview-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border-radius: 11px; font-size: 16px; }
-.overview-icon.blue { color: #536dfe; background: #edf0ff; }
-.overview-icon.amber { color: #e39131; background: #fff4e5; }
-.overview-icon.green { color: #13a989; background: #e6f8f3; }
-.overview-icon.violet { color: #9461dd; background: #f3ebff; }
+.overview-icon.blue { color: var(--primary-light); background: var(--primary-50); }
+.overview-icon.amber { color: var(--warning); background: var(--warning-light); }
+.overview-icon.green { color: var(--success); background: var(--success-light); }
+.overview-icon.violet { color: var(--primary-700); background: var(--primary-100); }
 .overview-copy { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
-.overview-copy small { overflow: hidden; color: #8692a6; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
-.overview-copy strong { color: #263550; font-size: 21px; line-height: 1.15; }
-.overview-copy em { overflow: hidden; color: #9aa4b3; font-size: 10px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
-.report-no-results { display: flex; align-items: center; flex-direction: column; gap: 6px; padding: 48px 16px; border: 1px dashed #d6ddeb; border-radius: 14px; color: #8290a5; background: rgba(255,255,255,.6); text-align: center; }
-.report-no-results i { margin-bottom: 3px; color: #7485e4; font-size: 22px; }
+.overview-copy small { overflow: hidden; color: var(--text-muted); font-size: 10px; font-weight: 700; letter-spacing: .03em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.overview-copy strong { color: var(--text-primary); font-size: 21px; line-height: 1.15; }
+.overview-copy em { overflow: hidden; color: var(--text-muted); font-size: 10px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.report-no-results { display: flex; align-items: center; flex-direction: column; gap: 6px; padding: 48px 16px; border: 1px dashed var(--border-light); border-radius: 14px; color: var(--text-muted); background: rgba(255,255,255,.6); text-align: center; }
+.report-no-results i { margin-bottom: 3px; color: var(--primary-lighter); font-size: 22px; }
 .report-no-results strong { color: #4b5972; font-size: 13px; }
 .report-no-results span { font-size: 11px; }
 
@@ -1355,7 +1355,7 @@ export default {
 }
 
 .reports-card {
-  background: #fff;
+  background: var(--bg-surface);
   border: 1px solid #e5e7eb;
   border-radius: 14px;
   box-shadow: 0 5px 18px rgba(34, 49, 84, .035);
@@ -1367,8 +1367,8 @@ export default {
 .reports-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(34, 49, 84, .08); }
 
 .reports-card .card-header {
-  background: #f8fafc;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--bg-muted);
+  border-bottom: 1px solid var(--border-color);
   padding: 0.85rem 1rem;
 }
 
@@ -1386,7 +1386,7 @@ export default {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(var(--primary-rgb), 0.1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1394,7 +1394,7 @@ export default {
 }
 
 .bg-primary-soft {
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(var(--primary-rgb), 0.12);
 }
 
 .reports-btn {

@@ -2,12 +2,12 @@
 .page-wrapper { height: 100%; }
 .page-header-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
+  padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: var(--bg-surface);
 }
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
 .content-container { max-width: 1120px; margin: 0 auto; padding: 1.5rem; }
 .upload-card, .results-card {
-  background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm); padding: 1.25rem; margin-top: 1rem;
 }
 .notice { border-radius: var(--radius-md); padding: 1rem 1.1rem; }
