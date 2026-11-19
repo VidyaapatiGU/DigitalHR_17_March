@@ -794,6 +794,17 @@ a:hover {
   border-color: var(--theme-button-hover) !important;
 }
 
+/* Replace the login and sign-up blue gradients so account themes apply there too. */
+.btn-login,
+.btn-signup {
+  background: var(--theme-button-bg) !important;
+}
+
+.btn-login:hover,
+.btn-signup:hover {
+  background: var(--theme-button-hover) !important;
+}
+
 .alert-primary {
   color: var(--primary-700);
   background-color: var(--primary-50);
