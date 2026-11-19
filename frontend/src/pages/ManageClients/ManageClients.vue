@@ -95,15 +95,25 @@
   color: #ffffff;
 }
 
-.format-link {
-  font-size: 0.75rem;
-  color: var(--primary-light, #2563eb);
+.icon-action {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #fff;
+  font-size: 1rem;
   text-decoration: none;
-  font-weight: 500;
 }
 
-.format-link:hover {
-  text-decoration: underline;
+.icon-action:hover {
+  color: #fff;
+}
+
+.icon-action:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: 2px;
 }
 
 .table-icon {
@@ -455,14 +465,23 @@
               </div>
             </div>
             <div class="action-buttons">
-              <a href="/templates/client_upload_format.xlsx" download class="format-link">
-                Download Format
+              <a
+                href="/templates/client_upload_format.xlsx"
+                download
+                class="btn button_bg icon-action"
+                aria-label="Download format"
+                title="Download format"
+              >
+                <i class="bi bi-download" aria-hidden="true"></i>
               </a>
-              <router-link to="/upload/client/excel" class="text-decoration-none">
-                <button type="button" class="btn-action">
-                  <i class="bi bi-file-earmark-arrow-up"></i>
-                  Upload Excel
-                </button>
+              <router-link
+                to="/upload/client/excel"
+                class="btn button_bg icon-action"
+                aria-label="Upload Excel"
+                title="Upload Excel"
+              >
+                <i class="bi bi-upload" aria-hidden="true"></i>
+                <span class="visually-hidden">Upload Excel</span>
               </router-link>
               <router-link to="/add/client" class="text-decoration-none">
                 <button type="button" class="btn-action">
