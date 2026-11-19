@@ -2,148 +2,241 @@ const { validationResult, matchedData } = require("express-validator");
 const logger = require("../config/logger.js");
 const Attendance = require("../models/Attendance.js");
 const Employee = require("../models/Employee.js");
+const Leaves = require("../models/Leaves.js");
+const Client = require("../models/Client.js");
 
 const normalizeInt = (value) => {
   const parsed = parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const parseAbsentDaysToIsoDates = (value, year, month) => {
-  if (value == null) return [];
-  const valueStr = String(value).trim();
-  if (!valueStr) return [];
-
-  const daysInMonth = new Date(year, month, 0).getDate();
-
-  const tokens = valueStr
-    .replace(/[;|]+/g, ",")
-    .split(/[\s,]+/)
-    .map((t) => t.trim())
-    .filter(Boolean);
-
-  const isoDates = [];
-  for (const token of tokens) {
-    if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(token)) {
-      const [yyyy, mm, dd] = token.split("-").map((p) => parseInt(p, 10));
-      if (yyyy === year && mm === month && dd >= 1 && dd <= daysInMonth) {
-        isoDates.push(`${String(yyyy)}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`);
-      }
-      continue;
-    }
-
-    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(token)) {
-      const [dd, mm, yyyyRaw] = token.split("/");
-      const ddNum = parseInt(dd, 10);
-      const mmNum = parseInt(mm, 10);
-      const yyyyNum = parseInt(yyyyRaw, 10);
-      if (yyyyNum === year && mmNum === month && ddNum >= 1 && ddNum <= daysInMonth) {
-        isoDates.push(`${String(yyyyNum)}-${String(mmNum).padStart(2, "0")}-${String(ddNum).padStart(2, "0")}`);
-      }
-      continue;
-    }
-
-    if (/^\d{1,2}$/.test(token)) {
-      const ddNum = parseInt(token, 10);
-      if (ddNum >= 1 && ddNum <= daysInMonth) {
-        isoDates.push(`${String(year)}-${String(month).padStart(2, "0")}-${String(ddNum).padStart(2, "0")}`);
-      }
-    }
-  }
-
-  return Array.from(new Set(isoDates)).sort();
+const getAttendancePeriod = (value) => {
+  const match = String(value || "").match(/^(\d{4})-(\d{1,2})/);
+  if (match) return { year: Number(match[1]), month: Number(match[2]) };
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return { year: 0, month: 0 };
+  return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1 };
 };
 
-const restoreEmployeeLeavesFromMonthAttendance = async (clientUserId, yearNum, monthNum, attendanceRecords) => {
-  const byEmp = new Map();
+const getMonthNumber = (value) => {
+  const numericMonth = Number(value);
+  if (Number.isInteger(numericMonth) && numericMonth >= 1 && numericMonth <= 12) return numericMonth;
+  const monthNames = [
+    "january", "february", "march", "april", "may", "june",
+    "july", "august", "september", "october", "november", "december",
+  ];
+  const monthText = String(value || "").trim().toLowerCase();
+  if (!monthText) return 0;
+  const monthIndex = monthNames.findIndex((name) => name === monthText || name.startsWith(monthText));
+  return monthIndex < 0 ? 0 : monthIndex + 1;
+};
 
-  for (const rec of attendanceRecords) {
-    const empNo = String(rec.emp_no || "").trim();
-    if (!empNo) continue;
-
-    const existing = byEmp.get(empNo) || {
-      clDates: new Set(),
-      slDates: new Set(),
-      plDates: new Set(),
-      clFallback: 0,
-      slFallback: 0,
-      plFallback: 0,
-    };
-
-    const clDates = parseAbsentDaysToIsoDates(rec.absentDaysCL, yearNum, monthNum);
-    const slDates = parseAbsentDaysToIsoDates(rec.absentDaysSL, yearNum, monthNum);
-    const plDates = parseAbsentDaysToIsoDates(rec.absentDaysPL, yearNum, monthNum);
-
-    if (clDates.length > 0) clDates.forEach((d) => existing.clDates.add(d));
-    else existing.clFallback += normalizeInt(rec.numberOfCL);
-
-    if (slDates.length > 0) slDates.forEach((d) => existing.slDates.add(d));
-    else existing.slFallback += normalizeInt(rec.numberOfSL);
-
-    if (plDates.length > 0) plDates.forEach((d) => existing.plDates.add(d));
-    else existing.plFallback += normalizeInt(rec.numberOfPL);
-
-    byEmp.set(empNo, existing);
-  }
-
-  const empNos = Array.from(byEmp.keys());
-  if (empNos.length === 0) return { employeesUpdated: 0, employeesMissing: 0 };
-
-  const employees = await Employee.find({
-    client_user_id: clientUserId,
-    emp_no: { $in: empNos },
-  }).select("_id emp_no leaves");
-
-  const employeesByEmpNo = new Map(employees.map((e) => [String(e.emp_no), e]));
-
-  const ops = [];
-  let employeesUpdated = 0;
-  let employeesMissing = 0;
-
-  const restoreType = (current, toRemoveSet, fallbackCount) => {
-    const balance = normalizeInt(current?.balance);
-    const absentDates = Array.isArray(current?.absentDates) ? current.absentDates : [];
-
-    const removeSet = toRemoveSet || new Set();
-    const nextAbsentDates = removeSet.size > 0 ? absentDates.filter((d) => !removeSet.has(d)) : absentDates.slice();
-    const removedCount = absentDates.length - nextAbsentDates.length;
-
-    const restoreCount = removedCount > 0 ? removedCount : normalizeInt(fallbackCount);
-    return {
-      balance: String(balance + restoreCount),
-      absentDates: nextAbsentDates,
-    };
+const parseAbsentDaysToIsoDates = (value, year, month) => {
+  if (value == null) return [];
+  const targetYear = Number(year);
+  const targetMonth = Number(month);
+  if (!Number.isInteger(targetYear) || !Number.isInteger(targetMonth) || targetMonth < 1 || targetMonth > 12) return [];
+  const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+  const isoDates = new Set();
+  const addDate = (dateYear, dateMonth, dateDay) => {
+    if (dateYear < 100) dateYear += 2000;
+    if (dateYear !== targetYear || dateMonth !== targetMonth || dateDay < 1 || dateDay > daysInMonth) return;
+    const date = new Date(dateYear, dateMonth - 1, dateDay);
+    if (
+      date.getFullYear() !== dateYear ||
+      date.getMonth() + 1 !== dateMonth ||
+      date.getDate() !== dateDay
+    ) return;
+    isoDates.add(String(dateYear) + "-" + String(dateMonth).padStart(2, "0") + "-" + String(dateDay).padStart(2, "0"));
+  };
+  const addDay = (day) => addDate(targetYear, targetMonth, Number(day));
+  const addExcelSerial = (serial) => {
+    const date = new Date(Date.UTC(1899, 11, 30) + Number(serial) * 86400000);
+    if (!Number.isNaN(date.getTime())) {
+      addDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+    }
+  };
+  const handleToken = (token) => {
+    const isoDateMatch = token.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:T.*)?$/);
+    if (isoDateMatch) {
+      const [, dateYear, dateMonth, dateDay] = isoDateMatch;
+      addDate(Number(dateYear), Number(dateMonth), Number(dateDay));
+      return;
+    }
+    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(token)) {
+      const [dateDay, dateMonth, dateYear] = token.split("/").map(Number);
+      addDate(dateYear, dateMonth, dateDay);
+      return;
+    }
+    if (/^\d{1,2}-\d{1,2}$/.test(token)) {
+      const [start, end] = token.split("-").map(Number);
+      for (let day = Math.min(start, end); day <= Math.max(start, end); day += 1) addDay(day);
+      return;
+    }
+    if (/^\d{1,2}(\.\d{1,2})+$/.test(token)) {
+      token.split(".").forEach(addDay);
+      return;
+    }
+    if (/^\d+(\.\d+)?$/.test(token)) {
+      const numericValue = Number(token);
+      if (numericValue > 31) addExcelSerial(numericValue);
+      else addDay(numericValue);
+    }
   };
 
-  for (const empNo of empNos) {
-    const employee = employeesByEmpNo.get(empNo);
-    if (!employee) {
-      employeesMissing++;
-      continue;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    addDate(value.getFullYear(), value.getMonth() + 1, value.getDate());
+  } else if (typeof value === "number") {
+    if (value > 31) addExcelSerial(value);
+    else addDay(value);
+  } else if (Array.isArray(value)) {
+    value.forEach((entry) => parseAbsentDaysToIsoDates(entry, targetYear, targetMonth).forEach((date) => isoDates.add(date)));
+  } else {
+    String(value)
+      .trim()
+      .replace(/[;|]+/g, ",")
+      .split(/[\s,]+/)
+      .map((token) => token.trim())
+      .filter(Boolean)
+      .forEach(handleToken);
+  }
+  return Array.from(isoDates).sort();
+};
+
+const reconcileEmployeeLeaveBalances = async (clientUserId) => {
+  const clientReference = String(clientUserId || "");
+  const client = await Client.findOne({
+    $or: [{ _id: clientReference }, { user_id: clientReference }],
+  }).select("_id user_id").lean();
+  const clientReferences = Array.from(new Set([
+    clientReference,
+    client?._id ? String(client._id) : "",
+    client?.user_id ? String(client.user_id) : "",
+  ].filter(Boolean)));
+
+  const [employees, attendanceRecords, leaveDefaultRecords] = await Promise.all([
+    Employee.find({
+      $or: [
+        { client_user_id: { $in: clientReferences } },
+        { client_id: { $in: clientReferences } },
+        { user_id: { $in: clientReferences } },
+      ],
+    }).select("_id emp_no leaves").lean(),
+    Attendance.find({ client_user_id: { $in: clientReferences } })
+      .select("emp_no month_year month year numberOfCL absentDaysCL numberOfSL absentDaysSL numberOfPL absentDaysPL")
+      .lean(),
+    Leaves.find({ client_id: { $in: clientReferences } }).lean(),
+  ]);
+  const leaveDefaults = leaveDefaultRecords.find(
+    (record) => client?._id && String(record.client_id) === String(client._id)
+  ) || leaveDefaultRecords.find(
+    (record) => String(record.client_id) === clientReference
+  ) || leaveDefaultRecords[0] || null;
+
+  const typeFields = {
+    cl: { count: "numberOfCL", dates: "absentDaysCL" },
+    sl: { count: "numberOfSL", dates: "absentDaysSL" },
+    pl: { count: "numberOfPL", dates: "absentDaysPL" },
+  };
+  const usageByEmployee = new Map();
+
+  for (const record of attendanceRecords) {
+    const empNo = String(record.emp_no || "").trim();
+    if (!empNo) continue;
+
+    let period = getAttendancePeriod(record.month_year);
+    if (!period.year || !period.month) {
+      period = { year: Number(record.year), month: getMonthNumber(record.month) };
+    }
+    const periodKey = period.year && period.month
+      ? `${period.year}-${String(period.month).padStart(2, "0")}`
+      : `unknown-${record._id}`;
+
+    if (!usageByEmployee.has(empNo)) {
+      usageByEmployee.set(empNo, {
+        cl: new Map(),
+        sl: new Map(),
+        pl: new Map(),
+      });
+    }
+    const employeeUsage = usageByEmployee.get(empNo);
+
+    for (const [type, fields] of Object.entries(typeFields)) {
+      const periodUsage = employeeUsage[type].get(periodKey) || { dates: new Set(), fallbackCount: 0 };
+      const dates = period.year && period.month
+        ? parseAbsentDaysToIsoDates(record[fields.dates], period.year, period.month)
+        : [];
+      if (dates.length > 0) {
+        dates.forEach((date) => periodUsage.dates.add(date));
+      } else {
+        // Keep support for older attendance rows that stored only leave counts.
+        periodUsage.fallbackCount = Math.max(
+          periodUsage.fallbackCount,
+          normalizeInt(record[fields.count])
+        );
+      }
+      employeeUsage[type].set(periodKey, periodUsage);
+    }
+  }
+
+  const configuredDefault = (type) => {
+    let value = leaveDefaults?.leaves?.[type];
+    if (Array.isArray(value)) value = value[0];
+    if (value && typeof value === "object") value = value.balance;
+    if (value == null || String(value).trim() === "") return null;
+    return normalizeInt(value);
+  };
+
+  const ops = employees.map((employee) => {
+    const employeeUsage = usageByEmployee.get(String(employee.emp_no || "").trim()) || {};
+    const nextLeaves = {};
+
+    for (const type of Object.keys(typeFields)) {
+      const current = employee.leaves?.[type] || {};
+      const currentDates = Array.isArray(current.absentDates)
+        ? Array.from(new Set(current.absentDates.map((date) => String(date))))
+        : [];
+      const inferredStartingBalance = normalizeInt(current.balance) + currentDates.length;
+      const defaultBalance = configuredDefault(type);
+      // The client leave policy is the authoritative starting balance. Using
+      // the employee's already-reduced balance here would preserve stale low
+      // balances after the attendance records that caused them are deleted.
+      const startingBalance = defaultBalance == null ? inferredStartingBalance : defaultBalance;
+
+      const dates = new Set();
+      let countOnlyUsage = 0;
+      for (const periodUsage of employeeUsage[type]?.values() || []) {
+        if (periodUsage.dates.size > 0) {
+          periodUsage.dates.forEach((date) => dates.add(date));
+        } else {
+          countOnlyUsage += periodUsage.fallbackCount;
+        }
+      }
+
+      const absentDates = Array.from(dates).sort();
+      nextLeaves[type] = {
+        balance: String(startingBalance - absentDates.length - countOnlyUsage),
+        absentDates,
+      };
     }
 
-    const restore = byEmp.get(empNo);
-    const currentLeaves = employee.leaves || {};
-
-    const nextLeaves = {
-      cl: restoreType(currentLeaves.cl, restore.clDates, restore.clFallback),
-      sl: restoreType(currentLeaves.sl, restore.slDates, restore.slFallback),
-      pl: restoreType(currentLeaves.pl, restore.plDates, restore.plFallback),
-    };
-
-    ops.push({
+    return {
       updateOne: {
         filter: { _id: employee._id },
         update: { $set: { leaves: nextLeaves, updated_at: Date.now() } },
       },
-    });
-    employeesUpdated++;
-  }
+    };
+  });
 
-  if (ops.length > 0) {
-    await Employee.bulkWrite(ops, { ordered: false });
-  }
+  if (ops.length > 0) await Employee.bulkWrite(ops, { ordered: false });
 
-  return { employeesUpdated, employeesMissing };
+  return {
+    employeesUpdated: ops.length,
+    attendanceRecords: attendanceRecords.length,
+    defaultsAvailable: Object.fromEntries(
+      Object.keys(typeFields).map((type) => [type, configuredDefault(type) != null])
+    ),
+  };
 };
 
 //@desc Test Attendance API
@@ -192,6 +285,7 @@ const addAttendance = async (req, res) => {
   if (user) {
     let attendanceRecords = [];
     let errorList = [];
+    const period = getAttendancePeriod(data.month_year);
 
     // Iterate through each employee and save attendance
     for (let i = 0; i < employeeData.length; i++) {
@@ -205,13 +299,13 @@ const addAttendance = async (req, res) => {
           present: employeeData[i].present,
           totalWorkingDays: data.totalWorkingDays,
           numberOfLOP: employeeData[i].numberOfLOP,
-          absentDaysLOP: employeeData[i].absentDaysLOP,
+          absentDaysLOP: parseAbsentDaysToIsoDates(employeeData[i].absentDaysLOP, period.year, period.month).join(","),
           numberOfCL: employeeData[i].numberOfCL,
-          absentDaysCL: employeeData[i].absentDaysCL,
+          absentDaysCL: parseAbsentDaysToIsoDates(employeeData[i].absentDaysCL, period.year, period.month).join(","),
           numberOfPL: employeeData[i].numberOfPL,
-          absentDaysPL: employeeData[i].absentDaysPL,
+          absentDaysPL: parseAbsentDaysToIsoDates(employeeData[i].absentDaysPL, period.year, period.month).join(","),
           numberOfSL: employeeData[i].numberOfSL,
-          absentDaysSL: employeeData[i].absentDaysSL,
+          absentDaysSL: parseAbsentDaysToIsoDates(employeeData[i].absentDaysSL, period.year, period.month).join(","),
           reasonCode: employeeData[i].reasonCode,
           lastWorkingDay: employeeData[i].lastWorkingDay,
           month: data.month,
@@ -432,7 +526,12 @@ const editAttendanceData = async (req, res) => {
 
   if (user) {
     try {
-      // Find the attendance document by its main _id
+      const existingAttendance = await Attendance.findById(attendance_id).select("month_year").lean();
+      if (!existingAttendance) {
+        return res.status(404).json({ message: "Attendance Not Found" });
+      }
+      const period = getAttendancePeriod(existingAttendance.month_year);
+
       const attendance = await Attendance.findOneAndUpdate(
         {
           _id: attendance_id,
@@ -444,14 +543,15 @@ const editAttendanceData = async (req, res) => {
           totalWorkingDays: data.totalWorkingDays,
           remark: data.remark,
           numberOfLOP: data.numberOfLOP,
-          absentDaysLOP: data.absentDaysLOP,
+          absentDaysLOP: parseAbsentDaysToIsoDates(data.absentDaysLOP, period.year, period.month).join(","),
           numberOfCL: data.numberOfCL,
-          absentDaysCL: data.absentDaysCL,
+          absentDaysCL: parseAbsentDaysToIsoDates(data.absentDaysCL, period.year, period.month).join(","),
           numberOfSL: data.numberOfSL,
-          absentDaysSL: data.absentDaysSL,
+          absentDaysSL: parseAbsentDaysToIsoDates(data.absentDaysSL, period.year, period.month).join(","),
           numberOfPL: data.numberOfPL,
-          absentDaysPL: data.absentDaysPL,
-        }
+          absentDaysPL: parseAbsentDaysToIsoDates(data.absentDaysPL, period.year, period.month).join(","),
+        },
+        { new: true }
       );
 
       if (attendance) {
@@ -668,7 +768,7 @@ const addRecordInAttendanceData = async (req, res) => {
 //@access Private: Needs Login
 const deleteAttendance = async (req, res) => {
   const { id } = req.params;
-  const { deleteScope, month, year, client_user_id } = req.query;
+  const { deleteScope, month, year, client_user_id, month_year } = req.query;
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   try {
     // Allow deleting an entire month's data for a client when query params are provided
@@ -680,10 +780,11 @@ const deleteAttendance = async (req, res) => {
       }
 
       // Normalize month/year inputs
-      const monthNum = Number(month);
-      const yearNum = Number(year);
-      if (Number.isNaN(monthNum) || Number.isNaN(yearNum)) {
-        return res.status(400).json({ message: "Valid numeric month and year are required" });
+      const periodMatch = String(month_year || "").match(/^(\d{4})-(\d{1,2})/);
+      const monthNum = periodMatch ? Number(periodMatch[2]) : getMonthNumber(month);
+      const yearNum = periodMatch ? Number(periodMatch[1]) : Number(year);
+      if (!Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12 || !Number.isInteger(yearNum)) {
+        return res.status(400).json({ message: "Valid month and year are required" });
       }
 
       const isoPrefix = `${yearNum}-${String(monthNum).padStart(2, "0")}`;
@@ -702,14 +803,11 @@ const deleteAttendance = async (req, res) => {
         return res.status(404).json({ message: "Attendance not found" });
       }
 
-      const leaveRestore = await restoreEmployeeLeavesFromMonthAttendance(
-        client_user_id,
-        yearNum,
-        monthNum,
-        recordsToDelete
-      );
-
       const result = await Attendance.deleteMany(monthQuery);
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ message: "Attendance not found" });
+      }
+      const leaveRestore = await reconcileEmployeeLeaveBalances(client_user_id);
 
       logger.info(
         `${ip}: API /api/v1/attendance/delete/${id}?month=${month}&year=${year} | Attendance deleted successfully | count=${result.deletedCount} | restoredEmployees=${leaveRestore.employeesUpdated}`
@@ -731,27 +829,34 @@ const deleteAttendance = async (req, res) => {
     }
 
     const clientUserId = String(attendance.client_user_id);
-    const date = attendance.month_year instanceof Date ? attendance.month_year : new Date(attendance.month_year);
-    const yearNum = date.getFullYear();
-    const monthNum = date.getMonth() + 1;
-
-    const leaveRestore = await restoreEmployeeLeavesFromMonthAttendance(
-      clientUserId,
-      yearNum,
-      monthNum,
-      [attendance]
-    );
-
     const deleted = await Attendance.findByIdAndDelete(id);
     if (!deleted) {
       logger.info(`${ip}: API /api/v1/attendance/delete/${id} | Attendance not found`);
       return res.status(404).json({ message: "Attendance not found" });
     }
+    const leaveRestore = await reconcileEmployeeLeaveBalances(clientUserId);
     logger.info(`${ip}: API /api/v1/attendance/delete/${id} | Attendance deleted successfully`);
     return res.status(200).json({ message: "Attendance deleted successfully", leaveRestore });
   } catch (err) {
     logger.error(`${ip}: API /api/v1/attendance/delete/${id} | Error: ${err.message}`);
     return res.status(500).json({ message: "Failed to delete attendance", error: err.message });
+  }
+};
+
+const reconcileClientLeaveBalances = async (req, res) => {
+  const user = req.user;
+  if (!user) return res.status(401).json({ message: "User is not authorized" });
+
+  try {
+    const leaveRestore = await reconcileEmployeeLeaveBalances(user._id);
+    return res.status(200).json({
+      message: "Leave balances recalculated from attendance records",
+      leaveRestore,
+    });
+  } catch (err) {
+    const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    logger.error(`${ip}: Leave balance reconciliation failed: ${err.message}`);
+    return res.status(500).json({ message: "Could not recalculate leave balances" });
   }
 };
 
@@ -873,5 +978,6 @@ module.exports = {
   getEmployeeAttendance,
   getAttendaceFromTo2,
   deleteAttendance,
+  reconcileClientLeaveBalances,
   getClientAttendance,
 };

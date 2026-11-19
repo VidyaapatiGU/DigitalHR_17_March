@@ -22,6 +22,27 @@
   --easy-table-body-row-font-size: 1rem;
 }
 
+.attendance-date-cell {
+  height: 42px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  line-height: 1.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.attendance-date-cell::-webkit-scrollbar {
+  width: 5px;
+}
+
+.attendance-date-cell::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+
 /* Removed empty rulesets: .main, .table-icon, h1 */
 
 .animated_input {
@@ -139,7 +160,7 @@
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
-        <div class="container py-3">
+        <div class="container-fluid py-3 px-4">
           <div class="mt-5 mb-3 d-flex justify-content-between px-2 gap-2">
             <div class="d-flex">
               <input
@@ -193,6 +214,18 @@
                     {{ absentDays(item) }}
                   </div>
                 </template>
+                <template #item-absentDaysCL="item">
+                  <div class="attendance-date-cell">{{ item.absentDaysCL }}</div>
+                </template>
+                <template #item-absentDaysSL="item">
+                  <div class="attendance-date-cell">{{ item.absentDaysSL }}</div>
+                </template>
+                <template #item-absentDaysPL="item">
+                  <div class="attendance-date-cell">{{ item.absentDaysPL }}</div>
+                </template>
+                <template #item-absentDaysLOP="item">
+                  <div class="attendance-date-cell">{{ item.absentDaysLOP }}</div>
+                </template>
                 <template #item-action="item">
                   <div class="d-flex justify-content-evenly">
                     <div
@@ -229,6 +262,7 @@
         </div>
       </div>
     </div>
+  </div>
 
     <!-- ////////////////////////////////////////Modal////////////////////////////////////////////// -->
 
@@ -257,32 +291,32 @@
                 <input type="number" class="form-control" v-model="updateEmployee.numberOfCL" />
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold">CL Days (Absent)</label>
-                <input type="number" class="form-control" v-model="updateEmployee.absentDaysCL" />
+                <label class="form-label fw-bold">CL Dates (DD/MM/YYYY)</label>
+                <input type="text" class="form-control" placeholder="DD/MM/YYYY, DD/MM/YYYY" v-model="updateEmployee.absentDaysCL" />
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-bold">SL (Count)</label>
                 <input type="number" class="form-control" v-model="updateEmployee.numberOfSL" />
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold">SL Days (Absent)</label>
-                <input type="number" class="form-control" v-model="updateEmployee.absentDaysSL" />
+                <label class="form-label fw-bold">SL Dates (DD/MM/YYYY)</label>
+                <input type="text" class="form-control" placeholder="DD/MM/YYYY, DD/MM/YYYY" v-model="updateEmployee.absentDaysSL" />
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-bold">PL (Count)</label>
                 <input type="number" class="form-control" v-model="updateEmployee.numberOfPL" />
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold">PL Days (Absent)</label>
-                <input type="number" class="form-control" v-model="updateEmployee.absentDaysPL" />
+                <label class="form-label fw-bold">PL Dates (DD/MM/YYYY)</label>
+                <input type="text" class="form-control" placeholder="DD/MM/YYYY, DD/MM/YYYY" v-model="updateEmployee.absentDaysPL" />
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-bold">LOP (Count)</label>
                 <input type="number" class="form-control" v-model="updateEmployee.numberOfLOP" />
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold">LOP Days (Absent)</label>
-                <input type="number" class="form-control" v-model="updateEmployee.absentDaysLOP" />
+                <label class="form-label fw-bold">LOP Dates (DD/MM/YYYY)</label>
+                <input type="text" class="form-control" placeholder="DD/MM/YYYY, DD/MM/YYYY" v-model="updateEmployee.absentDaysLOP" />
               </div>
               <div class="col-12">
                 <label class="form-label fw-bold">Remark</label>
@@ -299,8 +333,6 @@
         </div>
       </div>
     </div>
-
-  </div>
 </template>
 
 <script>
@@ -351,13 +383,13 @@ export default {
         { text: 'Days Present', value: 'present', sortable: false },
         { text: 'Total Working Days', value: 'totalWorkingDays' },
         { text: 'CL', value: 'numberOfCL' },
-        { text: 'CL Days', value: 'absentDaysCL' },
+        { text: 'CL Dates', value: 'absentDaysCL' },
         { text: 'SL', value: 'numberOfSL' },
-        { text: 'SL Days', value: 'absentDaysSL' },
+        { text: 'SL Dates', value: 'absentDaysSL' },
         { text: 'PL', value: 'numberOfPL' },
-        { text: 'PL Days', value: 'absentDaysPL' },
+        { text: 'PL Dates', value: 'absentDaysPL' },
         { text: 'LOP', value: 'numberOfLOP' },
-        { text: 'LOP Days', value: 'absentDaysLOP' },
+        { text: 'LOP Dates', value: 'absentDaysLOP' },
         { text: 'Month', value: 'month' },
         { text: 'Year', value: 'year' },
         { text: 'Remark', value: 'remark' },
@@ -478,117 +510,110 @@ export default {
       const value = Number(serial);
       if (!Number.isFinite(value)) return null;
       // Excel serial date to JS Date (1900 system)
-      const ms = Math.round((value - 25569) * 86400 * 1000);
-      const date = new Date(ms);
+      const date = new Date(Date.UTC(1899, 11, 30) + Math.round(value * 86400 * 1000));
       return Number.isNaN(date.getTime()) ? null : date;
     },
 
-    parseAbsentDaysToList(value) {
-      if (value == null || value === '') return [];
-
-      const daySet = new Set();
-      const pushDay = (dayNum) => {
-        const d = Number(dayNum);
-        if (!Number.isFinite(d)) return;
-        if (d < 1 || d > 31) return;
-        daySet.add(String(Math.trunc(d)));
-      };
-
-      const pushFromDate = (dateObj) => {
-        if (!dateObj) return;
-        const dayNum = dateObj.getDate();
-        pushDay(dayNum);
-      };
-
-      const handleNumeric = (num) => {
-        if (!Number.isFinite(num)) return;
-        if (num > 31) {
-          pushFromDate(this.excelSerialToDate(num));
-          return;
-        }
-        pushDay(Math.trunc(num));
-      };
-
-      const handleToken = (token) => {
-        if (!token) return;
-
-        if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(token)) {
-          const parts = token.split('-').map((p) => parseInt(p, 10));
-          if (parts.length === 3) {
-            const date = new Date(parts[0], parts[1] - 1, parts[2]);
-            if (!Number.isNaN(date.getTime())) pushFromDate(date);
-          }
-          return;
-        }
-
-        if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(token)) {
-          const [dd, mm, yyyy] = token.split('/').map((p) => parseInt(p, 10));
-          const date = new Date(yyyy, mm - 1, dd);
-          if (!Number.isNaN(date.getTime())) pushFromDate(date);
-          return;
-        }
-
-        if (/^\d{1,2}-\d{1,2}$/.test(token)) {
-          const [a, b] = token.split('-').map((p) => parseInt(p, 10));
-          if (!Number.isFinite(a) || !Number.isFinite(b)) return;
-          const start = Math.min(a, b);
-          const end = Math.max(a, b);
-          for (let d = start; d <= end; d += 1) {
-            pushDay(d);
-          }
-          return;
-        }
-
-        if (/^\d{1,2}(\.\d{1,2})+$/.test(token)) {
-          const [first] = token.split('.');
-          if (Number(first) <= 31) {
-            token.split('.').forEach((seg) => pushDay(parseInt(seg, 10)));
-            return;
-          }
-        }
-
-        if (/^\d+(\.\d+)?$/.test(token)) {
-          handleNumeric(Number(token));
-        }
-      };
-
-      if (value instanceof Date) {
-        pushFromDate(value);
-      } else if (typeof value === 'number') {
-        handleNumeric(value);
-      } else if (Array.isArray(value)) {
-        value.forEach((v) => {
-          const list = this.parseAbsentDaysToList(v);
-          list.forEach((d) => daySet.add(String(d)));
-        });
-      } else {
-        const valueStr = String(value).trim();
-        if (!valueStr) return [];
-        const tokens = valueStr
-          .replace(/[;|]+/g, ',')
-          .split(/[\s,]+/)
-          .map((t) => t.trim())
-          .filter(Boolean);
-        tokens.forEach(handleToken);
-      }
-
-      const sorted = Array.from(daySet).sort((a, b) => Number(a) - Number(b));
-      return sorted;
+    getAttendancePeriod(value = this.monthYear) {
+      const dateText = value instanceof Date ? value.toISOString() : String(value || '');
+      const match = dateText.match(/^(\d{4})-(\d{1,2})/);
+      if (!match) return { year: 0, month: 0 };
+      return { year: Number(match[1]), month: Number(match[2]) };
     },
 
-    normalizeAbsentDays(value) {
-      const list = this.parseAbsentDaysToList(value);
-      return list.join(', ');
+    parseAbsentDateList(value, period = this.getAttendancePeriod()) {
+      if (value == null || value === '') return [];
+      const { year, month } = period;
+      if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) return [];
+
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const isoDates = new Set();
+      const addDate = (dateYear, dateMonth, dateDay) => {
+        if (dateYear < 100) dateYear += 2000;
+        if (dateYear !== year || dateMonth !== month || dateDay < 1 || dateDay > daysInMonth) return;
+        const date = new Date(dateYear, dateMonth - 1, dateDay);
+        if (
+          date.getFullYear() !== dateYear ||
+          date.getMonth() + 1 !== dateMonth ||
+          date.getDate() !== dateDay
+        ) return;
+        isoDates.add(`${dateYear}-${String(dateMonth).padStart(2, '0')}-${String(dateDay).padStart(2, '0')}`);
+      };
+      const addLegacyDay = (day) => addDate(year, month, Number(day));
+      const addExcelSerial = (serial) => {
+        const date = this.excelSerialToDate(serial);
+        if (date) addDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+      };
+      const handleToken = (token) => {
+        if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(token)) {
+          const [dateYear, dateMonth, dateDay] = token.split('-').map(Number);
+          addDate(dateYear, dateMonth, dateDay);
+          return;
+        }
+        if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(token)) {
+          const [dateDay, dateMonth, dateYear] = token.split('/').map(Number);
+          addDate(dateYear, dateMonth, dateDay);
+          return;
+        }
+        if (/^\d{1,2}-\d{1,2}$/.test(token)) {
+          const [start, end] = token.split('-').map(Number);
+          for (let day = Math.min(start, end); day <= Math.max(start, end); day += 1) addLegacyDay(day);
+          return;
+        }
+        if (/^\d{1,2}(\.\d{1,2})+$/.test(token)) {
+          token.split('.').forEach(addLegacyDay);
+          return;
+        }
+        if (/^\d+(\.\d+)?$/.test(token)) {
+          const numericValue = Number(token);
+          if (numericValue > 31) addExcelSerial(numericValue);
+          else addLegacyDay(numericValue);
+        }
+      };
+
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        addDate(value.getFullYear(), value.getMonth() + 1, value.getDate());
+      } else if (typeof value === 'number') {
+        if (value > 31) addExcelSerial(value);
+        else addLegacyDay(value);
+      } else if (Array.isArray(value)) {
+        value.forEach((entry) => this.parseAbsentDateList(entry, period).forEach((date) => isoDates.add(date)));
+      } else {
+        String(value)
+          .trim()
+          .replace(/[;|]+/g, ',')
+          .split(/[\s,]+/)
+          .map((token) => token.trim())
+          .filter(Boolean)
+          .forEach(handleToken);
+      }
+      return Array.from(isoDates).sort();
+    },
+
+    formatAbsentDates(value, period = this.getAttendancePeriod()) {
+      return this.parseAbsentDateList(value, period)
+        .map((isoDate) => {
+          const [year, month, day] = isoDate.split('-');
+          return `${day}/${month}/${year}`;
+        })
+        .join(', ');
+    },
+
+    parseAbsentDaysToList(value) {
+      return this.parseAbsentDateList(value).map((isoDate) => String(Number(isoDate.slice(8, 10))));
     },
 
     normalizeAttendanceItems(rows) {
-      return (rows || []).map((row) => ({
-        ...row,
-        absentDaysCL: this.normalizeAbsentDays(row.absentDaysCL),
-        absentDaysSL: this.normalizeAbsentDays(row.absentDaysSL),
-        absentDaysPL: this.normalizeAbsentDays(row.absentDaysPL),
-        absentDaysLOP: this.normalizeAbsentDays(row.absentDaysLOP),
-      }));
+      return (rows || []).map((row) => {
+        const period = this.getAttendancePeriod(row.month_year || this.monthYear);
+        return {
+          ...row,
+          absentDaysCL: this.formatAbsentDates(row.absentDaysCL, period),
+          absentDaysSL: this.formatAbsentDates(row.absentDaysSL, period),
+          absentDaysPL: this.formatAbsentDates(row.absentDaysPL, period),
+          absentDaysLOP: this.formatAbsentDates(row.absentDaysLOP, period),
+        };
+      });
     },
 
     daysInSelectedMonth() {
@@ -1228,21 +1253,62 @@ export default {
     },
 
     async updateEmployeeAttendance() {
+      const attendancePeriod = this.getAttendancePeriod(
+        this.updateEmployee.month_year || this.monthYear
+      );
+      const normalizeDateField = (value, countValue, label) => {
+        const input = String(value ?? '').trim();
+        const tokens = input
+          ? input.replace(/[;|]+/g, ',').split(',').map((token) => token.trim()).filter(Boolean)
+          : [];
+        const fullDatePattern = /^(?:\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}\/\d{2,4})$/;
+        const dates = this.parseAbsentDateList(input, attendancePeriod);
+        const count = countValue === '' || countValue == null ? dates.length : Number(countValue);
+        if (
+          tokens.some((token) => !fullDatePattern.test(token)) ||
+          dates.length !== tokens.length ||
+          !Number.isFinite(count) ||
+          count !== dates.length
+        ) {
+          toast.error(`${label} count and dates must match. Enter full dates as DD/MM/YYYY.`, { autoClose: 3500 });
+          return null;
+        }
+        return { dates: dates.join(','), count };
+      };
+      const lop = normalizeDateField(
+        this.updateEmployee.absentDaysLOP,
+        this.updateEmployee.numberOfLOP,
+        'LOP'
+      );
+      const cl = normalizeDateField(
+        this.updateEmployee.absentDaysCL,
+        this.updateEmployee.numberOfCL,
+        'CL'
+      );
+      const sl = normalizeDateField(
+        this.updateEmployee.absentDaysSL,
+        this.updateEmployee.numberOfSL,
+        'SL'
+      );
+      const pl = normalizeDateField(
+        this.updateEmployee.absentDaysPL,
+        this.updateEmployee.numberOfPL,
+        'PL'
+      );
+      if (!lop || !cl || !sl || !pl) return;
       this.form = {
         name: this.updateEmployee.name,
         present: this.updateEmployee.present,
         totalWorkingDays: this.updateEmployee.totalWorkingDays,
-        numberOfLOP: this.updateEmployee.numberOfLOP,
-        absentDaysLOP: this.updateEmployee.absentDaysLOP,
+        numberOfLOP: lop.count,
+        absentDaysLOP: lop.dates,
         weeklyoff: this.updateEmployee.weeklyoff,
-        numberOfCL: this.updateEmployee.numberOfCL,
-        absentDaysCL: this.updateEmployee.absentDaysCL,
-        numberOfPL: this.updateEmployee.numberOfPL,
-        absentDaysPL: this.updateEmployee.absentDaysPL,
-        numberOfSL: this.updateEmployee.numberOfSL,
-        absentDaysSL: this.updateEmployee.absentDaysSL,
-        totalWorkingDays: this.updateEmployee.totalWorkingDays,
-        totalWorkingDays: this.updateEmployee.totalWorkingDays,
+        numberOfCL: cl.count,
+        absentDaysCL: cl.dates,
+        numberOfPL: pl.count,
+        absentDaysPL: pl.dates,
+        numberOfSL: sl.count,
+        absentDaysSL: sl.dates,
         remark: this.updateEmployee.remark,
       };
 
@@ -1263,14 +1329,14 @@ export default {
             this.originalItems[i].totalWorkingDays = this.form.totalWorkingDays;
             this.originalItems[i].remark = this.form.remark;
             this.originalItems[i].numberOfLOP = this.form.numberOfLOP;
-            this.originalItems[i].absentDaysLOP = this.form.absentDaysLOP;
             this.originalItems[i].weeklyoff = this.form.weeklyoff;
             this.originalItems[i].numberOfCL = this.form.numberOfCL;
-            this.originalItems[i].absentDaysCL = this.form.absentDaysCL;
+            this.originalItems[i].absentDaysCL = this.formatAbsentDates(this.form.absentDaysCL, attendancePeriod);
             this.originalItems[i].numberOfSL = this.form.numberOfSL;
-            this.originalItems[i].absentDaysSL = this.form.absentDaysSL;
+            this.originalItems[i].absentDaysSL = this.formatAbsentDates(this.form.absentDaysSL, attendancePeriod);
             this.originalItems[i].numberOfPL = this.form.numberOfPL;
-            this.originalItems[i].absentDaysPL = this.form.absentDaysPL;
+            this.originalItems[i].absentDaysPL = this.formatAbsentDates(this.form.absentDaysPL, attendancePeriod);
+            this.originalItems[i].absentDaysLOP = this.formatAbsentDates(this.form.absentDaysLOP, attendancePeriod);
           }
         }
 

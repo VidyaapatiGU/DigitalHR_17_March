@@ -10,9 +10,16 @@
   padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
-.notification-badge { position: relative; cursor: pointer; padding: 0.25rem; }
-
 .time-input { width: 150px; }
+
+.weekly-off-modal .modal-content,
+.weekly-off-modal .modal-body {
+  overflow: visible;
+}
+
+.weekly-off-modal :deep(.multiselect__content-wrapper) {
+  z-index: 1060;
+}
 
 .table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
 .table-icon:hover { background: #f1f5f9; }
@@ -405,7 +412,7 @@
   </div>
   <!-- Weekly Off Modal -->
   <div
-    class="modal fade"
+    class="modal fade weekly-off-modal"
     id="ModalWeeklyOff"
     tabindex="-1"
     aria-labelledby="ModalWeeklyOffLabel"
@@ -670,18 +677,22 @@
           ></button>
         </div>
         <div class="modal-body">
-          <div class="d-flex align-items-center">
-            <input
-              type="date"
-              class="form-control me-2"
-              id="monthlySalaryDatePicker"
-              v-model="monthlySalaryDate"
-            />
+          <div class="d-flex align-items-end gap-2">
+            <div class="flex-grow-1">
+              <label for="monthlySalaryDatePicker" class="form-label">Day of every month</label>
+              <select
+                class="form-select"
+                id="monthlySalaryDatePicker"
+                v-model="monthlySalaryDate"
+              >
+                <option disabled value="">Select a day</option>
+                <option v-for="day in 31" :key="day" :value="String(day)">{{ day }}</option>
+              </select>
+            </div>
             <button
               type="button"
               class="btn btn-success"
               @click="handleMonthlySalaryDate"
-              data-bs-dismiss="modal"
             >
               Submit
             </button>
@@ -1185,21 +1196,6 @@
   <div class="page-wrapper source-400 scroll">
     <div class="page-header-bar">
       <h5>Settings</h5>
-      <div class="notification-badge" data-bs-toggle="modal" data-bs-target="#ModalNotification">
-        <i class="bi bi-bell-fill pointer" style="font-size: 1.1rem; color: var(--text-secondary)"></i>
-        <span
-          v-if="notifications.length > 0 && notifications.length <= 99"
-          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-        >
-          {{ notifications.length }}
-        </span>
-        <span
-          v-if="notifications.length > 99"
-          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-        >
-          99+
-        </span>
-      </div>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
@@ -1357,7 +1353,8 @@
                 <tr>
                   <td>Monthly Salary Date</td>
                   <td v-if="monthlySalaryDate">
-                    <span style="font-weight: 500">Date:</span> {{ monthlySalaryDate }}
+                    <span style="font-weight: 500">Date:</span>
+                    {{ monthlySalaryDate }}{{ getOrdinalSuffix(Number(monthlySalaryDate)) }} of every month
                   </td>
                   <td v-else>Not Set</td>
                   <td>
@@ -1498,6 +1495,7 @@
 </template>
 
 <script>
+import { Modal } from 'bootstrap';
 import Multiselect from 'vue-multiselect';
 import 'vue-multiselect/dist/vue-multiselect.css';
 import EasyDataTable from 'vue3-easy-data-table';
@@ -1621,6 +1619,10 @@ export default {
   async created() {
     try {
       await this.getCurrent();
+      if (['admin', 'super_admin'].includes(this.user?.roleType?.name)) {
+        this.$router.replace('/dashboard');
+        return;
+      }
       const res = await axiosClient.get(`/api/v1/holiday/getall/client/${this.user._id}`);
       this.holidays = res.data.data;
 
@@ -1659,9 +1661,9 @@ export default {
       
       this.registrationNumber = res_holidayPolicy.data.data[0].registrationNumber || '';
       
-      this.monthlySalaryDate = res_holidayPolicy.data.data[0].monthlySalaryDate 
-        ? res_holidayPolicy.data.data[0].monthlySalaryDate.split('T')[0] 
-        : '';
+      this.monthlySalaryDate = this.getMonthlySalaryDay(
+        res_holidayPolicy.data.data[0].monthlySalaryDate
+      );
 
       this.minimumWages = res_holidayPolicy.data.data[0].minimumWages || {
       unskilled: { basic: '', vda: '', total: '' },
@@ -2066,6 +2068,18 @@ export default {
       if (j === 3 && k !== 13) return 'rd';
       return 'th';
     },
+
+    getMonthlySalaryDay(value) {
+      if (!value) return '';
+      const valueText = String(value);
+      if (/^\d{1,2}$/.test(valueText)) return String(Number(valueText));
+
+      const isoDate = valueText.match(/^\d{4}-\d{2}-(\d{2})/);
+      if (isoDate) return String(Number(isoDate[1]));
+
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? '' : String(date.getUTCDate());
+    },
     async handleDelete(holiday_id) {
       const res = await axiosClient.put(`/api/v1/holiday/delete/${holiday_id}`);
       if (res.status == 200) {
@@ -2087,8 +2101,15 @@ export default {
 
     async handleMonthlySalaryDate() {
       try {
+        const day = Number(this.monthlySalaryDate);
+        if (!Number.isInteger(day) || day < 1 || day > 31) {
+          toast.error('Select a day from 1 to 31.', { autoClose: 1500 });
+          return;
+        }
+
         const data = {
-          monthlySalaryDate: this.monthlySalaryDate,
+          // Keep the existing Date field compatible while storing only a recurring day.
+          monthlySalaryDate: `2000-01-${String(day).padStart(2, '0')}`,
         };
 
         const res = await axiosClient.put(
@@ -2098,6 +2119,8 @@ export default {
         
         if (res.status === 200) {
           toast.success('Monthly Salary Date Updated Successfully!', { autoClose: 1000 });
+          const modalElement = document.getElementById('monthlySalaryModal');
+          Modal.getInstance(modalElement)?.hide();
         } else if (res.status === 201) {
           toast.error('Settings Not Found!', { autoClose: 1000 });
         } else if (res.status === 500) {
@@ -2537,8 +2560,7 @@ export default {
           return;
         }
 
-        const date = new Date(this.monthlySalaryDate);
-        const day = date.getDate();
+        const day = Number(this.monthlySalaryDate);
         
         const dateText = `ON OR BEFORE ${day}${this.getOrdinalSuffix(day)} OF EVERY MONTH`;
 

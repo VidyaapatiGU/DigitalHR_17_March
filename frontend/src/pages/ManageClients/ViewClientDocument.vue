@@ -34,6 +34,8 @@
   color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500;
 }
 .doc-link:hover { text-decoration: underline; }
+.document-frame { width: 100%; height: 100%; border: 0; }
+.document-image { display: block; max-width: 100%; max-height: 100%; margin: auto; object-fit: contain; }
 
 @media (max-width: 576px) {
   .form-container { padding: 1.25rem; }
@@ -45,13 +47,13 @@
     <div class="vh-100">
       <div class="h-100 d-flex justify-content-center align-items-center">
         <div class="w-100 h-100 py-3">
-          <embed
+          <img
+            v-if="documentMimeType.startsWith('image/')"
             :src="documentUrl"
-            type="application/pdf"
-            width="100%"
-            height="100%"
-            class="h-100"
+            alt="Uploaded document"
+            class="document-image"
           />
+          <iframe v-else :src="documentUrl" title="Uploaded document" class="document-frame" />
         </div>
       </div>
     </div>
@@ -86,6 +88,8 @@ export default {
     return {
       client: '',
       documentUrl: '',
+      documentMimeType: '',
+      documentObjectUrl: '',
       formPage: 1,
       form: {
         user_id: '',
@@ -167,6 +171,8 @@ export default {
       this.documentUrl = clientData.cin_proof_url;
     }
 
+    await this.loadDocument(this.documentUrl);
+
     console.log('docId', this.docId, ' ', this.clientId);
   },
 
@@ -185,7 +191,23 @@ export default {
     });
   },
 
+  beforeUnmount() {
+    if (this.documentObjectUrl) URL.revokeObjectURL(this.documentObjectUrl);
+  },
+
   methods: {
+    async loadDocument(source) {
+      if (!source) return;
+      if (source.startsWith('/api/v1/document/file/')) {
+        const response = await axiosClient.get(source, { responseType: 'blob' });
+        this.documentMimeType = response.data.type || response.headers['content-type'] || '';
+        this.documentObjectUrl = URL.createObjectURL(response.data);
+        this.documentUrl = this.documentObjectUrl;
+        return;
+      }
+      this.documentMimeType = /\.(png|jpe?g)(?:$|\?)/i.test(source) ? 'image/*' : 'application/pdf';
+    },
+
     async handleUpdateClient(e) {
       this.$router.push(`/update/client/${this.clientId}`);
     },

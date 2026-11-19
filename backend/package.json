@@ -13,7 +13,6 @@
   "author": "Shrikrishna Parab",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.1686.0",
     "axios": "^1.7.3",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.4.0",

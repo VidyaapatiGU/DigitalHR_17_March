@@ -590,6 +590,9 @@ export default {
     },
 
     async handleCreateClient() {
+      if (this.creating) {
+        return;
+      }
       if (this.createForm.password.length < 5) {
         toast.info('Password must have at least 5 characters');
         return;

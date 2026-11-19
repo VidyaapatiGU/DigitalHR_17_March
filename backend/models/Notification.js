@@ -16,6 +16,15 @@ const NotificationSchema = new Schema({
     type: "ObjectId",
     ref: User,
   },
+  audienceType: {
+    type: String,
+    enum: ["direct", "all_clients", "departments", "roles"],
+    default: "direct",
+  },
+  audienceIds: {
+    type: [String],
+    default: [],
+  },
   by_user: {
     type: "ObjectId",
     ref: User,

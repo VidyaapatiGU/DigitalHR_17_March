@@ -13,9 +13,9 @@ const logger = winston.createLogger({
     printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
   ),
   transports: [
-    new winston.transports.File({
-      filename: "all.log",
-    }),
+    ...(!process.env.VERCEL
+      ? [new winston.transports.File({ filename: "all.log" })]
+      : []),
     new winston.transports.Console(),
   ],
 });

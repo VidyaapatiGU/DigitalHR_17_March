@@ -86,11 +86,27 @@
   <div class="page-wrapper scroll">
     <div class="page-header-bar">
       <h5>Upload Employee Excel</h5>
+      <a class="doc-link" href="/templates/employee_upload_format.xlsx" download>
+        <i class="bi bi-download me-1" aria-hidden="true"></i>Download Excel format
+      </a>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
         <div class="p-4 h-100">
+          <div v-if="isAdmin" class="alert alert-info" role="note">
+            Choose a client for this upload. You can also use an optional <code>client_name</code> column
+            in a custom workbook to import employees for multiple clients.
+          </div>
+          <div v-if="isAdmin" class="mb-3" style="max-width: 420px;">
+            <label for="employeeUploadClient" class="form-label">Client for this upload</label>
+            <select id="employeeUploadClient" v-model="selectedUploadClientId" class="form-select">
+              <option value="">Select a client</option>
+              <option v-for="client in clients" :key="client._id" :value="String(client._id)">
+                {{ client.name }}{{ client.client_code ? ` (${client.client_code})` : '' }}
+              </option>
+            </select>
+          </div>
           <div class="w-100 d-flex justify-content-center gap-3">
             <div class="row w-100">
               <div class="col-12 col-sm-6 col-md-3 d-flex align-items-center">
@@ -99,6 +115,7 @@
                     type="file"
                     class="form-control"
                     id="inputGroupFile04"
+                    accept=".csv,.xlsx,.xls"
                     aria-describedby="inputGroupFileAddon04"
                     aria-label="Upload"
                     @change="handleFileUpload"
@@ -215,7 +232,7 @@
               <div class="w-100">
                 <EasyDataTable
                   table-class-name="customize-table text-capitalize"
-                  :headers="employeesToSelectHeaders"
+                  :headers="savedEmployeesHeaders"
                   :items="savedEmployees"
                   search-field="name"
                   :search-value="search"
@@ -311,12 +328,22 @@ export default {
       showSpinner: false,
       itemsSelected: [],
       employeesToSelectHeaders: [
+        { text: 'Client', value: 'client_name' },
         { text: 'Name', value: 'name', sortable: true },
         { text: 'Email', value: 'email' },
         { text: 'Designation', value: 'designation' },
         { text: 'Adhar_Card', value: 'adhar_card' },
       ],
+      savedEmployeesHeaders: [
+        { text: 'Client', value: 'client_name' },
+        { text: 'Name', value: 'name', sortable: true },
+        { text: 'Username', value: 'username' },
+        { text: 'Employee code', value: 'emp_no' },
+        { text: 'Email', value: 'email' },
+        { text: 'Designation', value: 'designation' },
+      ],
       employeesNotToSelectHeaders: [
+        { text: 'Client', value: 'client_name' },
         { text: 'Name', value: 'name', sortable: true },
         { text: 'Email', value: 'email' },
         { text: 'Name', value: 'nameActions', sortable: false, width: 250 },
@@ -336,6 +363,7 @@ export default {
         year: new Date().getFullYear(),
       },
       excelData: [],
+      rawExcelData: [],
       form: {
         employeeData: [],
         client_user_id: '',
@@ -347,28 +375,39 @@ export default {
       roles: [],
       teams: [],
       departments: [],
+      clients: [],
+      currentClient: null,
+      selectedUploadClientId: '',
       selected_roleType: '',
       selected_team: '',
       selected_department: '',
     };
   },
 
+  computed: {
+    isAdmin() {
+      return ['admin', 'super_admin'].includes(this.role);
+    },
+  },
+
+  watch: {
+    selectedUploadClientId() {
+      if (this.rawExcelData.length) this.refreshEmployeeRows();
+    },
+  },
+
   async created() {
     await this.getCurrent();
 
     try {
-      const res = await axiosClient.get(
-        `/api/v1/employee/get/employees/by/client/${this.user._id}`
-      );
-
-      const roles = await axiosClient.get(`/api/v1/role/getall`);
-      this.roles = roles.data.data;
-
-      const departments = await axiosClient.get(`/api/v1/department/getall`);
-      this.departments = departments.data.data;
-
-      const teams = await axiosClient.get(`/api/v1/team/getall`);
-      this.teams = teams.data.data;
+      const [roles, departments, teams] = await Promise.all([
+        axiosClient.get('/api/v1/role/getall'),
+        axiosClient.get('/api/v1/department/getall'),
+        axiosClient.get('/api/v1/team/getall'),
+      ]);
+      this.roles = roles.data.data || [];
+      this.departments = departments.data.data || [];
+      this.teams = teams.data.data || [];
 
       for (let i = 0; i < this.roles.length; i++) {
         if (this.roles[i].name === 'employee') {
@@ -389,16 +428,9 @@ export default {
         }
       }
 
-      console.log('res.data.data: ', res.data.data);
-      this.originalItems = res.data.data;
-      const notifications = await axiosClient.get(`/api/v1/notification/getall/${this.user._id}`);
-      this.notifications = notifications.data.data;
-      console.log(' this.notifications: ', this.notifications);
     } catch (err) {
       console.log('error: ', err);
     }
-
-    // this.items = this.originalItems;
   },
 
   async getByRow(row) {
@@ -433,6 +465,7 @@ export default {
       this.employeesNotToSelect = [];
       this.itemsSelected = [];
       this.excelData = [];
+      this.rawExcelData = [];
       this.savedEmployees = [];
       this.unSavedEmployees = [];
       this.uploadErrors = [];
@@ -450,38 +483,30 @@ export default {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-
+      try {
+        const isCsv = /\.csv$/i.test(this.file.name);
+        if (!isCsv && !/\.(xlsx|xls)$/i.test(this.file.name)) {
+          throw new Error('Choose a .csv, .xlsx, or .xls file.');
+        }
+        const data = isCsv
+          ? await this.file.text()
+          : new Uint8Array(await this.file.arrayBuffer());
+        const workbook = XLSX.read(data, { type: isCsv ? 'string' : 'array' });
         const firstSheetName = workbook.SheetNames[0];
+        if (!firstSheetName) throw new Error('The file has no data sheet.');
         const worksheet = workbook.Sheets[firstSheetName];
 
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        const normalizedData = jsonData.map((row) => this.normalizeRow(row));
-        this.excelData = normalizedData;
-
-        let tempEmployeesToSelect = normalizedData;
-        let tempEmployeesNotToSelect = [];
-
-        for (let i = 0; i < tempEmployeesToSelect.length; i++) {
-          const normalizedRow = this.prepareRowForUpload(tempEmployeesToSelect[i]);
-          const missingFields = this.getMissingRequiredFields(normalizedRow);
-          if (missingFields.length === 0) {
-            this.employeesToSelect.push(normalizedRow);
-          } else {
-            this.employeesNotToSelect.push({
-              ...normalizedRow,
-              missingFields,
-            });
-          }
-        }
-        this.itemsSelected = [...this.employeesToSelect];
+        this.rawExcelData = jsonData.map((row, index) => {
+          const normalizedRow = this.normalizeRow(row);
+          normalizedRow._excelRow = index + 2;
+          return normalizedRow;
+        });
+        this.refreshEmployeeRows();
+      } catch (error) {
+        toast.error(error.message || 'Unable to read the file.');
         this.showSpinner = false;
-      };
-      reader.readAsArrayBuffer(this.file);
-      return;
+      }
     },
 
     normalizeRow(row) {
@@ -531,11 +556,59 @@ export default {
     },
 
     prepareRowForUpload(row) {
-      return { ...row };
+      const reference = String(row.client_name || '').trim().toLowerCase();
+      if (this.isAdmin) {
+        if (!reference) {
+          const selectedClient = this.clients.find(
+            (client) => String(client._id) === String(this.selectedUploadClientId)
+          );
+          if (!selectedClient) return { ...row, _clientError: 'select a client for this upload' };
+          return { ...row, client_name: selectedClient.name, _clientId: String(selectedClient._id) };
+        }
+        const matches = this.clients.filter((client) =>
+          [client.name, client.client_code].some((value) => String(value || '').trim().toLowerCase() === reference)
+        );
+        if (matches.length !== 1) {
+          return { ...row, _clientError: matches.length ? 'client name is ambiguous' : 'active client was not found' };
+        }
+        return { ...row, client_name: matches[0].name, _clientId: String(matches[0]._id) };
+      }
+
+      if (!this.currentClient) return { ...row, _clientError: 'No active client is linked to this login' };
+      return { ...row, client_name: this.currentClient.name, _clientId: String(this.currentClient._id) };
+    },
+
+    refreshEmployeeRows() {
+      const normalizedData = this.rawExcelData.map((row) =>
+        this.prepareRowForUpload({ ...row })
+      );
+      this.excelData = normalizedData;
+      this.employeesToSelect = [];
+      this.employeesNotToSelect = [];
+
+      for (const normalizedRow of normalizedData) {
+        if (normalizedRow._skipForCurrentClient) continue;
+        const missingFields = this.getMissingRequiredFields(normalizedRow);
+        if (missingFields.length === 0) {
+          this.employeesToSelect.push(normalizedRow);
+        } else {
+          this.employeesNotToSelect.push({ ...normalizedRow, missingFields });
+        }
+      }
+
+      this.itemsSelected = [...this.employeesToSelect];
+      this.showSpinner = false;
+      if (!this.employeesToSelect.length && !this.employeesNotToSelect.length) {
+        this.handleUploadButton = false;
+        toast.info(this.isAdmin
+          ? 'No employee rows are available for this upload.'
+          : 'No employee rows are available for this client.');
+      }
     },
 
     getMissingRequiredFields(row) {
       const missing = [];
+      if (!row._clientId) missing.push(row._clientError || 'active client');
       if (!row.name) missing.push('name');
       if (!row.email) missing.push('email');
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(row.email).trim())) missing.push('email (invalid format)');
@@ -553,6 +626,7 @@ export default {
     },
 
     mapExcelKey(cleanKey) {
+      if (['client', 'client_code', 'company', 'company_name'].includes(cleanKey)) return 'client_name';
       if (['name', 'employee_name', 'employee', 'emp_name', 'fullname', 'full_name'].includes(cleanKey)) {
         return 'name';
       }
@@ -625,39 +699,72 @@ export default {
     },
 
     async uploadFile() {
-      this.form.team = this.selected_team._id;
-      this.form.department = this.selected_department._id;
-      this.form.roleType = this.selected_roleType._id;
+      this.form.team = this.selected_team?._id;
+      this.form.department = this.selected_department?._id;
+      this.form.roleType = this.selected_roleType?._id;
       if (this.validateForm() == false) return;
 
-      this.form.employeeData =
-        this.itemsSelected.length > 0 ? this.itemsSelected : this.employeesToSelect;
-      try {
-        const res = await axiosClient.post(`/api/v1/employee/add/employees/excel`, this.form);
-        this.savedEmployees = res.data.newUsers;
-        this.unSavedEmployees = res.data.existingUsers;
-        this.uploadErrors = res.data.Errors || [];
+      const selectedRows = this.itemsSelected.length ? this.itemsSelected : this.employeesToSelect;
+      const groups = this.isAdmin
+        ? [...selectedRows.reduce((grouped, row) => {
+            if (!grouped.has(row._clientId)) grouped.set(row._clientId, []);
+            grouped.get(row._clientId).push(row);
+            return grouped;
+          }, new Map())].map(([clientId, rows]) => ({
+            client: this.clients.find((client) => String(client._id) === clientId),
+            rows,
+          }))
+        : [{ client: this.currentClient, rows: selectedRows }];
 
-        if (this.uploadErrors.length) {
-          toast.warning(`${this.savedEmployees.length} added; ${this.uploadErrors.length} could not be saved`, { autoClose: 2500 });
-        } else {
-          toast.success(`${this.savedEmployees.length} employees added; ${this.unSavedEmployees.length} duplicates skipped`, {
-            autoClose: 2000,
-          });
+      this.showSpinner = true;
+      this.savedEmployees = [];
+      this.unSavedEmployees = [];
+      this.uploadErrors = [];
+      for (const group of groups) {
+        if (!group.client) {
+          this.uploadErrors.push('An active client could not be resolved for selected rows.');
+          continue;
         }
-
-        this.handleUploadButton = false;
-        this.showResponse = true;
-      } catch (err) {
-        console.log('error: ', err);
-        const message =
-          err.response?.data?.message ||
-          err.response?.data?.errors?.[0]?.msg ||
-          'Something Went Wrong';
-        toast.error(message, {
-          autoClose: 1500,
-        });
+        const employeeData = group.rows.map(({
+          _clientId,
+          _clientError,
+          _skipForCurrentClient,
+          selected,
+          ...row
+        }) => row);
+        try {
+          const response = await axiosClient.post('/api/v1/employee/add/employees/excel', {
+            ...this.form,
+            client_user_id: group.client._id,
+            client_id: group.client._id,
+            employeeData,
+          });
+          this.savedEmployees.push(...(response.data.newUsers || []).map((employee) => ({
+            ...employee,
+            client_name: group.client.name,
+          })));
+          this.unSavedEmployees.push(...(response.data.existingUsers || []).map((employee) => ({
+            ...employee,
+            client_name: group.client.name,
+          })));
+          this.uploadErrors.push(...(response.data.Errors || []).map(
+            (error) => `${group.client.name}: ${error}`
+          ));
+        } catch (error) {
+          this.uploadErrors.push(
+            `${group.client.name}: ${error.response?.data?.message || 'Unable to import employees'}`
+          );
+        }
       }
+
+      this.showSpinner = false;
+      if (this.uploadErrors.length) {
+        toast.warning(`${this.savedEmployees.length} added; ${this.uploadErrors.length} issue(s) need attention`, { autoClose: 2500 });
+      } else {
+        toast.success(`${this.savedEmployees.length} employees added; ${this.unSavedEmployees.length} duplicates skipped`, { autoClose: 2000 });
+      }
+      this.handleUploadButton = false;
+      this.showResponse = true;
     },
 
     handleEmployeeUpdate(id) {
@@ -713,29 +820,33 @@ export default {
     },
 
     async getCurrent() {
-      let token = '';
       try {
-        token = await axiosClient.get(`api/v1/user/getCurrent/`);
-        this.form.client_user_id = token.data.user._id;
-        this.user = token.data.user;
-        // console.log('Token : ', token);
-        console.log('form.user_id: ', this.form.client_user_id);
-
-        if (!token) {
-          this.$router.push('/login');
-        }
+        const response = await axiosClient.get('/api/v1/user/getCurrent/');
+        this.user = response.data.user || {};
+        this.role = this.user.roleType?.name || this.user.role || (this.user.industry_type ? 'client' : '');
       } catch (err) {
-        console.log('error: ', err);
         this.$router.push('/login');
+        return;
       }
 
       try {
-        const client = await axiosClient.get(`/api/v1/client/get/${this.form.client_user_id}`);
-        // console.log('client : ', client);
-        this.form.client_id = client.data.data[0]._id;
-        console.log('form.client_id: ', this.form.client_id);
+        if (this.isAdmin) {
+          const response = await axiosClient.get('/api/v1/client/get/all/clients');
+          this.clients = (response.data.data || []).filter((client) =>
+            client.active !== false && client.approved !== false && !client.deletedAt
+          );
+          this.selectedUploadClientId = '';
+          return;
+        }
+
+        const response = await axiosClient.get(`/api/v1/client/get/${this.user._id}`);
+        this.currentClient = response.data.data?.[0] || null;
+        if (this.currentClient) {
+          this.form.client_user_id = this.currentClient._id;
+          this.form.client_id = this.currentClient._id;
+        }
       } catch (err) {
-        console.log('error: ', err);
+        console.error('Could not load client for employee upload:', err.response?.data?.message || err.message);
       }
     },
   },

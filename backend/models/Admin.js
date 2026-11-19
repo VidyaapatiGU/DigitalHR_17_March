@@ -23,6 +23,10 @@ const AdminSchema = new Schema(
       lowercase: true,
       trim: true,
     },
+    whatsapp_no: {
+      type: String,
+      trim: true,
+    },
     password: {
       type: String,
       required: true,

@@ -126,17 +126,24 @@
   color: var(--primary, #1e3a5f);
 }
 
+.document-upload-action {
+  position: relative;
+}
+
+.document-pending-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid #ffffff;
+  border-radius: 50%;
+  background: #f59e0b;
+  pointer-events: none;
+}
+
 .thumbs-down {
   color: var(--danger, #ef4444);
-}
-
-.notification-badge {
-  position: relative;
-  cursor: pointer;
-}
-
-.notification-badge .badge {
-  font-size: 0.625rem;
 }
 
 @media (max-width: 576px) {
@@ -422,35 +429,33 @@
   <div class="source-400 pt-0 h-100 scroll page-wrapper">
     <div class="page-header-bar">
       <h5>Manage Clients</h5>
-      <div class="notification-badge" data-bs-toggle="modal" data-bs-target="#ModalNotification">
-        <i class="bi bi-bell-fill pointer" style="font-size: 1.1rem; color: var(--text-secondary)"></i>
-        <span
-          v-if="notifications.length > 0 && notifications.length <= 99"
-          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-        >
-          {{ notifications.length }}
-        </span>
-        <span
-          v-if="notifications.length > 99"
-          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-        >
-          99+
-        </span>
-      </div>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
         <div class="p-4">
           <div class="toolbar mb-4">
-            <input
-              v-model="search"
-              class="form-control search-input"
-              size="small"
-              placeholder="Search clients..."
-            />
+            <div class="d-flex align-items-center flex-wrap gap-3">
+              <input
+                v-model="search"
+                class="form-control search-input"
+                size="small"
+                placeholder="Search clients..."
+              />
+              <div class="form-check form-switch mb-0">
+                <input
+                  id="showDisapprovedClients"
+                  v-model="showDisapprovedOnly"
+                  class="form-check-input"
+                  type="checkbox"
+                />
+                <label class="form-check-label" for="showDisapprovedClients" style="font-size: 12px">
+                  Show disapproved
+                </label>
+              </div>
+            </div>
             <div class="action-buttons">
-              <a href="https://technirmitisoftwares.com/client_format.xlsx" class="format-link">
+              <a href="/templates/client_upload_format.xlsx" download class="format-link">
                 Download Format
               </a>
               <router-link to="/upload/client/excel" class="text-decoration-none">
@@ -472,7 +477,7 @@
               <EasyDataTable
                 table-class-name="customize-table"
                 :headers="headers"
-                :items="items"
+                :items="filteredItems"
                 search-field="name"
                 :search-value="search"
                 :rows-per-page="10"
@@ -491,6 +496,22 @@
                       <el-tooltip content="Update " placement="bottom">
                         <i class="bi bi-pen-fill pointer" style="font-size"></i>
                       </el-tooltip>
+                    </div>
+
+                    <div
+                      v-if="['admin', 'super_admin'].includes(user.roleType?.name)"
+                      class="table-icon action_icon_color document-upload-action"
+                      @click="handleClientDocuments(item._id)"
+                    >
+                      <el-tooltip content="Upload Documents" placement="bottom">
+                        <i class="bi bi-file-earmark-arrow-up pointer" aria-label="Upload client documents"></i>
+                      </el-tooltip>
+                      <span
+                        v-if="!hasUploadedClientDocuments(item)"
+                        class="document-pending-dot"
+                        role="img"
+                        aria-label="No documents uploaded"
+                      ></span>
                     </div>
 
                     <!-- <div
@@ -624,6 +645,7 @@ export default {
       showDeleteModal: false,
 
       search: '',
+      showDisapprovedOnly: false,
       entries: 0,
       entriesPerPage: 5,
       entriesPerPageOptions: [5, 10, 15, 20],
@@ -673,7 +695,20 @@ export default {
 
   setup() {},
 
+  computed: {
+    filteredItems() {
+      if (this.showDisapprovedOnly) return this.items;
+      return this.items.filter((client) => client.approved !== false);
+    },
+  },
+
   methods: {
+    hasUploadedClientDocuments(client) {
+      return ['adhar_proof', 'pan_proof', 'gst_proof', 'cin_proof'].some(
+        (field) => client?.[field] === true
+      );
+    },
+
     async getAllEmployeesOfClient(name, id) {
       console.log(name, id);
       this.$router.push(`employees/by/client/${name}/${id}`);
@@ -791,7 +826,13 @@ export default {
     },
 
     handleUserUpdate(id) {
+      localStorage.removeItem('UpdateDocuments');
       this.$router.push(`/update/client/${id}`);
+    },
+
+    handleClientDocuments(id) {
+      localStorage.removeItem('UpdateDocuments');
+      this.$router.push(`/update/client/documents/${id}`);
     },
 
     handleViewUser(id) {

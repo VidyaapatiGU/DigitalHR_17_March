@@ -16,6 +16,11 @@ ul {
   border: 2px solid rgba(148, 163, 184, 0.3);
   transition: all 150ms ease;
 }
+.profile-warning-badge {
+  position: absolute; top: 0; right: 0; width: 0.7rem; height: 0.7rem;
+  display: inline-block; border-radius: 50%;
+  background: #f59e0b; border: 2px solid #111827;
+}
 
 .footer {
   height: auto;
@@ -259,10 +264,11 @@ ul {
           <div
             @click="handleRedirect('account')"
             @keydown.enter="handleRedirect('account')"
-            class="flex-shrink-0"
+            class="flex-shrink-0 position-relative"
             role="button"
             tabindex="0"
-            aria-label="Open account"
+            :aria-label="pendingProfileDocumentLabels.length ? `Open account; ${pendingProfileDocumentLabels.length} proof document(s) pending` : 'Open account'"
+            :title="pendingProfileDocumentLabels.length ? `${pendingProfileDocumentLabels.length} proof document(s) pending` : 'Open account'"
           >
             <img
               v-if="profile"
@@ -276,6 +282,12 @@ ul {
               src="../assets/profile-circle copy.svg"
               alt="Default Profile Picture"
             />
+            <span
+              v-if="pendingProfileDocumentLabels.length"
+              class="profile-warning-badge"
+              role="img"
+              aria-label="Proof documents pending"
+            ></span>
           </div>
           <div v-if="!collapsed" class="overflow-hidden flex-grow-1">
             <div class="user-name text-capitalize">{{ user.name }}</div>
@@ -473,7 +485,7 @@ ul {
         </div>
       </div>
 
-      <div class="footer">
+      <div v-if="!isAdminRole" class="footer">
         <button
           type="button"
           @click="handleRedirect('setting')"
@@ -519,6 +531,34 @@ export default {
   computed: {
     isAdminRole() {
       return this.role === 'super_admin' || this.role === 'admin';
+    },
+    isClientUser() {
+      return Boolean(
+        this.user.client_code ||
+        this.user.industry_type ||
+        this.user.roleType?.name === 'client'
+      );
+    },
+    isEmployeeUser() {
+      return !this.isClientUser && this.role === 'employee';
+    },
+    pendingProfileDocumentLabels() {
+      if (!this.isClientUser && !this.isEmployeeUser) return [];
+      const requiredDocuments = this.isClientUser
+        ? [
+            { label: 'Aadhaar', proofField: 'adhar_proof', required: true },
+            { label: 'PAN', proofField: 'pan_proof', required: true },
+            { label: 'GST', proofField: 'gst_proof', required: Boolean(this.user.gst_no) },
+            { label: 'CIN', proofField: 'cin_proof', required: Boolean(this.user.cin_no) },
+          ]
+        : [
+            { label: 'Aadhaar', proofField: 'adhar_proof', required: true },
+            { label: 'ASCI document', proofField: 'asci_proof', required: true },
+            { label: 'Bank proof', proofField: 'bank_proof', required: true },
+          ];
+      return requiredDocuments
+        .filter((document) => document.required && !this.user[document.proofField])
+        .map((document) => document.label);
     },
 
     collapsedMenuItems() {
@@ -591,6 +631,7 @@ export default {
   },
 
   async created() {
+    window.addEventListener('client-documents-updated', this.handleClientDocumentsUpdated);
     const token = localStorage.getItem('token');
     if (!token) {
       return;
@@ -605,6 +646,10 @@ export default {
     if (currPage) {
       this.glowMenuItem = currPage;
     }
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('client-documents-updated', this.handleClientDocumentsUpdated);
   },
 
   methods: {
@@ -686,6 +731,12 @@ export default {
       this.$emit('navigate');
     },
 
+    handleClientDocumentsUpdated(event) {
+      const updatedClient = event.detail;
+      if (String(updatedClient?._id || '') !== String(this.user?._id || '')) return;
+      this.user = { ...this.user, ...updatedClient };
+    },
+
     async getCurrent() {
       const tokenInStorage = localStorage.getItem('token');
       if (!tokenInStorage) return;
@@ -697,12 +748,12 @@ export default {
         }
         this.user = token.data.user;
         this.profile = this.user.profile_url || this.user.profile || '';
-        if (token.data.user.industry_type) {
+        if (token.data.user.industry_type || token.data.user.client_code) {
           this.role = 'client';
         } else if (token.data.user.designation) {
           this.role = 'employee';
         } else {
-          this.role = this.user.roleType.name;
+          this.role = this.user.roleType?.name || '';
         }
       } catch (err) {
         console.log('error: ', err);

@@ -107,6 +107,20 @@
                                 v-model="form.email"
                               />
                             </div>
+                            <div class="mt-3">
+                              <label class="small mb-1" for="client">Client</label>
+                              <multiselect
+                                id="client"
+                                class="text-dark"
+                                v-model="selected_client"
+                                :options="clients"
+                                :placeholder="clientPlaceholder"
+                                :disabled="clientsLoading || !clients.length"
+                                label="name"
+                                track-by="_id"
+                              />
+                              <small v-if="clientLoadError" class="text-danger">{{ clientLoadError }}</small>
+                            </div>
                             <div>
                               <div class="mt-3">
                                 <label class="small mb-1" for="team">Team</label>
@@ -132,6 +146,15 @@
                                 id="mobile_no"
                                 type="text"
                                 v-model="form.whatsapp_no"
+                              />
+                            </div>
+                            <div class="mt-3">
+                              <label class="small mb-1" for="designation">Job Title</label>
+                              <input
+                                class="form-control"
+                                id="designation"
+                                type="text"
+                                v-model.trim="form.designation"
                               />
                             </div>
                             <div class="">
@@ -223,6 +246,8 @@ export default {
         roleType: '',
         team: '',
         department: '',
+        client_id: '',
+        designation: '',
       },
       placeholderTeam: '',
       placeholderDepartment: '',
@@ -231,10 +256,22 @@ export default {
       selected_roleType: '',
       selected_team: '',
       selected_department: '',
+      selected_client: null,
       departments: [],
       roles: [],
       teams: [],
+      clients: [],
+      clientsLoading: true,
+      clientLoadError: '',
     };
+  },
+
+  computed: {
+    clientPlaceholder() {
+      if (this.clientsLoading) return 'Loading clients...';
+      if (this.clientLoadError) return 'Unable to load clients';
+      return this.clients.length ? 'Select Client' : 'No active clients found';
+    },
   },
 
   async created() {
@@ -251,6 +288,8 @@ export default {
         this.form.department = userData.department._id;
         this.form.roleType = userData.roleType._id;
         this.form.team = userData.team._id;
+        this.form.client_id = userData.client_id?._id || '';
+        this.form.designation = userData.designation || '';
 
         this.placeholderDepartment = userData.department.name;
         this.placeholderRoleType = userData.roleType.name;
@@ -259,6 +298,7 @@ export default {
         this.selected_roleType = userData.roleType;
         this.selected_team = userData.team;
         this.selected_department = userData.department;
+        this.selected_client = userData.client_id || null;
       }
 
       console.log('form: ', this.form);
@@ -270,10 +310,16 @@ export default {
 
       const teams = await axiosClient.get(`/api/v1/team/getall`);
       this.teams = teams.data.data;
+      const clients = await axiosClient.get(`/api/v1/client/get/all/clients`);
+      this.clients = clients.data.data.filter((client) => client.active !== false);
+      this.clientsLoading = false;
       console.log('departments : ', this.departments);
       console.log('roles : ', this.roles);
       console.log('teams : ', this.teams);
-    } catch (err) {}
+    } catch (err) {
+      this.clientLoadError = 'Could not load clients. Refresh the page and try again.';
+      this.clientsLoading = false;
+    }
   },
 
   mounted() {
@@ -300,6 +346,7 @@ export default {
       this.form.roleType = this.selected_roleType._id;
       this.form.department = this.selected_department._id;
       this.form.team = this.selected_team._id;
+      this.form.client_id = this.selected_client?._id || '';
 
       try {
         const res = await axiosClient.put(`api/v1/user/update/${this.userId}`, this.form);
@@ -357,6 +404,14 @@ export default {
       }
       if (this.selected_roleType == '' || !this.selected_roleType) {
         toast.info(`Select Role `, { autoClose: 1000 });
+        return false;
+      }
+      if (!this.selected_client) {
+        toast.info(`Select a client`, { autoClose: 1000 });
+        return false;
+      }
+      if (!this.form.designation.trim()) {
+        toast.info(`Enter a job title`, { autoClose: 1000 });
         return false;
       }
 

@@ -220,10 +220,17 @@
               <button
                 v-if="formPage == 1 && userAdded == false"
                 @click="handleAddClient"
+                :disabled="isCreatingClient"
                 type="button"
                 class="btn-submit mt-4"
               >
-                Next
+                <span
+                  v-if="isCreatingClient"
+                  class="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                {{ isCreatingClient ? 'Creating client…' : 'Next' }}
               </button>
               <button
                 v-if="formPage == 1 && userAdded == true"
@@ -456,6 +463,7 @@ export default {
     return {
       formPage: 1,
       isLoading: false,
+      isCreatingClient: false,
       userAdded: false,
       form: {
         user_id: '66d7f425ad326a6f50ef00d5',
@@ -766,10 +774,13 @@ export default {
     },
 
     async handleAddClient() {
+      if (this.isCreatingClient || this.userAdded) {
+        return;
+      }
       if (this.validateFormPage1() == false) {
         return;
       }
-      this.isLoading = true;
+      this.isCreatingClient = true;
       /* this.form.roleType = this.selected_roleType._id;
       this.form.department = this.selected_department._id;
       this.form.team = this.selected_team._id; */
@@ -783,29 +794,34 @@ export default {
         this.userAdded = true;
       } catch (err) {
         console.log('error: ', err);
-        if (err.response.status == 409) {
+        if (err.response?.status == 409) {
           toast.error(`Email Already Registered!`, {
             autoClose: 1500,
           });
-        } else if (err.response.status == 412) {
+        } else if (err.response?.status == 412) {
           toast.error(`User with same ADHAR already registered!`, {
             autoClose: 1500,
           });
-        } else if (err.response.status == 401) {
+        } else if (err.response?.status == 401) {
           toast.error(`User is not Autherized!`, {
             autoClose: 1500,
           });
-        } else if (err.response.status == 400) {
+        } else if (err.response?.status == 400) {
           toast.error(`Something Went Wrong! Check Your Input Fields.`, {
             autoClose: 1500,
           });
-        } else if (err.response.status == 500) {
+        } else if (err.response?.status == 500) {
           toast.error(`Internal Server Error!`, {
             autoClose: 1500,
           });
+        } else {
+          toast.error('Unable to create client. Please try again.', {
+            autoClose: 1500,
+          });
         }
+      } finally {
+        this.isCreatingClient = false;
       }
-      this.isLoading = false;
     },
 
     async handleAddClientDetails() {

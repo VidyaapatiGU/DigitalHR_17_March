@@ -30,6 +30,33 @@
 }
 .btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
 
+.employee-documents-content { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+.documents-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+.document-card {
+  padding: 1.25rem; border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  background: #fff; box-shadow: var(--shadow-sm);
+}
+.document-card h6 { margin: 0; color: var(--text-primary); font-weight: 600; }
+.document-card-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.document-status { padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+.document-status.uploaded { color: #166534; background: #dcfce7; }
+.document-status.pending { color: #9a3412; background: #ffedd5; }
+.document-file-input { min-height: 42px; font-size: 0.82rem; }
+.document-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.document-actions .btn { font-size: 0.82rem; }
+.preview-backdrop {
+  position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center;
+  padding: 1rem; background: rgb(15 23 42 / 72%);
+}
+.preview-dialog {
+  display: flex; flex-direction: column; width: min(100%, 1000px); height: min(90vh, 800px);
+  overflow: hidden; border-radius: 0.75rem; background: #fff;
+}
+.preview-header { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1rem; border-bottom: 1px solid #e2e8f0; }
+.preview-body { display: flex; flex: 1; align-items: center; justify-content: center; min-height: 0; padding: 0.75rem; }
+.preview-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+.preview-frame { width: 100%; height: 100%; border: 0; }
+
 @media (max-width: 576px) {
   .form-container { padding: 1.25rem; }
 }
@@ -500,88 +527,63 @@
                 </div>
               </div>
               <div v-if="UpdateDocuments == true" v-auto-animate class="h-100 overflow-y-auto">
-                <div class="container h-100 py-3">
-                  <div class="form-document rounded">
-                    <div class="row mb-4">
-                      <div class="form-group col-12 col-md-6">
-                        <div class="">
-                          <label for="incorporation_type" class="">Select Document Type</label>
-                          <multiselect
-                            class="text-capitalize"
-                            v-model="form.document_type"
-                            :options="documentOptions"
-                            placeholder="Select Document "
-                          ></multiselect>
-                        </div>
+                <div class="employee-documents-content">
+                  <div class="alert alert-light border mb-4">
+                    Upload PDF, JPG, or PNG files up to 4 MB each.
+                  </div>
+                  <div class="documents-grid">
+                    <section v-for="document in employeeDocuments" :key="document.type" class="document-card">
+                      <div class="document-card-header">
+                        <h6>{{ document.label }}</h6>
+                        <span class="document-status" :class="isEmployeeDocumentUploaded(document) ? 'uploaded' : 'pending'">
+                          {{ isEmployeeDocumentUploaded(document) ? 'Uploaded' : 'Pending' }}
+                        </span>
                       </div>
-                      <div class="form-group col-12 col-md-6 d-flex justify-content-end">
-                        <div class="d-flex gap-4 w-100">
-                          <div class="d-flex align-items-end w-100">
-                            <label for="formFile" class=""></label>
-                            <input
-                              class="form-control"
-                              accept="image/png, image/jpeg, application/pdf"
-                              type="file"
-                              id="file"
-                              ref="file"
-                              v-on:change="handleFile()"
-                            />
-                          </div>
-                          <div class="d-flex align-items-end">
-                            <butto @click="uploadFile" type="button" class="btn btn-dark btn-sm">
-                              Add
-                            </butto>
-                          </div>
-                        </div>
+                      <p class="small text-secondary mt-2 mb-3">
+                        {{ isEmployeeDocumentUploaded(document) ? 'A document is on file. You can view, replace, or remove it.' : 'No document has been uploaded yet.' }}
+                      </p>
+                      <input
+                        class="form-control document-file-input"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                        :aria-label="`Choose ${document.label}`"
+                        :disabled="isDocumentBusy"
+                        @change="selectEmployeeDocument($event, document.type)"
+                      />
+                      <div v-if="selectedDocumentFiles[document.type]" class="small text-secondary mt-2 text-break">
+                        {{ selectedDocumentFiles[document.type].name }}
                       </div>
-                    </div>
-                    <div class="">
-                      <div
-                        class="d-flex justify-content-around capitalize source-600 animate rounded py-1 pointer px-4 mb-2"
-                        v-if="form.adhar_proof == true"
-                      >
-                        <div>adhar proof</div>
-                        <div>
-                          <button
-                            @click="handleDeleteDocument(form.adhar_proof_url_id, 'adhar')"
-                            type="button"
-                            class="btn btn-outline-danger btn-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
+                      <div class="document-actions">
+                        <button
+                          type="button"
+                          class="btn btn-primary"
+                          :disabled="!selectedDocumentFiles[document.type] || isDocumentBusy"
+                          @click="uploadEmployeeDocument(document)"
+                        >
+                          <span v-if="uploadingDocumentType === document.type" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                          {{ uploadingDocumentType === document.type ? 'Uploading…' : (isEmployeeDocumentUploaded(document) ? 'Replace' : 'Upload') }}
+                        </button>
+                        <button
+                          v-if="form[document.idField]"
+                          type="button"
+                          class="btn btn-outline-secondary"
+                          :disabled="isDocumentBusy"
+                          @click="viewEmployeeDocument(form[document.idField], document.label)"
+                        >
+                          <i class="bi bi-eye me-1"></i> View
+                        </button>
+                        <button
+                          v-if="form[document.idField]"
+                          type="button"
+                          class="btn btn-outline-danger"
+                          :disabled="isDocumentBusy"
+                          @click="handleDeleteDocument(form[document.idField], document.type)"
+                        >
+                          <span v-if="deletingDocumentType === document.type" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                          {{ deletingDocumentType === document.type ? 'Deleting…' : 'Delete' }}
+                        </button>
                       </div>
-                      <div
-                        class="d-flex justify-content-around capitalize source-600 animate rounded py-1 pointer px-4 mb-2"
-                        v-if="form.asci_proof == true"
-                      >
-                        <div>pan proof</div>
-                        <div>
-                          <button
-                            type="button"
-                            @click="handleDeleteDocument(form.asci_proof_url_id, 'pan')"
-                            class="btn btn-outline-danger btn-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                      <div
-                        class="d-flex justify-content-around capitalize source-600 animate rounded py-1 pointer px-4 mb-2"
-                        v-if="form.bank_proof == true"
-                      >
-                        <div>cin proof</div>
-                        <div>
-                          <button
-                            type="button"
-                            @click="handleDeleteDocument(form.bank_proof_url_id, 'cin')"
-                            class="btn btn-outline-danger btn-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    </section>
                   </div>
                 </div>
               </div>
@@ -589,6 +591,20 @@
           </div>
         </div>
       </div>
+    </div>
+    <div v-if="previewDocument" class="preview-backdrop" @click.self="closeEmployeeDocumentPreview">
+      <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="previewDocument.label">
+        <header class="preview-header">
+          <strong>{{ previewDocument.label }}</strong>
+          <button type="button" class="btn-close" aria-label="Close preview" @click="closeEmployeeDocumentPreview"></button>
+        </header>
+        <div v-if="previewLoading" class="preview-body text-secondary" role="status">Loading document…</div>
+        <div v-else-if="previewError" class="preview-body text-danger" role="alert">{{ previewError }}</div>
+        <div v-else class="preview-body">
+          <img v-if="previewMimeType.startsWith('image/')" :src="previewUrl" :alt="previewDocument.label" class="preview-image" />
+          <iframe v-else :src="previewUrl" :title="previewDocument.label" class="preview-frame"></iframe>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -601,7 +617,6 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Multiselect from 'vue-multiselect';
 import 'vue-multiselect/dist/vue-multiselect.css';
-import UpdateDocuments from '../ManageClients/UpdateDocuments.vue';
 
 export default {
   name: 'UpdateEmployee',
@@ -623,7 +638,15 @@ export default {
       mobile_no: '11111111',
       email: 'xyz@gmail.com',
       UpdateDocuments: false,
-      documentUploaded: false,
+      isUploadingDocument: false,
+      uploadingDocumentType: '',
+      deletingDocumentType: '',
+      selectedDocumentFiles: { adhar: null, asci: null, bank: null },
+      previewDocument: null,
+      previewUrl: '',
+      previewMimeType: '',
+      previewLoading: false,
+      previewError: '',
       profile_url: '',
       form: {
         _id: '',
@@ -661,20 +684,17 @@ export default {
         lwf: '',
         e_epf: '',
         e_esic: '',
-        document_type: '',
-
         adhar_proof: false,
-        gst_proof: false,
-        cin_proof: false,
-        pan_proof: false,
+        adhar_proof_url_id: '',
         adhar_proof_url: '',
-        gst_proof_url: '',
-        cin_proof_url: '',
-        pan_proof_url: '',
+        asci_proof: false,
+        asci_proof_url_id: '',
+        asci_proof_url: '',
+        bank_proof: false,
+        bank_proof_url_id: '',
+        bank_proof_url: '',
         weeklyOff: [],
       },
-      file: '',
-      documentOptions: [],
       placeholderTeam: '',
       placeholderDepartment: '',
       placeholderRoleType: '',
@@ -749,14 +769,14 @@ export default {
           e_esic: employeeData.e_esic ?? employeeData.esic ?? '',
           adhar_proof: employeeData.adhar_proof,
           adhar_proof_url: employeeData.adhar_proof_url,
-          adhar_proof_id: employeeData.adhar_proof_id,
+          adhar_proof_url_id: employeeData.adhar_proof_url_id,
           asci_proof: employeeData.asci_proof,
           asci_proof_url: employeeData.asci_proof_url,
-          asci_proof_id: employeeData.asci_proof_id,
+          asci_proof_url_id: employeeData.asci_proof_url_id,
           bank_proof: employeeData.bank_proof,
           bank_proof_url: employeeData.bank_proof_url,
-          bank_proof_id: employeeData.bank_proof_id,
-          weeklyOff: employeeData.weeklyOff.map(day => {
+          bank_proof_url_id: employeeData.bank_proof_url_id,
+          weeklyOff: (employeeData.weeklyOff || []).map(day => {
             // Find the corresponding object from weekOffOptions
             return this.weekOffOptions.find(option => option.value === day) || { label: day, value: day };
           }),
@@ -775,9 +795,6 @@ export default {
       console.log('departments : ', this.departments);
       console.log('roles : ', this.roles);
       console.log('teams : ', this.teams);
-      if (this.form.adhar_proof == false) this.documentOptions.push('adhar');
-      if (this.form.asci_proof == false) this.documentOptions.push('asci');
-      if (this.form.bank_proof == false) this.documentOptions.push('bank');
     } catch (err) {}
   },
 
@@ -796,7 +813,21 @@ export default {
     });
   },
 
+  beforeUnmount() {
+    this.closeEmployeeDocumentPreview();
+  },
+
   computed: {
+    employeeDocuments() {
+      return [
+        { type: 'adhar', label: 'Aadhaar proof', proofField: 'adhar_proof', urlField: 'adhar_proof_url', idField: 'adhar_proof_url_id' },
+        { type: 'asci', label: 'ASCI document', proofField: 'asci_proof', urlField: 'asci_proof_url', idField: 'asci_proof_url_id' },
+        { type: 'bank', label: 'Bank proof', proofField: 'bank_proof', urlField: 'bank_proof_url', idField: 'bank_proof_url_id' },
+      ];
+    },
+    isDocumentBusy() {
+      return this.isUploadingDocument || Boolean(this.deletingDocumentType);
+    },
     formattedDate() {
       //this.form.date_of_joining = this.form.date_of_joining.split('T')[0];
       return this.form.date_of_joining.split('T')[0]; // Converts to 'YYYY-MM-DD'
@@ -804,6 +835,14 @@ export default {
   },
 
   methods: {
+    isEmployeeDocumentUploaded(document) {
+      return Boolean(
+        this.form[document.idField] ||
+        this.form[document.urlField] ||
+        this.form[document.proofField]
+      );
+    },
+
     handleGrossCal() {
       const gross = this.form.gross;
       const food_allow = this.form.food_allow;
@@ -820,64 +859,55 @@ export default {
       this.form.date_of_joining = this.formattedDate;
       console.log(this.form.date_of_joining);
     },
-    handleFile() {
-      this.file = this.$refs.file.files[0];
-      console.log(this.file);
-    },
-    async uploadFile() {
-      if (this.form.document_type == '') {
-        toast.error(`Please select document type`, {
-          autoClose: 1500,
-        });
+    selectEmployeeDocument(event, documentType) {
+      const input = event.target;
+      const file = input.files?.[0] || null;
+      input.value = '';
+      if (!file) {
+        this.selectedDocumentFiles[documentType] = null;
         return;
       }
-      if (this.file == undefined) {
-        toast.error(`Please select file`, {
-          autoClose: 1500,
-        });
+      if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
+        toast.error('Choose a PDF, JPG, or PNG file.');
+        this.selectedDocumentFiles[documentType] = null;
+        return;
+      }
+      if (file.size > 4 * 1024 * 1024) {
+        toast.error('The file must be 4 MB or smaller.');
+        this.selectedDocumentFiles[documentType] = null;
+        return;
+      }
+      this.selectedDocumentFiles[documentType] = file;
+    },
+
+    async uploadEmployeeDocument(document) {
+      const file = this.selectedDocumentFiles[document.type];
+      if (!file || this.isDocumentBusy) return;
+      if (!this.form._id) {
+        toast.error('Employee record is not loaded yet', { autoClose: 1500 });
         return;
       }
 
       const formData = new FormData();
-      formData.append('file', this.file);
+      formData.append('file', file);
+      this.isUploadingDocument = true;
+      this.uploadingDocumentType = document.type;
 
       try {
         const documentRes = await axiosClient.post(
-          `/api/v1/document/upload/${this.form.document_type}/${this.form.user_id}`,
+          `/api/v1/document/upload/employee/${document.type}/${this.form._id}`,
           formData
         );
-        console.log(documentRes);
-        this.form.document_url = documentRes.data.location.Location;
-        this.form.document_url_id = documentRes.data.file_id;
-        console.log('form', this.form);
-        const res = await axiosClient.put(
-          `/api/v1/employee/update/document/${this.form.user_id}`,
-          this.form
-        );
-
-        toast.success(`File uploaded successfully`, {
-          autoClose: 1500,
-        });
-
-        setTimeout(() => {
-          this.$router.go(0);
-        }, 2000);
-
-        for (let i = 0; i < this.submitedDocuments.length; i++) {
-          if (this.submitedDocuments[i].document_typ == this.form.document_type) {
-            this.submitedDocuments[i].uploaded = true;
-          }
-        }
-        this.documentOoptions = this.documentOoptions.filter(
-          (option) => option != this.form.document_type
-        );
-        this.documentUploaded = true;
-        this.file = null;
-        this.form.document_type = '';
-
-        console.log('this.submitedDocuments: ', this.submitedDocuments);
+        this.form[document.proofField] = true;
+        this.form[document.urlField] = documentRes.data.location.Location;
+        this.form[document.idField] = documentRes.data.file_id;
+        this.selectedDocumentFiles[document.type] = null;
+        toast.success(`${document.label} uploaded successfully.`);
       } catch (err) {
-        console.log('error: ', err);
+        toast.error(err.response?.data?.message || err.message || `Unable to upload ${document.label.toLowerCase()}.`);
+      } finally {
+        this.isUploadingDocument = false;
+        this.uploadingDocumentType = '';
       }
     },
 
@@ -931,6 +961,54 @@ export default {
     handleUpdateDocuments(e) {
       this.UpdateDocuments = e;
       localStorage.setItem('UpdateDocuments', e);
+    },
+
+    async viewEmployeeDocument(fileId, label = 'Employee proof') {
+      if (!fileId) return;
+      this.closeEmployeeDocumentPreview();
+      this.previewDocument = { label };
+      this.previewLoading = true;
+      this.previewError = '';
+      try {
+        const response = await axiosClient.get(`/api/v1/document/file/${fileId}`, {
+          responseType: 'blob',
+        });
+        this.previewMimeType = response.data.type || response.headers['content-type'] || '';
+        this.previewUrl = URL.createObjectURL(response.data);
+      } catch (err) {
+        this.previewError = err.response?.data?.message || 'Unable to open document.';
+      } finally {
+        this.previewLoading = false;
+      }
+    },
+
+    closeEmployeeDocumentPreview() {
+      if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+      this.previewUrl = '';
+      this.previewMimeType = '';
+      this.previewLoading = false;
+      this.previewError = '';
+      this.previewDocument = null;
+    },
+
+    async handleDeleteDocument(fileId, fileType) {
+      if (!fileId || this.isDocumentBusy) return;
+      this.deletingDocumentType = fileType;
+      try {
+        const entityId = this.form._id || this.employeeId;
+        await axiosClient.delete(`/api/v1/document/delete/${entityId}/${fileId}/${fileType}`);
+        const document = this.employeeDocuments.find((item) => item.type === fileType);
+        if (document) {
+          this.form[document.proofField] = false;
+          this.form[document.urlField] = '';
+          this.form[document.idField] = '';
+        }
+        toast.success('Document deleted successfully.');
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Failed to delete document.');
+      } finally {
+        this.deletingDocumentType = '';
+      }
     },
 
     validateForm() {

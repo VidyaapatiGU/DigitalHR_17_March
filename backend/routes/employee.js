@@ -88,8 +88,8 @@ router.post(
   "/add/employees/excel",
 
   [
-    body("client_user_id", "Enter a valid client user id").notEmpty(),
-    body("client_id"),
+    body("client_user_id").optional({ checkFalsy: true }),
+    body("client_id").optional({ checkFalsy: true }),
     body("team", "team required"),
     body("department", "department required"),
     body("roleType", "roleType required"),

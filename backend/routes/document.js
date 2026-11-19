@@ -1,27 +1,51 @@
-const AWS = require("aws-sdk");
-const multer = require("multer");
-const fs = require("fs");
-
 const express = require("express");
 const router = express.Router();
-const { body } = require("express-validator");
 const {
+  upload,
   testDocumentAPI,
   uploadDocument,
+  uploadEmployeeDocument,
+  uploadUserDocument,
+  uploadClientDocument,
+  getDocument,
   deleteDocument,
 } = require("../controllers/document.js");
 const validateToken = require("../middleware/validateTokenHandler");
-
-const upload = multer({ storage: multer.memoryStorage() });
 
 //@desc Test Client API
 //@route GET /api/v1/client
 //@access Private: Needs Login
 router.get("/", validateToken, testDocumentAPI);
 
+//@desc Read a MongoDB-backed document
+//@route GET /api/v1/document/file/:fileId
+//@access Private: Needs Login
+router.get("/file/:fileId", validateToken, getDocument);
+
 //@desc Upload document
 //@route POST /api/v1/document/upload
 //@access Private: Needs Login
+router.post(
+  "/upload/client/:document/:id",
+  validateToken,
+  upload.single("file"),
+  uploadClientDocument
+);
+
+router.post(
+  "/upload/user/:document/:id",
+  validateToken,
+  upload.single("file"),
+  uploadUserDocument
+);
+
+router.post(
+  "/upload/employee/:document/:id",
+  validateToken,
+  upload.single("file"),
+  uploadEmployeeDocument
+);
+
 router.post(
   "/upload/:document/:id",
   validateToken,

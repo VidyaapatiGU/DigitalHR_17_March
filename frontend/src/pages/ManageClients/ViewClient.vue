@@ -5,6 +5,7 @@
   padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
+.header-spacer { width: 112px; }
 
 .form-container {
   width: 100%; max-width: 960px; padding: 2rem; margin: auto;
@@ -43,7 +44,12 @@
 <template>
   <div class="page-wrapper">
     <div class="page-header-bar">
+      <button type="button" class="btn btn-light btn-sm" @click="backToClients">
+        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+        Back to Clients
+      </button>
       <h5>View Client</h5>
+      <span aria-hidden="true" class="header-spacer"></span>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
@@ -473,6 +479,9 @@ export default {
   },
 
   methods: {
+    backToClients() {
+      this.$router.push('/manage/clients');
+    },
     handleUpdateClient(link) {
       this.$router.push(`/${link}`);
     },

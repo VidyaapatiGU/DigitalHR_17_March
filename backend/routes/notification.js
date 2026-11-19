@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 const { body } = require("express-validator");
 const validateToken = require("../middleware/validateTokenHandler");
@@ -27,10 +28,15 @@ router.post(
   "/add",
   validateToken,
   [
-    body("text", "Enter a valid text"),
-    body("type", "Enter a Valid type"),
-    body("to_user", "Enter a Valid to_user"),
-    body("by_user", "Enter a Valid by_user"),
+    body("text", "Enter a valid text").trim().isLength({ min: 1, max: 2000 }),
+    body("type", "Enter a valid type").isIn(["info", "success", "warning", "danger"]),
+    body("to_user").optional({ checkFalsy: true }).isMongoId(),
+    body("audience").optional().isObject(),
+    body("audience.type").optional().isIn(["all_clients", "departments", "roles"]),
+    body("audience.ids").optional().isArray(),
+    body("audience.ids.*").optional().custom((value) =>
+      value === "client" || mongoose.Types.ObjectId.isValid(value)
+    ),
   ],
   createNotification
 );

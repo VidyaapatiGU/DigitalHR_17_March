@@ -43,7 +43,16 @@
 <template>
   <div class="page-wrapper">
     <div class="page-header-bar">
-      <div>
+      <div class="d-flex align-items-center gap-2">
+        <button
+          v-if="UpdateDocuments"
+          type="button"
+          class="btn btn-light btn-sm"
+          @click="backToClients"
+        >
+          <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+          Back to Clients
+        </button>
         <h5>Update Client</h5>
       </div>
       <div class="d-flex align-items-center capitalize source-400">
@@ -102,13 +111,15 @@
                   <span class="text-danger">*</span>
                 </label>
                 <input
-                  disabled
+                  :disabled="!isAdmin"
                   v-model="form.email"
                   type="email"
+                  autocomplete="email"
                   class="form-control border"
                   id="email"
                   placeholder="Enter Company Email"
                 />
+                <small v-if="!isAdmin" class="text-muted">Only admins can change the company email.</small>
               </div>
               <div class="form-group col-12 col-sm-6 col-lg-4">
                 <label for="phone_number source-500" class="mt-2 mt-sm-0">
@@ -122,6 +133,38 @@
                   id="phone_number"
                   placeholder="Enter WhatsApp Number"
                 />
+              </div>
+              <div v-if="isAdmin" class="form-group col-12 col-sm-6 col-lg-4">
+                <label for="notificationDepartment" class="mt-2 mt-sm-0">Notification department</label>
+                <select v-model="form.notificationDepartment" class="form-select border" id="notificationDepartment">
+                  <option value="">No department assigned</option>
+                  <option v-for="department in departments" :key="department._id" :value="department._id">
+                    {{ department.name }}
+                  </option>
+                </select>
+                <small class="text-muted">Used to target this client in department broadcasts.</small>
+              </div>
+              <div v-if="isAdmin" class="form-group col-12 col-sm-6 col-lg-4">
+                <label for="notificationRole" class="mt-2 mt-sm-0">Notification role</label>
+                <select v-model="form.notificationRole" class="form-select border" id="notificationRole">
+                  <option value="">No role assigned</option>
+                  <option v-for="role in roles" :key="role._id" :value="role._id">
+                    {{ role.name }}
+                  </option>
+                </select>
+                <small class="text-muted">Used to target this client in role broadcasts.</small>
+              </div>
+              <div v-if="isAdmin" class="form-group col-12 mt-2">
+                <button
+                  type="button"
+                  class="btn btn-outline-primary btn-sm"
+                  :disabled="isSavingAudience"
+                  @click="saveNotificationAudience"
+                >
+                  <span v-if="isSavingAudience" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                  {{ isSavingAudience ? 'Saving audience…' : 'Save notification audience' }}
+                </button>
+                <small class="text-muted ms-2">Save these assignments without completing the other client details.</small>
               </div>
               <div class="form-group col-12 col-sm-6 col-lg-4">
                 <label for="city" class="mt-2">
@@ -423,6 +466,8 @@
                     v-model="form.document_type"
                     :options="documentOptions"
                     placeholder="Select Document "
+                    :use-teleport="true"
+                    :disabled="isUploadingDocument"
                   ></multiselect>
                 </div>
               </div>
@@ -437,12 +482,33 @@
                       id="file"
                       ref="file"
                       v-on:change="handleFile()"
+                      :disabled="isUploadingDocument"
                     />
                   </div>
                   <div class="d-flex align-items-end">
-                    <button @click="uploadFile" type="button" class="btn btn-dark btn-sm">Add</button>
+                    <button
+                      @click="uploadFile"
+                      type="button"
+                      class="btn btn-dark btn-sm"
+                      :disabled="isUploadingDocument"
+                    >
+                      <span v-if="isUploadingDocument">
+                        <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                        <span>Uploading…</span>
+                      </span>
+                      <span v-else>Add</span>
+                    </button>
                   </div>
                 </div>
+              </div>
+            </div>
+            <div v-if="isUploadingDocument" class="mb-3" role="status" aria-live="polite">
+              <div class="d-flex justify-content-between small mb-1">
+                <span>Uploading…</span>
+                <span>{{ uploadProgress }}%</span>
+              </div>
+              <div class="progress" role="progressbar" :aria-valuenow="uploadProgress" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: `${Math.max(uploadProgress, 5)}%` }"></div>
               </div>
             </div>
             <div class="">
@@ -451,13 +517,25 @@
                 v-if="client.adhar_proof == true"
               >
                 <div>adhar proof</div>
-                <div>
+                <div class="d-flex gap-2">
+                  <button
+                    @click="viewClientDocument('adhar_proof_url')"
+                    type="button"
+                    class="btn btn-outline-primary btn-sm"
+                  >
+                    View
+                  </button>
                   <button
                     @click="handleDeleteDocument(client.adhar_proof_url_id, 'adhar')"
                     type="button"
                     class="btn btn-outline-danger btn-sm"
+                    :disabled="Boolean(deletingDocumentType)"
                   >
-                    Delete
+                    <span v-if="deletingDocumentType === 'adhar'" role="status" aria-live="polite">
+                      <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                      Deleting…
+                    </span>
+                    <span v-else>Delete</span>
                   </button>
                 </div>
               </div>
@@ -466,13 +544,25 @@
                 v-if="client.pan_proof == true"
               >
                 <div>pan proof</div>
-                <div>
+                <div class="d-flex gap-2">
+                  <button
+                    @click="viewClientDocument('pan_proof_url')"
+                    type="button"
+                    class="btn btn-outline-primary btn-sm"
+                  >
+                    View
+                  </button>
                   <button
                     type="button"
                     @click="handleDeleteDocument(client.pan_proof_url_id, 'pan')"
                     class="btn btn-outline-danger btn-sm"
+                    :disabled="Boolean(deletingDocumentType)"
                   >
-                    Delete
+                    <span v-if="deletingDocumentType === 'pan'" role="status" aria-live="polite">
+                      <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                      Deleting…
+                    </span>
+                    <span v-else>Delete</span>
                   </button>
                 </div>
               </div>
@@ -481,13 +571,25 @@
                 v-if="client.cin_proof == true"
               >
                 <div>cin proof</div>
-                <div>
+                <div class="d-flex gap-2">
+                  <button
+                    @click="viewClientDocument('cin_proof_url')"
+                    type="button"
+                    class="btn btn-outline-primary btn-sm"
+                  >
+                    View
+                  </button>
                   <button
                     type="button"
                     @click="handleDeleteDocument(client.cin_proof_url_id, 'cin')"
                     class="btn btn-outline-danger btn-sm"
+                    :disabled="Boolean(deletingDocumentType)"
                   >
-                    Delete
+                    <span v-if="deletingDocumentType === 'cin'" role="status" aria-live="polite">
+                      <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                      Deleting…
+                    </span>
+                    <span v-else>Delete</span>
                   </button>
                 </div>
               </div>
@@ -496,13 +598,25 @@
                 v-if="client.gst_proof == true"
               >
                 <div>gst proof</div>
-                <div>
+                <div class="d-flex gap-2">
+                  <button
+                    @click="viewClientDocument('gst_proof_url')"
+                    type="button"
+                    class="btn btn-outline-primary btn-sm"
+                  >
+                    View
+                  </button>
                   <button
                     type="button"
                     @click="handleDeleteDocument(client.gst_proof_url_id, 'gst')"
                     class="btn btn-outline-danger btn-sm"
+                    :disabled="Boolean(deletingDocumentType)"
                   >
-                    Delete
+                    <span v-if="deletingDocumentType === 'gst'" role="status" aria-live="polite">
+                      <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                      Deleting…
+                    </span>
+                    <span v-else>Delete</span>
                   </button>
                 </div>
               </div>
@@ -539,6 +653,13 @@ export default {
     return {
       formPage: 1,
       isLoading: false,
+      isUploadingDocument: false,
+      isSavingDocument: false,
+      deletingDocumentType: '',
+      isSavingAudience: false,
+      uploadProgress: 0,
+      file: null,
+      isAdmin: false,
       UpdateDocuments: false,
       client: '',
       form: {
@@ -561,6 +682,8 @@ export default {
         pin_code: '',
         department: '',
         roleType: '',
+        notificationDepartment: '',
+        notificationRole: '',
         industry_type: '',
         employee_count_range: '',
         incorporation_type: '',
@@ -605,11 +728,8 @@ export default {
   },
 
   async created() {
-    const UpdateDocuments = localStorage.getItem('UpdateDocuments');
-    if (UpdateDocuments !== null) {
-      this.UpdateDocuments = JSON.parse(UpdateDocuments);
-    }
-    this.getCurrent();
+    this.UpdateDocuments = this.$route.query.tab === 'documents';
+    await this.getCurrent();
     try {
       const clientRes = await axiosClient.get(`/api/v1/client/get/${this.clientId}`);
       const clientData = clientRes.data?.data?.[0];
@@ -624,6 +744,8 @@ export default {
         user_id: clientData.user_id || '',
         name: clientData.name ?? '',
         email: clientData.email ?? '',
+        notificationDepartment: clientData.notificationDepartment?._id || clientData.notificationDepartment || '',
+        notificationRole: clientData.notificationRole?._id || clientData.notificationRole || '',
         whatsapp_no: clientData.whatsapp_no ?? '',
         address: clientData.address ?? '',
         city: clientData.city ?? '',
@@ -708,35 +830,75 @@ export default {
   },
 
   methods: {
+    backToClients() {
+      this.$router.push('/manage/clients');
+    },
+
+    viewClientDocument(documentField) {
+      const clientId = this.client._id || this.clientId;
+      const route = this.$router.resolve(`/view/document/${clientId}/${documentField}`);
+      window.open(route.href, '_blank', 'noopener,noreferrer');
+    },
+
+    async saveNotificationAudience() {
+      if (!this.isAdmin || this.isSavingAudience) return;
+      this.isSavingAudience = true;
+      try {
+        const response = await axiosClient.put(`/api/v1/client/update/audience/${this.clientId}`, {
+          notificationDepartment: this.form.notificationDepartment || '',
+          notificationRole: this.form.notificationRole || '',
+        });
+        this.client = response.data.data || this.client;
+        toast.success('Notification audience saved', { autoClose: 1500 });
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Unable to save notification audience', { autoClose: 2000 });
+      } finally {
+        this.isSavingAudience = false;
+      }
+    },
+
     async handleDeleteDocument(document_proof_url, document_type) {
+      if (this.deletingDocumentType) return;
       const clientId = this.client.user_id || this.client._id || this.clientId;
+      this.deletingDocumentType = document_type;
       try {
         await axiosClient.delete(
           `/api/v1/document/delete/${clientId}/${document_proof_url}/${document_type}`
+        );
+        this.client = {
+          ...this.client,
+          [`${document_type}_proof`]: false,
+          [`${document_type}_proof_url`]: null,
+          [`${document_type}_proof_url_id`]: null,
+        };
+        this.submitedDocuments = this.submitedDocuments.map((document) =>
+          document.document_typ === document_type
+            ? { ...document, uploaded: false }
+            : document
         );
         if (!this.documentOptions.includes(document_type)) this.documentOptions.push(document_type);
         toast.success('Document deleted successfully', {
           autoClose: 1500,
         });
-
-        setTimeout(() => {
-          this.$router.go(0);
-        }, 2000);
-        return;
       } catch (err) {
         toast.error(err.response?.data?.message || 'Failed to delete document', {
           autoClose: 1500,
         });
-        return;
+      } finally {
+        this.deletingDocumentType = '';
       }
     },
 
     handleUpdateDocuments(e) {
-      this.UpdateDocuments = e;
-      localStorage.setItem('UpdateDocuments', e);
+      this.UpdateDocuments = Boolean(e);
+      const query = { ...this.$route.query };
+      if (this.UpdateDocuments) query.tab = 'documents';
+      else delete query.tab;
+      this.$router.replace({ path: this.$route.path, query });
     },
 
     async uploadFile() {
+      if (this.isUploadingDocument) return;
       if (this.form.document_type == '') {
         toast.error(`Please select document type`, {
           autoClose: 1500,
@@ -753,34 +915,49 @@ export default {
       const formData = new FormData();
       formData.append('file', this.file);
       const clientId = this.client.user_id || this.client._id || this.clientId;
+      const uploadedType = this.form.document_type;
 
+      this.isUploadingDocument = true;
+      this.isSavingDocument = false;
+      this.uploadProgress = 0;
       try {
         const documentRes = await axiosClient.post(
-          `/api/v1/document/upload/${this.form.document_type}/${clientId}`,
-          formData
+          `/api/v1/document/upload/${uploadedType}/${clientId}`,
+          formData,
+          {
+            onUploadProgress: (event) => {
+              if (event.total) {
+                this.uploadProgress = Math.min(100, Math.round((event.loaded * 100) / event.total));
+              }
+            },
+          }
         );
+        this.uploadProgress = 100;
+        this.isSavingDocument = true;
         this.form.document_url = documentRes.data.location.Location;
         this.form.document_url_id = documentRes.data.file_id;
-        await axiosClient.put(
+        const clientUpdateRes = await axiosClient.put(
           `/api/v1/client/update/document/${this.client._id || clientId}`,
           this.form
         );
+        this.client = clientUpdateRes.data?.data || {
+          ...this.client,
+          [`${uploadedType}_proof`]: true,
+          [`${uploadedType}_proof_url`]: this.form.document_url,
+          [`${uploadedType}_proof_url_id`]: this.form.document_url_id,
+        };
 
         toast.success(`File uploaded successfully`, {
           autoClose: 1500,
         });
 
-        setTimeout(() => {
-          this.$router.go(0);
-        }, 2000);
-
         for (let i = 0; i < this.submitedDocuments.length; i++) {
-          if (this.submitedDocuments[i].document_typ == this.form.document_type) {
+          if (this.submitedDocuments[i].document_typ == uploadedType) {
             this.submitedDocuments[i].uploaded = true;
           }
         }
         this.documentOptions = this.documentOptions.filter(
-          (option) => option != this.form.document_type
+          (option) => option != uploadedType
         );
         this.documentUploaded = true;
         this.file = null;
@@ -790,6 +967,10 @@ export default {
         toast.error(err.response?.data?.message || 'Unable to upload document', {
           autoClose: 2000,
         });
+      } finally {
+        this.isUploadingDocument = false;
+        this.isSavingDocument = false;
+        this.uploadProgress = 0;
       }
     },
 
@@ -823,7 +1004,13 @@ export default {
       this.isLoading = true;
 
       try {
-        const res = await axiosClient.put(`/api/v1/client/update/${this.clientId}`, this.form);
+        const updateData = { ...this.form };
+        if (this.isAdmin) {
+          updateData.email = this.form.email.trim().toLowerCase();
+        } else {
+          delete updateData.email;
+        }
+        const res = await axiosClient.put(`/api/v1/client/update/${this.clientId}`, updateData);
         console.log(res);
 
         if (res) {
@@ -837,12 +1024,12 @@ export default {
         }, 2000);
       } catch (err) {
         console.log('error: ', err);
-        if (err.response.status == 409) {
-          toast.error(`User Already Exist`, {
+        if (err.response?.status == 409) {
+          toast.error(err.response?.data?.message || `User Already Exist`, {
             autoClose: 1500,
           });
         } else {
-          toast.error(`Something Went Wrong`, {
+          toast.error(err.response?.data?.message || `Something Went Wrong`, {
             autoClose: 1500,
           });
         }
@@ -853,6 +1040,10 @@ export default {
 
     validateFormPage1() {
       console.log('validateForm');
+      if (this.isAdmin && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email.trim())) {
+        toast.info(`Enter a valid Company Email`, { autoClose: 1000 });
+        return false;
+      }
       if (this.form.name == '') {
         toast.info(`Enter Name`, { autoClose: 1000 });
         return false;
@@ -981,10 +1172,13 @@ export default {
     async getCurrent() {
       try {
         const token = await axiosClient.get(`api/v1/user/getCurrent/`);
-        console.log('Token : ', token);
-        if (!token) {
+        if (!token?.data?.user) {
           this.$router.push('/login');
+          return;
         }
+        const role = token.data.user.roleType?.name;
+        this.isAdmin = ['admin', 'super_admin'].includes(role);
+        this.user_id = token.data.user._id;
       } catch (err) {
         console.log('error: ', err);
         this.$router.push('/login');

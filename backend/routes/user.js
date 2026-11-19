@@ -4,6 +4,7 @@ const { body } = require("express-validator");
 const {
   testUserAPI,
   createUser,
+  uploadUsers,
   getUsers,
   getUser,
   updateUser,
@@ -45,8 +46,20 @@ router.post(
     body("roleType", "Select a valid role id").notEmpty(),
     body("team", "Select a valid team id").notEmpty(),
     body("department", "Select a valid department id").notEmpty(),
+    body("client_id", "Select a client").isMongoId(),
+    body("designation", "Enter a job title").trim().notEmpty(),
   ],
   createUser
+);
+
+//@desc Bulk create Users from an Excel upload
+//@route POST /api/v1/user/upload
+//@access Private: Admin
+router.post(
+  "/upload",
+  validateToken,
+  [body("userData", "Select at least one user to upload").isArray({ min: 1 })],
+  uploadUsers
 );
 
 //@desc User Login with email and password
@@ -86,12 +99,15 @@ router.put(
   "/update/:id",
   [
     body("name", "Enter a valid name").optional().isLength({ min: 3 }),
+    body("email", "Enter a valid email").optional().isEmail(),
     body("whatsapp_no", "Enter a Valid Whatsapp Number")
       .optional()
       .isNumeric(),
     body("roleType", "Select a valid role id").optional(),
     body("team", "Select a valid team id").optional(),
     body("department", "Select a valid department id").optional(),
+    body("client_id", "Select a valid client id").optional().isMongoId(),
+    body("designation", "Enter a valid job title").optional().trim().notEmpty(),
   ],
   validateToken,
   updateUser

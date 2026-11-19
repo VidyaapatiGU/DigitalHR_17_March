@@ -1,12 +1,9 @@
-const AWS = require("aws-sdk");
 const express = require("express");
 const cors = require("cors");
 const logger = require("./config/logger.js");
 const connectToMongo = require("./config/db.js");
 const bodyParser = require("body-parser");
 const path = require("path");
-const fs = require("fs");
-const multer = require("multer");
 
 const envPath =
   process.env.DOTENV_CONFIG_PATH || path.resolve(__dirname, "../.env");
@@ -46,16 +43,6 @@ app.use((req, res, next) => {
 });
 const port = process.env.PORT || 5001;
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: "eu-north-1",
-  endpoint: "s3.eu-north-1.amazonaws.com",
-});
-
-// Create S3 service object
-const s3 = new AWS.S3({ apiVersion: "2006-03-01" });
-
 //@desc Test Backend API
 //@route GET /api/v1/
 //@access Public
@@ -80,31 +67,6 @@ app.use("/api/v1/attendance", require("./routes/attendance.js"));
 app.use("/api/v1/holiday", require("./routes/holidays.js"));
 app.use("/api/v1/settings", require("./routes/settings.js"));
 app.use("/api/v1/esic-report", require("./routes/esicReport.js"));
-
-/* ///////////////////////////////////////////////--------//////////////////////////////////////////////////////////////////// */
-
-const upload2 = multer({ dest: "uploads/" }); // Destination folder for multer to store temporary files
-
-app.post("/client/upload/document", upload2.single("file"), (req, res) => {
-  const file = req.file; // File object
-
-  const uploadParams = {
-    Bucket: "digitalhrs3bucket",
-    Key: file.originalname,
-    Body: fs.readFileSync(file.path),
-  };
-
-  s3.upload(uploadParams, function (err, data) {
-    if (err) {
-      console.log("Error", err);
-      res.status(500).json({ error: err.message });
-    }
-    if (data) {
-      console.log("Upload Success", data);
-      res.status(201).json({ location: data });
-    }
-  });
-});
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);

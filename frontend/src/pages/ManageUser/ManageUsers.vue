@@ -29,8 +29,6 @@
   background: #fff;
 }
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
-.notification-badge { position: relative; cursor: pointer; padding: 0.25rem; }
-
 .table-container {
   background: #fff;
   border-radius: var(--radius-lg);
@@ -57,11 +55,37 @@
   white-space: nowrap;
 }
 .btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
+.icon-action {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #fff;
+  font-size: 1rem;
+  text-decoration: none;
+}
+.icon-action:hover { color: #fff; }
+.icon-action:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: 2px;
+}
 .table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
 .table-icon:hover { background: #f1f5f9; }
 
 .thumbs-down {
   color: rgb(235, 46, 21);
+}
+.pending-dot {
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  background: #f97316;
 }
 </style>
 
@@ -130,6 +154,12 @@
           ></button>
         </div>
 
+        <div class="modal-body pt-0 text-secondary small">
+          The account, uploaded documents, inbox notifications, and any directly linked employee
+          records and attendance will be permanently deleted. Broadcasts already delivered to other
+          users remain available, with this account removed as the author.
+        </div>
+
         <div class="modal-footer border-0">
           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
             Close
@@ -138,9 +168,10 @@
             @click="handleDelete(updateUser._id)"
             type="button"
             class="btn text-light border-0 button_bg btn-sm"
-            data-bs-dismiss="modal"
+            :disabled="deletingUserId === updateUser._id"
           >
-            Delete
+            <span v-if="deletingUserId === updateUser._id" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+            {{ deletingUserId === updateUser._id ? 'Deleting…' : 'Delete' }}
           </button>
         </div>
       </div>
@@ -339,36 +370,50 @@
       <div>
         <h5 class="source-500">Manage Users</h5>
       </div>
-      <div class="notification-badge" data-bs-toggle="modal" data-bs-target="#ModalNotification">
-        <div class="position-relative">
-          <i class="bi bi-bell-fill pointer text-danger" style="font-size: 1.2rem"></i>
-          <span
-            v-if="notifications.length > 0"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark bg-gradient"
-          >
-            {{ notifications.length }}
-          </span>
-          <span
-            v-if="notifications.length > 99"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark bg-gradient"
-          >
-            99+
-          </span>
-        </div>
-      </div>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
       <div class="h-100 overflow-y-auto">
         <div class="p-4">
           <div class="toolbar mb-4">
-            <input
-              v-model="search"
-              class="form-control search-input"
-              size="small"
-              placeholder="Search users..."
-            />
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <input
+                v-model="search"
+                class="form-control search-input"
+                size="small"
+                placeholder="Search users..."
+              />
+              <div class="form-check form-switch mb-0">
+                <input
+                  v-model="showDisapprovedOnly"
+                  class="form-check-input"
+                  type="checkbox"
+                  id="showDisapprovedUsers"
+                />
+                <label class="form-check-label" for="showDisapprovedUsers" style="font-size: 12px">
+                  Show disapproved
+                </label>
+              </div>
+            </div>
             <div class="action-buttons">
+              <a
+                href="/templates/user_upload_format.xlsx"
+                download
+                class="btn button_bg icon-action"
+                aria-label="Download format"
+                title="Download format"
+              >
+                <i class="bi bi-download" aria-hidden="true"></i>
+              </a>
+              <router-link
+                to="/upload/user/excel"
+                class="btn button_bg icon-action"
+                aria-label="Upload Excel"
+                title="Upload Excel"
+              >
+                <i class="bi bi-upload" aria-hidden="true"></i>
+                <span class="visually-hidden">Upload Excel</span>
+              </router-link>
               <router-link to="/add/user" class="d-flex align-items-center text-decoration-none">
                 <button type="button" class="btn btn-primary border-0 button_bg source-400">
                   Add User
@@ -381,7 +426,7 @@
               <EasyDataTable
                 table-class-name="customize-table"
                 :headers="headers"
-                :items="items"
+                :items="filteredItems"
                 search-field="name"
                 :search-value="search"
                 :rows-per-page="10"
@@ -401,6 +446,16 @@
                       <el-tooltip content="Update User" placement="bottom">
                         <i class="bi bi-pen-fill pointer" style="font-size"></i>
                       </el-tooltip>
+                    </div>
+
+                    <div
+                      class="table-icon action_icon_color position-relative"
+                      @click="handleUserDocuments(item._id)"
+                    >
+                      <el-tooltip content="Manage Documents" placement="bottom">
+                        <i class="bi bi-file-earmark-arrow-up-fill pointer" aria-label="Manage Documents"></i>
+                      </el-tooltip>
+                      <span v-if="hasPendingUserDocuments(item)" class="pending-dot"></span>
                     </div>
 
                     <!-- <div
@@ -450,7 +505,7 @@
                     </div>
 
                     <div
-                      v-if="user.roleType.name == 'super_admin'"
+                      v-if="canDeleteUsers"
                       class="table-icon action_icon_color"
                       @click="updateUser = item"
                       data-bs-toggle="modal"
@@ -481,6 +536,7 @@ import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Modal } from 'bootstrap';
 import axiosClient from '../../axiosClient';
 
 export default {
@@ -497,10 +553,12 @@ export default {
       headers: [
         { text: 'Name', value: 'name', sortable: true },
         { text: 'Email', value: 'email' },
+        { text: 'Client', value: 'client_id.name', sortable: true },
+        { text: 'Job Title', value: 'designation', sortable: true },
         { text: 'Department', value: 'department.name', sortable: true },
         { text: 'Team', value: 'team.name', sortable: true },
         { text: 'Role', value: 'roleType.name', sortable: true },
-        { text: 'Actions', value: 'actions', sortable: false, width: 250 },
+        { text: 'Actions', value: 'actions', sortable: false, width: 300 },
       ],
       optionTypes: ['success', 'warning', 'danger'],
       form: {
@@ -513,8 +571,10 @@ export default {
       newPassword: '',
       updateUser: {},
       showDeleteModal: false,
+      deletingUserId: null,
 
       search: '',
+      showDisapprovedOnly: false,
       entries: 0,
       entriesPerPage: 5,
       entriesPerPageOptions: [5, 10, 15, 20],
@@ -593,15 +653,14 @@ export default {
     async toggleUserApproved(id) {
       try {
         const res = await axiosClient.put(`/api/v1/user/app_dis/${id}`);
-        if (res) {
+        if (res?.data?.data) {
           toast.success(`Updated User `, {
             autoClose: 1000,
           });
-          for (let i in this.items) {
-            if (this.items[i]._id == id) {
-              this.items[i].approved = !this.items[i].approved;
-            }
-          }
+          const approved = res.data.data.approved;
+          const updateApproval = (user) => user._id === id ? { ...user, approved } : user;
+          this.items = this.items.map(updateApproval);
+          this.originalItems = this.originalItems.map(updateApproval);
         }
       } catch (err) {
         console.log('error: ', err);
@@ -633,6 +692,7 @@ export default {
             autoClose: 1000,
           });
           this.newPassword = '';
+          Modal.getOrCreateInstance(document.getElementById('Modal')).hide();
         }
       } catch (err) {
         console.log('error: ', err);
@@ -641,17 +701,22 @@ export default {
     },
 
     async handleDelete(id) {
+      if (!id || this.deletingUserId) return;
+      this.deletingUserId = id;
       try {
         const res = await axiosClient.put(`/api/v1/user/delete/${id}`);
-        if (res) {
-          toast.success(`User Deleted`, {
-            autoClose: 1000,
-          });
-          this.items = this.items.filter((item) => item._id != id);
+        if (!res.data?.data || res.data.data.active !== false) {
+          throw new Error(res.data?.message || 'Unable to delete user');
         }
+        this.items = this.items.filter((item) => item._id !== id);
+        this.originalItems = this.originalItems.filter((item) => item._id !== id);
+        this.updateUser = {};
+        Modal.getOrCreateInstance(document.getElementById('ModalDelete')).hide();
+        toast.success('User deleted', { autoClose: 1200 });
       } catch (err) {
-        console.log('error: ', err);
-        toast.error(`Some Thing Went Wrong`);
+        toast.error(err.response?.data?.message || err.message || 'Unable to delete user');
+      } finally {
+        this.deletingUserId = null;
       }
     },
 
@@ -672,6 +737,14 @@ export default {
       this.$router.push(`/update/user/${id}`);
     },
 
+    handleUserDocuments(id) {
+      this.$router.push(`/update/user/documents/${id}`);
+    },
+
+    hasPendingUserDocuments(user) {
+      return ['adhar', 'asci', 'bank'].some((type) => !user[`${type}_proof_url_id`]);
+    },
+
     handleViewUser(id) {
       this.$router.push(`/view/user/${id}`);
     },
@@ -690,6 +763,20 @@ export default {
       }
 
       return;
+    },
+  },
+
+  computed: {
+    canDeleteUsers() {
+      const roleType = this.user.roleType;
+      const roleName = (typeof roleType === 'string' ? roleType : roleType?.name) || this.user.role;
+      return ['admin', 'super_admin'].includes(String(roleName || '').trim().toLowerCase());
+    },
+    filteredItems() {
+      if (this.showDisapprovedOnly) {
+        return this.items.filter((user) => user.approved === false);
+      }
+      return this.items.filter((user) => user.approved !== false);
     },
   },
 };

@@ -5,7 +5,8 @@
         <div>
           <div class="eyebrow">DIGITALHR WORKSPACE</div>
           <h1>Good {{ greeting }}, {{ firstName }}</h1>
-          <p>A live snapshot of your people and monthly payroll.</p>
+          <p v-if="isAdmin">A live snapshot of your clients, users, employees and monthly payroll.</p>
+          <p v-else>A live snapshot of your people and monthly payroll.</p>
         </div>
         <div class="hero-actions">
           <span class="today-chip"><i class="bi bi-calendar3"></i>{{ todayLabel }}</span>
@@ -104,6 +105,7 @@ export default {
       role: '',
       employees: [],
       clients: [],
+      users: [],
       isLoading: true,
       joinersChart: null,
       designationChart: null,
@@ -121,7 +123,30 @@ export default {
       return new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date());
     },
     activeEmployees() {
-      return this.employees.filter(employee => employee.active !== false && employee.approved !== false);
+      return this.employees.filter(employee => {
+        const isActive = employee.active !== false && employee.approved !== false;
+        return isActive && (!this.isAdmin || this.employeeBelongsToActiveClient(employee));
+      });
+    },
+    isAdmin() {
+      return this.role === 'admin' || this.role === 'super_admin';
+    },
+    activeClients() {
+      return this.clients.filter(client =>
+        client.active !== false && client.approved !== false && !client.deletedAt
+      );
+    },
+    activeClientIds() {
+      return new Set(this.activeClients.flatMap(client => [client._id, client.user_id]
+        .filter(Boolean)
+        .map(id => String(typeof id === 'object' ? id._id : id))));
+    },
+    activeUsers() {
+      const clientDocumentIds = new Set(this.activeClients.map(client => String(client._id)));
+      return this.users.filter(user => {
+        const clientId = user.client_id?._id || user.client_id;
+        return user.active !== false && user.approved !== false && clientDocumentIds.has(String(clientId || ''));
+      });
     },
     joinedThisMonth() {
       const now = new Date();
@@ -137,12 +162,11 @@ export default {
       return this.activeEmployees.length ? this.monthlyGross / this.activeEmployees.length : 0;
     },
     metrics() {
-      const people = this.role === 'admin' || this.role === 'super_admin';
-      if (people) {
+      if (this.isAdmin) {
         return [
-          { label: 'Total clients', value: this.clients.length, note: 'Organizations on the platform', icon: 'bi-buildings', tone: 'blue' },
-          { label: 'Active workforce', value: this.activeEmployees.length, note: 'Currently active employees', icon: 'bi-person-check', tone: 'green' },
-          { label: 'Joined this month', value: this.joinedThisMonth, note: 'Based on employee start dates', icon: 'bi-person-plus', tone: 'amber' },
+          { label: 'Active clients', value: this.activeClients.length, note: 'Approved organizations on the platform', icon: 'bi-buildings', tone: 'blue' },
+          { label: 'Active users', value: this.activeUsers.length, note: 'Users linked to active clients', icon: 'bi-person-lines-fill', tone: 'green' },
+          { label: 'Active employees', value: this.activeEmployees.length, note: 'Employees of active clients', icon: 'bi-person-check', tone: 'amber' },
           { label: 'Monthly gross', value: this.formatCurrency(this.monthlyGross), note: 'Combined gross salary estimate', icon: 'bi-currency-rupee', tone: 'violet' },
         ];
       }
@@ -189,6 +213,9 @@ export default {
     async loadDashboard() {
       this.isLoading = true;
       this.destroyCharts();
+      this.employees = [];
+      this.clients = [];
+      this.users = [];
       try {
         if (!localStorage.getItem('token')) {
           this.$router.push('/login');
@@ -198,13 +225,15 @@ export default {
         this.user = current.data.user;
         this.role = this.user?.industry_type ? 'client' : this.user?.designation ? 'employee' : this.user?.roleType?.name || '';
 
-        if (this.role === 'admin' || this.role === 'super_admin') {
-          const [employeeResponse, clientResponse] = await Promise.all([
+        if (this.isAdmin) {
+          const [employeeResponse, clientResponse, userResponse] = await Promise.all([
             axiosClient.get('/api/v1/employee/getall'),
             axiosClient.get('/api/v1/client/get/all/clients'),
+            axiosClient.get('/api/v1/user/getall'),
           ]);
           this.employees = employeeResponse.data.data || [];
           this.clients = clientResponse.data.data || [];
+          this.users = userResponse.data.data || [];
         } else if (this.role === 'client') {
           const response = await axiosClient.get(`/api/v1/employee/client/${this.user._id}`);
           this.employees = response.data.data || [];
@@ -216,6 +245,12 @@ export default {
         await nextTick();
         this.renderCharts();
       }
+    },
+    employeeBelongsToActiveClient(employee) {
+      const clientRefs = [employee.client_id, employee.client_user_id, employee.user_id]
+        .filter(Boolean)
+        .map(id => String(typeof id === 'object' ? id._id : id));
+      return clientRefs.some(id => this.activeClientIds.has(id));
     },
     destroyCharts() {
       this.joinersChart?.destroy();

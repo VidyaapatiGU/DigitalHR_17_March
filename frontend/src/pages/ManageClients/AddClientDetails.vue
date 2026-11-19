@@ -186,6 +186,7 @@
                     v-model="form.document_type"
                     :options="documentOoptions"
                     placeholder="Select Document Type"
+                    :disabled="isUploading"
                   ></multiselect>
                 </div>
               </div>
@@ -199,7 +200,17 @@
                     id="file"
                     ref="file"
                     v-on:change="handleFile()"
+                    :disabled="isUploading"
                   />
+                </div>
+              </div>
+              <div v-if="isUploading" class="col-12 mt-2" role="status" aria-live="polite">
+                <div class="d-flex justify-content-between small mb-1">
+                  <span>Uploading…</span>
+                  <span>{{ uploadProgress }}%</span>
+                </div>
+                <div class="progress" role="progressbar" :aria-valuenow="uploadProgress" aria-valuemin="0" aria-valuemax="100">
+                  <div class="progress-bar progress-bar-striped progress-bar-animated" :style="{ width: `${Math.max(uploadProgress, 5)}%` }"></div>
                 </div>
               </div>
             </div>
@@ -229,11 +240,16 @@
                   @click="uploadFile"
                   type="button"
                   class="btn-submit"
+                  :disabled="isUploading"
                 >
-                  <span v-if="documentUploaded == false">Update Document</span>
+                  <span v-if="isUploading">
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    <span>Uploading…</span>
+                  </span>
+                  <span v-else-if="documentUploaded == false">Update Document</span>
                   <span v-else>Add Another</span>
                 </button>
-                <router-link to="/manage/clients" v-if="documentUploaded == false">
+                <router-link to="/manage/clients" v-if="documentUploaded == false && !isUploading">
                   <button
                     type="button"
                     class="btn-submit"
@@ -241,7 +257,7 @@
                     <span>Skip</span>
                   </button>
                 </router-link>
-                <router-link to="/manage/clients" v-if="documentUploaded == true">
+                <router-link to="/manage/clients" v-if="documentUploaded == true && !isUploading">
                   <button
                     type="button"
                     class="btn-submit"
@@ -304,6 +320,10 @@ export default {
     return {
       formPage: 3,
       documentUploaded: false,
+      isUploading: false,
+      isSavingDocument: false,
+      uploadProgress: 0,
+      file: null,
       user: '',
       /*  form: {
         user_id: '1234567890',
@@ -414,6 +434,7 @@ export default {
 
   methods: {
     async uploadFile() {
+      if (this.isUploading) return;
       if (this.form.document_type == '') {
         toast.error(`Please Select Document Type!`, {
           autoClose: 1500,
@@ -428,11 +449,23 @@ export default {
       }
       const formData = new FormData();
       formData.append('file', this.file);
+      this.isUploading = true;
+      this.isSavingDocument = false;
+      this.uploadProgress = 0;
       try {
         const documentRes = await axiosClient.post(
           `/api/v1/document/upload/${this.form.document_type}/${this.userId}`,
-          formData
+          formData,
+          {
+            onUploadProgress: (event) => {
+              if (event.total) {
+                this.uploadProgress = Math.min(100, Math.round((event.loaded * 100) / event.total));
+              }
+            },
+          }
         );
+        this.uploadProgress = 100;
+        this.isSavingDocument = true;
         //console.log(documentRes);
         this.form.document_url = documentRes.data.location.Location;
         this.form.document_url_id = documentRes.data.file_id;
@@ -461,6 +494,10 @@ export default {
         toast.error(err.response?.data?.message || 'Unable to upload document', {
           autoClose: 2000,
         });
+      } finally {
+        this.isUploading = false;
+        this.isSavingDocument = false;
+        this.uploadProgress = 0;
       }
     },
 

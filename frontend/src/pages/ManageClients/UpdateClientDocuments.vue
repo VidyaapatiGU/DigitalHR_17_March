@@ -1,609 +1,286 @@
 <style scoped>
-.page-wrapper { height: 100%; }
+.page-wrapper { min-height: 100%; }
 .page-header-bar {
   display: flex; align-items: center; justify-content: space-between;
   padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
-.page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
-
-.form-container {
-  width: 100%; max-width: 960px; padding: 2rem; margin: auto;
-  background: #fff; border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);
+.page-header-bar h5 { margin: 0; color: var(--text-primary); font-size: 1.05rem; font-weight: 600; }
+.back-button {
+  display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #fff;
+  color: var(--text-primary); font-size: 0.85rem;
 }
-
-.form-title {
-  font-weight: 600; color: var(--text-primary); font-size: 1.15rem; margin-bottom: 1.5rem;
+.back-button:hover { border-color: var(--primary); color: var(--primary); }
+.content { padding: 1.5rem; }
+.documents-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+.document-card {
+  padding: 1.25rem; border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  background: #fff; box-shadow: var(--shadow-sm);
 }
-
-.form-group label {
-  font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
-  margin-bottom: 0.25rem; display: block;
+.document-card h6 { margin: 0; color: var(--text-primary); font-weight: 600; }
+.document-card-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.document-status { padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+.document-status.uploaded { color: #166534; background: #dcfce7; }
+.document-status.pending { color: #9a3412; background: #ffedd5; }
+.file-input { min-height: 42px; font-size: 0.82rem; }
+.document-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.document-actions .btn { font-size: 0.82rem; }
+.preview-backdrop {
+  position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center;
+  padding: 1rem; background: rgb(15 23 42 / 72%);
 }
-
-.btn-submit {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.6rem 2rem; font-size: 0.9rem; font-weight: 500;
-  border-radius: var(--radius-md); border: none;
-  background: var(--primary); color: #fff; cursor: pointer;
-  transition: var(--transition-fast);
+.preview-dialog {
+  display: flex; flex-direction: column; width: min(100%, 1000px); height: min(90vh, 800px);
+  overflow: hidden; border-radius: 0.75rem; background: #fff;
 }
-.btn-submit:hover { background: var(--primary-light); transform: translateY(-1px); }
-
-.doc-link {
-  color: var(--primary); text-decoration: none; font-size: 0.875rem; font-weight: 500;
-}
-.doc-link:hover { text-decoration: underline; }
-
-@media (max-width: 576px) {
-  .form-container { padding: 1.25rem; }
-}
+.preview-header { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1rem; border-bottom: 1px solid #e2e8f0; }
+.preview-body { display: flex; flex: 1; align-items: center; justify-content: center; min-height: 0; padding: 0.75rem; }
+.preview-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+.preview-frame { width: 100%; height: 100%; border: 0; }
 </style>
 
 <template>
   <div class="page-wrapper">
-    <div class="page-header-bar"><h5>Add Client</h5></div>
-
-    <div class="overflow-y-hidden pb-5 h-100">
-      <div class="h-100 overflow-y-auto d-flex justify-content-center align-items-center">
-        <div class="p-4">
-          <form v-auto-animate class="form-container">
-            <h5 v-if="formPage == 1" class="text-center source-600 text-dark mb-2">Add Details</h5>
-
-            <div v-if="formPage == 1" class="row">
-              <div class="form-group col-12 col-md-6">
-                <label for="pan_card" class="source-500 mt-2">Pan Card</label>
-                <input
-                  v-model="form.pan_card"
-                  type="text"
-                  class="form-control border"
-                  id="pan_card"
-                  placeholder="Enter Pan Number"
-                />
-
-                <label for="gst_no" class="source-500 mt-2">GST Number</label>
-                <input
-                  v-model="form.gst_no"
-                  type="number"
-                  class="form-control border"
-                  id="gst_no"
-                  placeholder="Enter GST Number"
-                />
-
-                <div class="mt-3">
-                  <label for="incorporation_type" class="source-500">Incorporation Type</label>
-                  <multiselect
-                    class=""
-                    v-model="form.incorporation_type"
-                    :options="incorporation_typeOptions"
-                    placeholder="Select Incorporation Type"
-                  ></multiselect>
-                </div>
-                <label for="employee_count_range" class="source-500 mt-2">
-                  Number Of Employees
-                </label>
-                <input
-                  v-model="form.employee_count_range"
-                  type="number"
-                  class="form-control border"
-                  id="employee_count_range"
-                  placeholder="Enter whatsapp number"
-                />
-              </div>
-              <!-- /////////////////////////////////////////////////////////////////////////////////////////////////// -->
-              <div class="form-group col-12 col-md-6">
-                <label for="adhar_card" class="source-500 mt-2">Adhar Card</label>
-                <input
-                  v-model="form.adhar_card"
-                  type="number"
-                  class="form-control border"
-                  id="adhar_card"
-                  placeholder="Enter Adhar Number"
-                />
-
-                <label for="cin_no" class="source-500 mt-2">CIN Number</label>
-                <input
-                  v-model="form.cin_no"
-                  type="number"
-                  class="form-control border"
-                  id="cin_no"
-                  placeholder="Enter CIN Number"
-                />
-                <div class="mt-3">
-                  <label for="industry_type" class="source-500">Industry Type</label>
-                  <multiselect
-                    v-model="form.industry_type"
-                    :options="industry_typeOptions"
-                    placeholder="Select Industry Type"
-                  ></multiselect>
-                </div>
-              </div>
-            </div>
-            <div v-if="formPage == 2" class="mt-3 mb-2 source-600 d-flex gap-2">
-              <div v-if="formPage == 2" @click="formPage = 1" class="pointer pb-2">
-                <i class="bi bi-arrow-left icon-font-2"></i>
-              </div>
-              <div class="w-100 text-center">
-                <h5>Contact Person Information</h5>
-              </div>
-            </div>
-
-            <div v-if="formPage == 2" class="row">
-              <div class="form-group col-12 col-md-6">
-                <label for="contact_person.name" class="source-500 mt-2">Contact Name</label>
-                <input
-                  v-model="form.contact_person.name"
-                  type="text"
-                  class="form-control border"
-                  id="contact_person.name"
-                  placeholder="Enter Contact Name"
-                />
-                <label for="contact_person.contact_no" class="source-500 mt-2">
-                  Contact Number
-                </label>
-                <input
-                  v-model="form.contact_person.contact_no"
-                  type="number"
-                  class="form-control border"
-                  id="contact_person.contact_no"
-                  placeholder="Enter Contact Number"
-                />
-              </div>
-              <div class="form-group col-12 col-md-6">
-                <label for="contact_person.email" class="source-500 mt-2">Contact Email</label>
-                <input
-                  v-model="form.contact_person.email"
-                  type="email"
-                  class="form-control border"
-                  id="contact_person.email"
-                  placeholder="Enter Contact Email "
-                />
-                <label for="contact_person.designation" class="source-500 mt-2">
-                  Contact Designation
-                </label>
-                <input
-                  v-model="form.contact_person.designation"
-                  type="text"
-                  class="form-control border"
-                  id="contact_person.designation"
-                  placeholder="Enter Pan Number"
-                />
-              </div>
-            </div>
-
-            <div v-if="formPage == 3" class="mt-3 mb-2 source-600 d-flex gap-2">
-              <div class="w-100 text-center">
-                <h5>Add Proof</h5>
-              </div>
-            </div>
-
-            <div v-if="formPage == 3" class="row">
-              <div class="form-group col-12 col-md-6">
-                <div class="">
-                  <label for="incorporation_type" class="source-500">Select Document</label>
-                  <multiselect
-                    class="text-capitalize"
-                    v-model="form.document_type"
-                    :options="documentOoptions"
-                    placeholder="Select Incorporation Type"
-                  ></multiselect>
-                </div>
-              </div>
-              <div class="form-group col-12 col-md-6">
-                <div class="mb-3">
-                  <label for="formFile" class="source-500">Small file input example</label>
-                  <input
-                    class="form-control"
-                    accept="image/png, image/jpeg, application/pdf"
-                    type="file"
-                    id="file"
-                    ref="file"
-                    v-on:change="handleFile()"
-                  />
-                </div>
-              </div>
-            </div>
-            <!-- //////////////////////////////////////////--Buttons--///////////////////////////////////////////// -->
-            <div class="w-100 d-flex justify-content-center align-items-center">
-              <button
-                v-if="formPage == 1"
-                @click="changeFormPage"
-                type="button"
-                class="btn-submit"
-              >
-                Next
-              </button>
-              <button
-                v-if="formPage == 2"
-                @click="handleAddClientDetails"
-                type="button"
-                class="btn-submit"
-              >
-                Add Details
-              </button>
-              <div
-                v-if="formPage == 3"
-                class="w-100 d-flex justify-content-center align-items-center gap-2"
-              >
-                <button
-                  @click="uploadFile"
-                  type="button"
-                  class="btn-submit"
-                >
-                  <span v-if="documentUploaded == false">Update Document</span>
-                  <span v-else>Add Another</span>
-                </button>
-                <router-link to="/manage/clients" v-if="documentUploaded == true">
-                  <button
-                    type="button"
-                    class="btn-submit"
-                  >
-                    <span>Done</span>
-                  </button>
-                </router-link>
-              </div>
-            </div>
-
-            <div v-auto-animate class="mt-3 rounded p-3 shadow-lg" v-if="documentUploaded == true">
-              <div class="w-100 source-700 text-center">
-                <div>Uploaded Documents</div>
-              </div>
-              <div
-                v-for="document in submitedDocuments"
-                :key="document"
-                v-if="formPage == 3"
-                class="w-100 mt-3"
-                v-auto-animate
-              >
-                <div v-if="document.uploaded == true" class="d-flex justify-content-between">
-                  <di v class="row px-3 w-100">
-                    <div class="col-6 d-flex justify-content-center capitalize">
-                      <h6>{{ document.document_typ }}</h6>
-                    </div>
-                    <div class="col-6 d-flex justify-content-center">
-                      <div><i class="bi bi-check-circle icon-font-2 text-success"></i></div>
-                    </div>
-                  </di>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
+    <div class="page-header-bar">
+      <div>
+        <h5>Client documents</h5>
+        <small v-if="client" class="text-secondary">{{ client.name }} · {{ client.email }}</small>
       </div>
+      <button type="button" class="back-button" @click="$router.push('/manage/clients')">
+        <i class="bi bi-arrow-left"></i> Back to clients
+      </button>
+    </div>
+
+    <div class="content">
+      <div v-if="loading" class="text-secondary" role="status" aria-live="polite">
+        Loading client documents…
+      </div>
+      <div v-else-if="loadError" class="alert alert-danger" role="alert">{{ loadError }}</div>
+      <template v-else>
+        <div class="alert alert-light border mb-4">
+          Upload PDF, JPG, or PNG files up to 4 MB each.
+        </div>
+
+        <div class="documents-grid">
+          <section v-for="document in documents" :key="document.type" class="document-card">
+            <div class="document-card-header">
+              <h6>{{ document.label }}</h6>
+              <span class="document-status" :class="isUploaded(document) ? 'uploaded' : 'pending'">
+                {{ isUploaded(document) ? 'Uploaded' : 'Pending' }}
+              </span>
+            </div>
+
+            <p class="small text-secondary mt-2 mb-3">
+              {{ isUploaded(document) ? 'A document is on file. You can view, replace, or remove it.' : 'No document has been uploaded yet.' }}
+            </p>
+
+            <input
+              class="form-control file-input"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              :aria-label="`Choose ${document.label}`"
+              @change="selectFile($event, document.type)"
+            />
+            <div v-if="selectedFiles[document.type]" class="small text-secondary mt-2 text-break">
+              {{ selectedFiles[document.type].name }}
+            </div>
+
+            <div class="document-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                :disabled="!selectedFiles[document.type] || busyType"
+                @click="uploadDocument(document)"
+              >
+                <span v-if="uploadingType === document.type" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                {{ uploadingType === document.type ? 'Uploading…' : (isUploaded(document) ? 'Replace' : 'Upload') }}
+              </button>
+              <button
+                v-if="isUploaded(document)"
+                type="button"
+                class="btn btn-outline-secondary"
+                :disabled="busyType"
+                @click="viewDocument(document)"
+              >
+                <i class="bi bi-eye me-1"></i> View
+              </button>
+              <button
+                v-if="isUploaded(document)"
+                type="button"
+                class="btn btn-outline-danger"
+                :disabled="busyType"
+                @click="deleteDocument(document)"
+              >
+                <span v-if="deletingType === document.type" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                {{ deletingType === document.type ? 'Deleting…' : 'Delete' }}
+              </button>
+            </div>
+          </section>
+        </div>
+      </template>
+    </div>
+
+    <div v-if="previewDocument" class="preview-backdrop" @click.self="closePreview">
+      <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="previewDocument.label">
+        <header class="preview-header">
+          <strong>{{ previewDocument.label }}</strong>
+          <button type="button" class="btn-close" aria-label="Close preview" @click="closePreview"></button>
+        </header>
+        <div v-if="previewLoading" class="preview-body text-secondary" role="status">Loading document…</div>
+        <div v-else-if="previewError" class="preview-body text-danger" role="alert">{{ previewError }}</div>
+        <div v-else class="preview-body">
+          <img v-if="previewMimeType.startsWith('image/')" :src="previewUrl" :alt="previewDocument.label" class="preview-image" />
+          <iframe v-else :src="previewUrl" :title="previewDocument.label" class="preview-frame"></iframe>
+        </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script>
 import axiosClient from '../../axiosClient';
-import Multiselect from 'vue-multiselect';
-import 'vue-multiselect/dist/vue-multiselect.css';
 import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
 export default {
-  name: 'updateClientDocuments',
-  components: {
-    Multiselect,
-  },
+  name: 'UpdateClientDocuments',
   props: {
-    clientId: {
-      type: String,
-    },
+    clientId: { type: String, required: true },
   },
   data() {
     return {
-      formPage: 3,
-      documentUploaded: false,
-      user: '',
-      /*  form: {
-        user_id: '1234567890',
-        name: 'John Doe',
-        email: 'johndoe@example.com',
-        whatsapp_no: '1234567890',
-        password: 'password123',
-        address: '123 Main St, Anytown, USA',
-        pan_card: 'ABCDE1234F',
-        adhar_card: '123456789012',
-        gst_no: '213233',
-        cin_no: '121212',
-        industry_type: 'Technology',
-        employee_count_range: '50',
-        contact_person: {
-          name: 'Jane Doe',
-          email: 'janedoe@example.com',
-          contact_no: '0987654321',
-          designation: 'CEO',
-        },
-        incorporation_type: 'Private Limited',
-      }, */
-      submitedDocuments: [
-        { document_typ: 'pan', uploaded: false },
-        { document_typ: 'adhar', uploaded: false },
-        { document_typ: 'gst', uploaded: false },
-        { document_typ: 'cin', uploaded: false },
+      client: null,
+      loading: true,
+      loadError: '',
+      documents: [
+        { type: 'pan', label: 'PAN card', proofField: 'pan_proof', urlField: 'pan_proof_url', idField: 'pan_proof_url_id' },
+        { type: 'adhar', label: 'Aadhaar card', proofField: 'adhar_proof', urlField: 'adhar_proof_url', idField: 'adhar_proof_url_id' },
+        { type: 'gst', label: 'GST certificate', proofField: 'gst_proof', urlField: 'gst_proof_url', idField: 'gst_proof_url_id' },
+        { type: 'cin', label: 'CIN certificate', proofField: 'cin_proof', urlField: 'cin_proof_url', idField: 'cin_proof_url_id' },
       ],
-      form: {
-        user_id: '',
-        name: '',
-        email: '',
-        whatsapp_no: '',
-        password: '',
-        address: '',
-        pan_card: '',
-        adhar_card: '',
-        gst_no: '',
-        cin_no: '',
-        industry_type: '',
-        employee_count_range: '',
-        incorporation_type: '',
-        adhar_proof: false,
-        gst_proof: false,
-        cin_proof: false,
-        pan_proof: false,
-        adhar_proof_url: '',
-        gst_proof_url: '',
-        cin_proof_url: '',
-        pan_proof_url: '',
-
-        document_type: '',
-        doc_url: '',
-        contact_person: {
-          name: '',
-          email: '',
-          contact_no: '',
-          designation: '',
-        },
-      },
-      documentOoptions: ['pan', 'adhar', 'gst', 'cin'],
-      industry_typeOptions: ['Factories', 'Restaurants', 'Hotels', 'IT Company'],
-      incorporation_typeOptions: [
-        'Proprietory Firm',
-        'Partnership Firm',
-        'LLP',
-        'Private Limited',
-        'Public Limited',
-        'Local Bodies / Municipal Corporations',
-        'State Govt. Controlled',
-        'State Govt. Department',
-        'Co-Operative Society',
-        'Registered Society',
-        'Firms Run by Trust',
-      ],
+      selectedFiles: { pan: null, adhar: null, gst: null, cin: null },
+      uploadingType: '',
+      deletingType: '',
+      previewDocument: null,
+      previewUrl: '',
+      previewMimeType: '',
+      previewLoading: false,
+      previewError: '',
     };
   },
-
-  async created() {
-    this.getCurrent();
-    if (this.userId) {
-      try {
-        const userRes = await axiosClient.get(`/api/v1/user/get/${this.clientId}`);
-        this.user = userRes.data.data[0];
-        console.log('res: ', this.user);
-
-        this.form.user_id = this.user._id;
-        this.form.name = this.user.name;
-        this.form.email = this.user.email;
-        this.form.whatsapp_no = this.user.whatsapp_no;
-      } catch (err) {
-        console.log('error: ', err);
-        this.$router.push('/manage/users');
-      }
-    } else {
-      this.$router.push('/manage/clients');
-    }
+  computed: {
+    busyType() {
+      return Boolean(this.uploadingType || this.deletingType);
+    },
   },
-
-  mounted() {
-    gsap.registerPlugin(ScrollTrigger);
-    gsap.from('.form-container', {
-      opacity: 0,
-      y: 50,
-      duration: 0.5,
-      scrollTrigger: {
-        trigger: '.form-container',
-        delay: 0.5,
-        start: 'top center',
-        toggleActions: 'play none none reverse',
-      },
-    });
+  created() {
+    this.loadClient();
   },
-
+  beforeUnmount() {
+    this.releasePreviewUrl();
+  },
   methods: {
-    async uploadFile() {
-      if (this.form.document_type == '') {
-        toast.error(`Please select document type`, {
-          autoClose: 1500,
-        });
+    async loadClient() {
+      this.loading = true;
+      this.loadError = '';
+      try {
+        const response = await axiosClient.get(`/api/v1/client/get/${this.clientId}`);
+        this.client = response.data.data?.[0] || null;
+        if (!this.client) this.loadError = 'Client not found.';
+      } catch (error) {
+        this.loadError = error.response?.data?.message || 'Unable to load this client’s documents.';
+      } finally {
+        this.loading = false;
+      }
+    },
+    isUploaded(document) {
+      return Boolean(this.client?.[document.idField] || this.client?.[document.urlField] || this.client?.[document.proofField]);
+    },
+    selectFile(event, type) {
+      const file = event.target.files?.[0] || null;
+      if (!file) {
+        this.selectedFiles[type] = null;
         return;
       }
-      if (this.file == undefined) {
-        toast.error(`Please select file`, {
-          autoClose: 1500,
-        });
+      if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
+        toast.error('Choose a PDF, JPG, or PNG file.');
+        event.target.value = '';
+        this.selectedFiles[type] = null;
         return;
       }
+      if (file.size > 4 * 1024 * 1024) {
+        toast.error('The file must be 4 MB or smaller.');
+        event.target.value = '';
+        this.selectedFiles[type] = null;
+        return;
+      }
+      this.selectedFiles[type] = file;
+    },
+    async uploadDocument(document) {
+      const file = this.selectedFiles[document.type];
+      if (!file || this.busyType) return;
 
       const formData = new FormData();
-      formData.append('file', this.file);
-
+      formData.append('file', file);
+      this.uploadingType = document.type;
       try {
-        const documentRes = await axiosClient.post(`/api/v1/document/upload`, formData);
-        console.log(documentRes);
-        this.form.doc_url = documentRes.data.location;
-        console.log('form', this.form);
-        const res = await axiosClient.put(
-          `/api/v1/client/update/document/${this.userId}`,
-          this.form
-        );
-
-        toast.success(`File uploaded successfully`, {
-          autoClose: 1500,
-        });
-
-        for (let i = 0; i < this.submitedDocuments.length; i++) {
-          if (this.submitedDocuments[i].document_typ == this.form.document_type) {
-            this.submitedDocuments[i].uploaded = true;
-          }
-        }
-        this.documentOoptions = this.documentOoptions.filter(
-          (option) => option != this.form.document_type
-        );
-        this.documentUploaded = true;
-        this.file = null;
-        this.form.document_type = '';
-
-        console.log('this.submitedDocuments: ', this.submitedDocuments);
-      } catch (err) {
-        console.log('error: ', err);
+        await axiosClient.post(`/api/v1/document/upload/client/${document.type}/${this.client._id}`, formData);
+        this.selectedFiles[document.type] = null;
+        await this.loadClient();
+        toast.success(`${document.label} uploaded successfully.`);
+      } catch (error) {
+        toast.error(error.response?.data?.message || `Unable to upload ${document.label.toLowerCase()}.`);
+      } finally {
+        this.uploadingType = '';
       }
     },
-
-    handleFile() {
-      this.file = this.$refs.file.files[0];
-      console.log(this.file);
-    },
-
-    async handleAddClientDetails() {
-      console.log('form: ', this.form);
-      if (this.validateForm() == false) {
-        return;
-      }
-
+    async viewDocument(document) {
+      this.closePreview();
+      this.previewDocument = document;
+      this.previewLoading = true;
+      this.previewError = '';
       try {
-        const res = await axiosClient.put(`/api/v1/client/add/details/${this.userId}`, this.form);
-        console.log(res);
-
-        if (res) {
-          toast.success(`Client Added`, {
-            autoClose: 1500,
-          });
-        }
-        this.formPage = 3;
-      } catch (err) {
-        console.log('error: ', err);
-        if (err.response.status == 409) {
-          toast.error(`User Already Exist`, {
-            autoClose: 1500,
-          });
+        const source = this.client?.[document.urlField];
+        if (!source) throw new Error('Document link is missing.');
+        if (source.startsWith('/api/v1/document/file/')) {
+          const response = await axiosClient.get(source, { responseType: 'blob' });
+          this.previewMimeType = response.data.type || response.headers['content-type'] || '';
+          this.previewUrl = URL.createObjectURL(response.data);
         } else {
-          toast.error(`Something Went Wrong`, {
-            autoClose: 1500,
-          });
+          this.previewMimeType = /\.(png|jpe?g)(?:$|\?)/i.test(source) ? 'image/*' : 'application/pdf';
+          this.previewUrl = source;
         }
+      } catch (error) {
+        this.previewError = error.response?.data?.message || error.message || 'Unable to load this document.';
+      } finally {
+        this.previewLoading = false;
       }
     },
-
-    nameWithLang({ name }) {
-      console.log(name);
-      return `${name} `;
+    closePreview() {
+      this.releasePreviewUrl();
+      this.previewDocument = null;
+      this.previewMimeType = '';
+      this.previewError = '';
+      this.previewLoading = false;
     },
-    changeFormPage() {
-      console.log('changeFormPage');
-      this.formPage = 2;
+    releasePreviewUrl() {
+      if (this.previewUrl.startsWith('blob:')) URL.revokeObjectURL(this.previewUrl);
+      this.previewUrl = '';
     },
+    async deleteDocument(document) {
+      if (this.busyType) return;
+      const fileId = this.client?.[document.idField];
+      if (!fileId || !window.confirm(`Delete the ${document.label.toLowerCase()}?`)) return;
 
-    validateForm() {
-      console.log('validateForm');
-
-      if (this.form.name === '') {
-        toast.info(`Enter Name`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-
-      if (this.form.whatsapp_no === '') {
-        toast.info(`Enter WhatsApp Number`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-
-      if (this.form.email === '') {
-        toast.info(`Enter Email`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-
-      if (this.form.pan_card === '') {
-        toast.info(`Enter PAN Card Number`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-
-      if (this.form.adhar_card === '') {
-        toast.info(`Enter Aadhar Card Number`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-
-      if (this.form.gst_no === '') {
-        toast.info(`Enter GST Number`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-
-      if (this.form.cin_no === '') {
-        toast.info(`Enter CIN Number`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-
-      if (this.form.industry_type === '') {
-        toast.info(`Enter Industry Type`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-
-      if (this.form.employee_count_range === '') {
-        toast.info(`Enter Employee Count Range`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-      if (this.form.incorporation_type === '') {
-        toast.info(`Enter Incorporation Type`, { autoClose: 1000 });
-        this.formPage = 1;
-        return false;
-      }
-      if (this.form.contact_person.name === '') {
-        toast.info(`Enter Contact Person Name`, { autoClose: 1000 });
-        this.formPage = 2;
-        return false;
-      }
-
-      if (this.form.contact_person.email === '') {
-        toast.info(`Enter Contact Person Email`, { autoClose: 1000 });
-        this.formPage = 2;
-        return false;
-      }
-
-      if (this.form.contact_person.contact_no === '') {
-        toast.info(`Enter Contact Person Contact Number`, { autoClose: 1000 });
-        this.formPage = 2;
-        return false;
-      }
-
-      if (this.form.contact_person.designation === '') {
-        toast.info(`Enter Contact Person Designation`, { autoClose: 1000 });
-        this.formPage = 2;
-        return false;
-      }
-
-      return true;
-    },
-
-    async getCurrent() {
+      this.deletingType = document.type;
       try {
-        const token = await axiosClient.get(`api/v1/user/getCurrent/`);
-        console.log('Token : ', token);
-
-        if (!token) {
-          this.$router.push('/login');
-        }
-        this.form.user_id = token.data.user._id;
-      } catch (err) {
-        console.log('error: ', err);
-        this.$router.push('/login');
+        await axiosClient.delete(`/api/v1/document/delete/${this.client._id}/${fileId}/${document.type}`);
+        await this.loadClient();
+        toast.success(`${document.label} deleted successfully.`);
+      } catch (error) {
+        toast.error(error.response?.data?.message || `Unable to delete ${document.label.toLowerCase()}.`);
+      } finally {
+        this.deletingType = '';
       }
     },
   },

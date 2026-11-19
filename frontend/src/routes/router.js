@@ -20,6 +20,8 @@ import ManageUsers from '../pages/ManageUser/ManageUsers.vue';
 import AddUser from '../pages/ManageUser/AddUser.vue';
 import UpdateUser from '../pages/ManageUser/UpdateUser.vue';
 import ViewUser from '../pages/ManageUser/ViewUser.vue';
+import UpdateUserDocuments from '../pages/ManageUser/UpdateUserDocuments.vue';
+import UploadUserExcel from '../pages/ManageUser/UploadUserExcel.vue';
 
 import ManageClients from '../pages/ManageClients/ManageClients.vue';
 import AddClient from '../pages/ManageClients/AddClient.vue';
@@ -160,6 +162,10 @@ const routes = [
         component: AddUser,
       },
       {
+        path: '/upload/user/excel',
+        component: UploadUserExcel,
+      },
+      {
         path: '/wage/slip/:attandanceId/:email',
         component: WageSlip,
         props: (route) => ({
@@ -177,6 +183,13 @@ const routes = [
       {
         path: '/update/user/:userId',
         component: UpdateUser,
+        props: (route) => ({
+          userId: route.params.userId,
+        }),
+      },
+      {
+        path: '/update/user/documents/:userId',
+        component: UpdateUserDocuments,
         props: (route) => ({
           userId: route.params.userId,
         }),

@@ -135,6 +135,23 @@
   min-width: 220px;
 }
 
+.employee-proof-pending-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: 0 0 0.55rem;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px #fff;
+}
+.employee-proof-button-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  z-index: 1;
+  pointer-events: none;
+}
+
 /* Keep row actions available while the wider employee table is swiped on mobile. */
 .table-container :deep(.vue3-easy-data-table__header th:last-child),
 .table-container :deep(.vue3-easy-data-table__body td:last-child) {
@@ -159,11 +176,6 @@
 
 .thumbs-down {
   color: var(--danger, #ef4444);
-}
-
-.notification-badge {
-  position: relative;
-  cursor: pointer;
 }
 
 @media (max-width: 576px) {
@@ -431,72 +443,6 @@
     </div>
   </div>
 
-  <div
-    class="modal fade"
-    id="ModalNotification"
-    tabindex="-1"
-    aria-labelledby="ModalNotificationLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title source-400" id="ModalNotificationLabel">Notification</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <div class="w-100" v-for="notification in notifications" :key="notification">
-            <div class="w-100 p-2">
-              <div
-                v-if="notification.type == 'success'"
-                class="w-100 rounded d-flex align-items-center"
-              >
-                <div class="w-100 border border-success rounded-4 py-1 px-2">
-                  {{ notification.text }}
-                </div>
-                <div class="p-2 pointer" @click="handleDismiss(notification._id)">
-                  <i class="bi bi-x-lg"></i>
-                </div>
-              </div>
-              <div
-                v-if="notification.type == 'warning'"
-                class="w-100 rounded d-flex align-items-center"
-              >
-                <div class="w-100 border border-warning rounded-4 py-1 px-2">
-                  {{ notification.text }}
-                </div>
-                <div class="p-2 pointer" @click="handleDismiss(notification._id)">
-                  <i class="bi bi-x-lg"></i>
-                </div>
-              </div>
-              <div
-                v-if="notification.type == 'danger'"
-                class="w-100 rounded d-flex align-items-center"
-              >
-                <div class="w-100 border border-danger rounded-4 py-1 px-2">
-                  {{ notification.text }}
-                </div>
-                <div class="p-2 pointer" @click="handleDismiss(notification._id)">
-                  <i class="bi bi-x-lg"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
   <div class="source-400 pt-0 h-100 scroll page-wrapper">
     <div class="page-header-bar">
@@ -512,28 +458,14 @@
         </el-tooltip>
         <el-tooltip content="Download Excel format" placement="bottom">
           <a
-            href="https://technirmitisoftwares.com/Employees_format.xlsx"
+            href="/templates/employee_upload_format.xlsx"
+            download
             class="btn-action"
             style="padding: 0.45rem 0.6rem;"
           >
             <i class="bi bi-download"></i>
           </a>
         </el-tooltip>
-        <div class="notification-badge" data-bs-toggle="modal" data-bs-target="#ModalNotification">
-          <i class="bi bi-bell-fill pointer" style="font-size: 1.1rem; color: #ef4444"></i>
-          <span
-            v-if="notifications.length > 0 && notifications.length <= 99"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-          >
-            {{ notifications.length }}
-          </span>
-          <span
-            v-if="notifications.length > 99"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-          >
-            99+
-          </span>
-        </div>
       </div>
     </div>
 
@@ -635,12 +567,21 @@
                       </el-tooltip>
                     </div>
                     <div
-                      class="table-icon action_icon_color"
+                      class="table-icon action_icon_color position-relative"
                       @click="handleEmployeeUpdate(item._id)"
                     >
-                      <el-tooltip content="Update " placement="bottom">
+                      <el-tooltip
+                        :content="pendingEmployeeProofLabels(item).length ? `Update — proof documents pending: ${pendingEmployeeProofLabels(item).join(', ')}` : 'Update'"
+                        placement="bottom"
+                      >
                         <i class="bi bi-pen-fill pointer" style="font-size"></i>
                       </el-tooltip>
+                      <span
+                        v-if="pendingEmployeeProofLabels(item).length"
+                        class="employee-proof-pending-dot employee-proof-button-dot"
+                        role="img"
+                        :aria-label="`Proof documents pending: ${pendingEmployeeProofLabels(item).join(', ')}`"
+                      ></span>
                     </div>
 
                     <!-- <div
@@ -754,7 +695,6 @@ export default {
       user: {},
       role: '',
 
-      notifications: [],
       headers: [
         { text: '', value: 'select', sortable: false, width: 40 },
         { text: 'Name', value: 'name', sortable: true },
@@ -798,9 +738,6 @@ export default {
       );
       //console.log('res.data.data: ', res.data.data);
       this.originalItems = res.data.data;
-      const notifications = await axiosClient.get(`/api/v1/notification/getall/${this.user._id}`);
-      this.notifications = notifications.data.data;
-      //console.log(' this.notifications: ', this.notifications);
     } catch (err) {
       console.log('error: ', err);
     }
@@ -826,6 +763,16 @@ export default {
   setup() {},
 
   methods: {
+    pendingEmployeeProofLabels(employee) {
+      return [
+        { label: 'Aadhaar', field: 'adhar_proof' },
+        { label: 'ASCI document', field: 'asci_proof' },
+        { label: 'Bank proof', field: 'bank_proof' },
+      ]
+        .filter((document) => !employee?.[document.field])
+        .map((document) => document.label);
+    },
+
     downloadExcel() {
       let tempItems = [];
 
@@ -873,19 +820,6 @@ export default {
 
       const filename = this.user.name.split(' ')[0] + '_AllEmployees.xlsx';
       saveAs(blob, filename);
-    },
-
-    async handleDismiss(id) {
-      console.log(id);
-      try {
-        const res = await axiosClient.put(`/api/v1/notification/dismiss/${id}`);
-        if (res) {
-          this.notifications = this.notifications.filter((notification) => notification._id != id);
-        }
-      } catch (err) {
-        console.log('error: ', err);
-        toast.error(`Some Thing Went Wrong`);
-      }
     },
 
     async handleSendMessage() {

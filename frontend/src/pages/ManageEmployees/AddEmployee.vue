@@ -694,8 +694,8 @@ export default {
           });
 
           setTimeout(() => {
-            //this.$router.push(`/manage/employees`);
-          }, 2000);
+            this.$router.push('/manage/employees');
+          }, 1200);
         }
       } catch (err) {
         const status = err.response?.status;

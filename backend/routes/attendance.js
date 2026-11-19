@@ -25,8 +25,11 @@ const {
   getEmployeeAttendance,
 
   getAttendaceFromTo2,
+  reconcileClientLeaveBalances,
 } = require("../controllers/attendance");
 const { getClientAttendance } = require('../controllers/attendance');
+
+router.post("/reconcile-leaves", validateToken, reconcileClientLeaveBalances);
 
 //@desc Test Attendance API
 //@route GET /api/v1/attendance

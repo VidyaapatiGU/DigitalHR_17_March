@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 const dotenv = require("dotenv").config();
 const { validationResult, matchedData } = require("express-validator");
@@ -11,6 +12,52 @@ const logger = require("../config/logger.js");
 
 const secret = process.env.ACCESS_TOKEN_SECERT;
 const defaultPassword = process.env.DEFAULT_PASSWORD;
+
+const getRoleName = (user) =>
+  String(user?.roleType?.name || user?.role || "").trim().toLowerCase();
+
+const isAdminUser = (user) => ["admin", "super_admin"].includes(getRoleName(user));
+
+const getActiveClientByReference = async (reference) => {
+  if (!reference) return null;
+  const referenceId = String(reference);
+  const conditions = [{ user_id: referenceId }];
+  if (mongoose.Types.ObjectId.isValid(referenceId)) conditions.push({ _id: referenceId });
+
+  return Client.findOne({
+    $or: conditions,
+    active: { $ne: false },
+    deletedAt: null,
+  }).select("_id user_id").lean();
+};
+
+const getClientReferenceIds = (client) =>
+  [client?._id, client?.user_id].filter(Boolean).map((reference) => String(reference));
+
+const canReadEmployee = async (user, employee) => {
+  if (!user || !employee) return false;
+  if (isAdminUser(user)) return true;
+  if (user.active === false || user.approved === false) return false;
+
+  const userId = String(user._id || "");
+  const roleName = getRoleName(user);
+  if (roleName === "employee") {
+    return String(employee._id) === userId || String(employee.user_id || "") === userId;
+  }
+
+  const client = roleName === "client"
+    ? await getActiveClientByReference(user._id)
+    : user.client_id
+      ? await getActiveClientByReference(user.client_id)
+      : null;
+  if (!client) return false;
+
+  const clientIds = new Set(getClientReferenceIds(client));
+  const employeeClientIds = [employee.client_id, employee.client_user_id, employee.user_id]
+    .filter(Boolean)
+    .map((reference) => String(reference));
+  return employeeClientIds.some((reference) => clientIds.has(reference));
+};
 
 const sanitizeEmployee = (employee) => {
   if (!employee) return employee;
@@ -247,16 +294,22 @@ const createEmployeesByExcel = async (req, res) => {
   let Errors = [];
   let lastCount = 0;
 
-  // Resolve client: prefer client_user_id, then client_id, then logged-in client user
+  const roleName = getRoleName(user);
+  const isAdmin = isAdminUser(user);
+  const isClientOwner = roleName === "client" || Boolean(user.industry_type);
+
+  // Client accounts always import into their own workspace, regardless of
+  // any client identifier sent by the browser. Admins can target a client.
   let existingClient = null;
-  if (data.client_user_id) {
-    existingClient = await Client.findOne({ _id: data.client_user_id });
-  }
-  if (!existingClient && data.client_id) {
-    existingClient = await Client.findOne({ _id: data.client_id });
-  }
-  if (!existingClient && user?.industry_type) {
-    existingClient = await Client.findOne({ _id: user._id });
+  if (isClientOwner) {
+    existingClient = await Client.findOne({ _id: user._id, active: { $ne: false }, deletedAt: null });
+  } else if (isAdmin) {
+    const clientReference = data.client_user_id || data.client_id;
+    if (clientReference) {
+      existingClient = await Client.findOne({ _id: clientReference, active: { $ne: false }, deletedAt: null });
+    }
+  } else {
+    return res.status(403).json({ message: "Only administrators or the client owner can upload employees" });
   }
   if (!existingClient) {
     logger.error(
@@ -568,91 +621,57 @@ const AddClientDetails = async (req, res) => {
 //@route GET /api/v1/employees/client/:client_id
 //@access Private: Needs Login
 const getClientEmployees = async (req, res) => {
-  // Determine the client's IP address
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-  const client_id = req.params.client_id;
-
+  const requestedClientId = String(req.params.client_id || "");
   const user = req.user;
-
-  // Log initial request details
-  logger.info(`Incoming request to get employees for client ${client_id}`, {
-    method: req.method,
-    url: req.originalUrl,
-    client_id: client_id,
-    user: user ? user.name : "Unauthenticated",
-    ip: ip,
-    timestamp: new Date().toISOString(),
-  });
-
-  console.log("client_id:", client_id);
+  const roleName = getRoleName(user);
 
   try {
-    if (user) {
-      const includeInactive = req.query.includeInactive === "true";
-      const activeFilter = includeInactive ? {} : { active: true };
+    if (!user) return res.status(401).json({ message: "User is not authorized" });
 
-      // First attempt: search by client_id field
-      let employees = await Employee.find({
-        client_id: client_id,
-        ...activeFilter,
-      }).select("-password");
-      logger.info(`Found ${employees.length} employee(s) for client_id query`, {
-        client_id: client_id,
-        queryType: "client_id",
-        employeeCount: employees.length,
-        timestamp: new Date().toISOString(),
-      });
-
-      // Fallback: search by client_user_id if no results found
-      if (employees.length <= 0) {
-        employees = await Employee.find({
-          client_user_id: client_id,
-          ...activeFilter,
-        }).select("-password");
-        logger.info(`Found ${employees.length} employee(s) for client_user_id query`, {
-          client_id: client_id,
-          queryType: "client_user_id",
-          employeeCount: employees.length,
-          timestamp: new Date().toISOString(),
-        });
-      }
-
-      // Log success with detailed information
-      logger.info(
-        `${ip}: API /api/v1/employees/client/${client_id} | User: ${user.name} responded with success. Employees retrieved.`,
-        {
-          client_id: client_id,
-          employeeCount: employees.length,
-          user: user.name,
-          timestamp: new Date().toISOString(),
-        }
-      );
-
-      return res.status(200).json({
-        data: employees,
-        message: "employees retrieved successfully",
-      });
+    let client;
+    if (isAdminUser(user)) {
+      client = await getActiveClientByReference(requestedClientId);
     } else {
-      // Log unauthorized access attempt
-      logger.error(
-        `${ip}: API /api/v1/employees/client/${client_id} | Unauthenticated access attempt.`,
-        {
-          client_id: client_id,
-          timestamp: new Date().toISOString(),
-        }
-      );
-      return res.status(401).send({ message: "User is not Authorized" });
-    }
-  } catch (error) {
-    // Log the error details with stack trace and additional context
-    logger.error(
-      `${ip}: API /api/v1/employees/client/${client_id} | Error occurred: ${error.message}`,
-      {
-        client_id: client_id,
-        user: user ? user.name : "Unknown",
-        errorStack: error.stack,
-        timestamp: new Date().toISOString(),
+      if (user.active === false || user.approved === false) {
+        return res.status(403).json({ message: "This account cannot access employee data" });
       }
+      const ownClientReference = roleName === "client" ? user._id : user.client_id;
+      client = ownClientReference
+        ? await getActiveClientByReference(ownClientReference)
+        : null;
+
+      if (!client) {
+        return res.status(403).json({ message: "You are not linked to an active client" });
+      }
+      if (!getClientReferenceIds(client).includes(requestedClientId)) {
+        return res.status(403).json({ message: "You can only view employees in your client workspace" });
+      }
+    }
+
+    if (!client) return res.status(404).json({ message: "Client not found" });
+
+    const clientIds = [client._id, client.user_id].filter(Boolean);
+    const activeFilter = req.query.includeInactive === "true" ? {} : { active: true };
+    const employees = await Employee.find({
+      ...activeFilter,
+      $or: [
+        { client_id: { $in: clientIds } },
+        { client_user_id: { $in: clientIds } },
+        { user_id: { $in: clientIds } },
+      ],
+    }).select("-password");
+
+    logger.info(
+      `${ip}: API /api/v1/employees/client/${requestedClientId} | User: ${user.name} | returned ${employees.length} employee record(s)`
+    );
+    return res.status(200).json({
+      data: employees,
+      message: "Employees retrieved successfully",
+    });
+  } catch (error) {
+    logger.error(
+      `${ip}: API /api/v1/employees/client/${requestedClientId} | User: ${user?.name || "Unknown"} | Error: ${error.message}`
     );
     return res.status(500).json({ message: "Something went wrong" });
   }
@@ -668,9 +687,27 @@ const getAllEmployees = async (req, res) => {
 
   try {
     if (user && ["super_admin", "admin"].includes(user.roleType?.name)) {
-      //console.log("user: ", user);
-
-      const employees = await Employee.find({ active: true }).select("-password");
+      const activeClients = await Client.find(
+        { active: { $ne: false }, deletedAt: null },
+        { _id: 1, user_id: 1 }
+      ).lean();
+      const activeClientIds = [
+        ...new Map(
+          activeClients
+            .flatMap((client) => [client._id, client.user_id].filter(Boolean))
+            .map((id) => [String(id), id])
+        ).values(),
+      ];
+      const employees = activeClientIds.length
+        ? await Employee.find({
+            active: true,
+            $or: [
+              { client_id: { $in: activeClientIds } },
+              { client_user_id: { $in: activeClientIds } },
+              { user_id: { $in: activeClientIds } },
+            ],
+          }).select("-password")
+        : [];
 
       logger.info(
         `${ip}: API /api/v1/employee/getall | User: ${user.name} | responnded with Success `
@@ -713,6 +750,11 @@ const getEmployee = async (req, res) => {
       }
 
       if (employee) {
+        if (!(await canReadEmployee(loggedin_user, employee))) {
+          return res.status(403).json({
+            message: "You can only view employee records in your workspace",
+          });
+        }
         logger.info(
           `${ip}: API /api/v1/employee/get/:${id} | User: ${loggedin_user.name} | responnded with Success `
         );
@@ -757,6 +799,11 @@ const getEmployeeByEmail = async (req, res) => {
       }).select("-password");
 
       if (emp) {
+        if (!(await canReadEmployee(loggedin_user, emp))) {
+          return res.status(403).json({
+            message: "You can only view employee records in your workspace",
+          });
+        }
         logger.info(
           `${ip}: API /api/v1/employee/getbyemail/:${email} | User: ${loggedin_user.name} | responnded with Success `
         );

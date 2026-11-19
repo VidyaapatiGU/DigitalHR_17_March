@@ -15,6 +15,7 @@ const {
   getCurrent,
   AppDisClient,
   updateDocument,
+  updateClientNotificationAudience,
   changePass,
   logIn,
 } = require("../controllers/client");
@@ -158,6 +159,7 @@ router.put(
     body("username"),
     body("pf_enable"),
     body("esic_enable"),
+    body("email", "Enter a valid company email").optional({ checkFalsy: true }).isEmail(),
 
     body("whatsapp_no", "Enter a Valid Whatsapp Number"),
 
@@ -184,9 +186,21 @@ router.put(
     body("state"),
     body("country"),
     body("pin_code"),
+    body("notificationDepartment").optional({ checkFalsy: true }).isMongoId(),
+    body("notificationRole").optional({ checkFalsy: true }).isMongoId(),
   ],
   validateToken,
   updateClient
+);
+
+router.put(
+  "/update/audience/:id",
+  validateToken,
+  [
+    body("notificationDepartment").optional({ checkFalsy: true }).isMongoId(),
+    body("notificationRole").optional({ checkFalsy: true }).isMongoId(),
+  ],
+  updateClientNotificationAudience
 );
 
 //@desc Update Client with id

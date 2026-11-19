@@ -125,6 +125,227 @@
   content: '';
 }
 
+.content-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 0 0 auto;
+}
+
+.notification-menu {
+  position: relative;
+}
+
+.notification-trigger {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-xs);
+  font-size: 1rem;
+}
+
+.notification-trigger:hover,
+.notification-trigger[aria-expanded='true'] {
+  color: var(--primary);
+  border-color: var(--primary-light);
+}
+
+.notification-count {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.3rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #f1f5f9;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  z-index: 90;
+  width: min(430px, calc(100vw - 1.5rem));
+  max-height: min(78vh, 720px);
+  overflow-y: auto;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: #fff;
+  box-shadow: var(--shadow-lg);
+}
+
+.notification-panel__header,
+.notification-item,
+.broadcast-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.notification-panel__header h2,
+.broadcast-heading h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.notification-panel__header small,
+.notification-meta,
+.broadcast-help {
+  color: var(--text-muted);
+  font-size: 0.73rem;
+}
+
+.notification-panel__close,
+.notification-dismiss {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.notification-panel__close:hover,
+.notification-dismiss:hover {
+  background: var(--bg-body);
+  color: var(--text-primary);
+}
+
+.broadcast-launch {
+  width: 100%;
+  margin: 0.9rem 0;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.broadcast-form {
+  margin: 0.85rem 0 1rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+}
+
+.broadcast-form label,
+.broadcast-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.broadcast-form .form-control,
+.broadcast-form .form-select {
+  margin-bottom: 0.7rem;
+  font-size: 0.8rem;
+}
+
+.audience-options {
+  max-height: 130px;
+  margin: 0.4rem 0 0.7rem;
+  padding: 0.4rem 0.55rem;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.audience-option {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 !important;
+  padding: 0.32rem 0;
+  color: var(--text-primary) !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+}
+
+.broadcast-submit {
+  width: 100%;
+}
+
+.notification-feedback {
+  margin: 0.6rem 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 0.76rem;
+}
+
+.notification-feedback.error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.notification-list {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.notification-card {
+  padding: 0.7rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--primary);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.notification-card.warning { border-left-color: #f59e0b; }
+.notification-card.success { border-left-color: #16a34a; }
+.notification-card.danger { border-left-color: #dc2626; }
+
+.notification-item p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.notification-empty {
+  padding: 1.2rem 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
 .route-wrapper {
   min-height: calc(100vh - 72px);
 }
@@ -311,7 +532,122 @@
             <span class="content-topbar__title">{{ pageTitle }}</span>
           </div>
         </div>
-        <span class="content-topbar__status">Connected</span>
+        <div class="content-topbar__actions">
+          <span class="content-topbar__status">Connected</span>
+          <div v-if="currentUser._id" class="notification-menu">
+            <button
+              class="notification-trigger"
+              type="button"
+              :aria-expanded="isNotificationPanelOpen"
+              aria-label="Open notifications"
+              @click="toggleNotificationPanel"
+            >
+              <i class="bi bi-bell-fill" aria-hidden="true"></i>
+              <span v-if="notifications.length" class="notification-count">
+                {{ notifications.length > 99 ? '99+' : notifications.length }}
+              </span>
+            </button>
+
+            <section v-if="isNotificationPanelOpen" class="notification-panel" aria-label="Notifications">
+              <div class="notification-panel__header">
+                <div>
+                  <h2>Notifications</h2>
+                  <small>{{ notifications.length }} unread</small>
+                </div>
+                <button class="notification-panel__close" type="button" aria-label="Close notifications" @click="isNotificationPanelOpen = false">
+                  <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+              </div>
+
+              <template v-if="isAdminUser">
+                <button
+                  v-if="!isComposingBroadcast"
+                  class="broadcast-launch"
+                  type="button"
+                  @click="openBroadcastForm"
+                >
+                  <i class="bi bi-megaphone-fill" aria-hidden="true"></i>
+                  Create a broadcast
+                </button>
+
+                <form v-if="isComposingBroadcast" class="broadcast-form" @submit.prevent="sendBroadcast">
+                  <div class="broadcast-heading mb-2">
+                    <h3>New broadcast</h3>
+                    <button class="notification-panel__close" type="button" aria-label="Cancel broadcast" @click="isComposingBroadcast = false">
+                      <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <label for="broadcastText">Message</label>
+                  <textarea
+                    id="broadcastText"
+                    v-model="broadcastForm.text"
+                    class="form-control"
+                    rows="3"
+                    maxlength="2000"
+                    placeholder="Write an update for your audience"
+                    required
+                  ></textarea>
+
+                  <label for="broadcastType">Type</label>
+                  <select id="broadcastType" v-model="broadcastForm.type" class="form-select">
+                    <option value="info">Information</option>
+                    <option value="success">Success</option>
+                    <option value="warning">Warning</option>
+                    <option value="danger">Urgent</option>
+                  </select>
+
+                  <label for="broadcastAudience">Audience</label>
+                  <select id="broadcastAudience" v-model="broadcastForm.audienceType" class="form-select" @change="broadcastForm.audienceIds = []">
+                    <option value="all_clients">All active clients</option>
+                    <option value="departments">Departments</option>
+                    <option value="roles">Roles</option>
+                  </select>
+
+                  <template v-if="broadcastForm.audienceType !== 'all_clients'">
+                    <span class="broadcast-label">Select {{ broadcastForm.audienceType }}</span>
+                    <div class="audience-options">
+                      <label v-for="option in broadcastAudienceOptions" :key="option._id" class="audience-option">
+                        <input v-model="broadcastForm.audienceIds" type="checkbox" :value="String(option._id)" />
+                        <span>{{ option.name }}</span>
+                      </label>
+                      <div v-if="!broadcastAudienceOptions.length" class="notification-meta py-2">
+                        No active {{ broadcastForm.audienceType }} are available.
+                      </div>
+                    </div>
+                    <p v-if="broadcastForm.audienceType === 'departments'" class="broadcast-help mb-2">
+                      Sends to members of these departments and clients assigned to them in Manage Clients.
+                    </p>
+                    <p v-else class="broadcast-help mb-2">
+                      Sends to accounts with these roles and clients assigned those roles in Manage Clients. “Client accounts” targets every active client.
+                    </p>
+                  </template>
+
+                  <button class="btn btn-primary btn-sm text-white broadcast-submit" type="submit" :disabled="isSendingBroadcast">
+                    <span v-if="isSendingBroadcast" class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                    {{ isSendingBroadcast ? 'Sending…' : 'Send broadcast' }}
+                  </button>
+                </form>
+              </template>
+
+              <div v-if="notificationFeedback" class="notification-feedback" :class="{ error: notificationFeedbackIsError }" role="status">
+                {{ notificationFeedback }}
+              </div>
+              <div v-if="isLoadingNotifications" class="notification-empty" role="status">Loading notifications…</div>
+              <div v-else-if="!notifications.length" class="notification-empty">You’re all caught up.</div>
+              <div v-else class="notification-list">
+                <article v-for="notification in notifications" :key="notification._id" class="notification-card" :class="notification.type">
+                  <div class="notification-item">
+                    <p>{{ notification.text }}</p>
+                    <button class="notification-dismiss" type="button" aria-label="Dismiss notification" @click="dismissNotification(notification._id)">
+                      <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div class="notification-meta">{{ formatNotificationDate(notification.createDate) }}</div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </div>
       </header>
       <div class="route-wrapper">
         <router-view />
@@ -321,9 +657,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import SideMenu from '../components/SideMenu.vue';
+import axiosClient from '../axiosClient';
 
 const DESKTOP_BREAKPOINT = 992;
 
@@ -331,6 +668,32 @@ const isDesktop = ref(true);
 const isSidebarCollapsed = ref(false);
 const isMobileSidebarOpen = ref(false);
 const route = useRoute();
+const currentUser = ref({});
+const notifications = ref([]);
+const roles = ref([]);
+const departments = ref([]);
+const isNotificationPanelOpen = ref(false);
+const isLoadingNotifications = ref(false);
+const isComposingBroadcast = ref(false);
+const isSendingBroadcast = ref(false);
+const notificationFeedback = ref('');
+const notificationFeedbackIsError = ref(false);
+const broadcastForm = reactive({
+  text: '',
+  type: 'info',
+  audienceType: 'all_clients',
+  audienceIds: [],
+});
+
+const isAdminUser = computed(() => ['admin', 'super_admin'].includes(currentUser.value?.roleType?.name));
+const broadcastAudienceOptions = computed(() => {
+  if (broadcastForm.audienceType === 'departments') return departments.value;
+  if (broadcastForm.audienceType === 'roles') {
+    const nonClientRoles = roles.value.filter((role) => String(role.name || '').toLowerCase() !== 'client');
+    return [{ _id: 'client', name: 'Client accounts' }, ...nonClientRoles];
+  }
+  return [];
+});
 
 const pageTitle = computed(() => {
   const path = route.path;
@@ -386,9 +749,116 @@ const handleMenuNavigation = () => {
   }
 };
 
+const loadNotifications = async () => {
+  if (!currentUser.value?._id) return;
+  isLoadingNotifications.value = true;
+  try {
+    const response = await axiosClient.get(`/api/v1/notification/getall/${currentUser.value._id}`);
+    notifications.value = response.data.data || [];
+  } catch (error) {
+    notificationFeedback.value = error.response?.data?.message || 'Unable to load notifications.';
+    notificationFeedbackIsError.value = true;
+  } finally {
+    isLoadingNotifications.value = false;
+  }
+};
+
+const loadDashboardNotifications = async () => {
+  if (!localStorage.getItem('token')) return;
+  try {
+    const response = await axiosClient.get('/api/v1/user/getCurrent/');
+    currentUser.value = response.data.user || {};
+    await loadNotifications();
+    if (isAdminUser.value) {
+      const [roleResponse, departmentResponse] = await Promise.all([
+        axiosClient.get('/api/v1/role/getall'),
+        axiosClient.get('/api/v1/department/getall'),
+      ]);
+      roles.value = roleResponse.data.data || [];
+      departments.value = departmentResponse.data.data || [];
+    }
+  } catch (error) {
+    notificationFeedback.value = error.response?.data?.message || 'Unable to load dashboard notifications.';
+    notificationFeedbackIsError.value = true;
+  }
+};
+
+const toggleNotificationPanel = async () => {
+  isNotificationPanelOpen.value = !isNotificationPanelOpen.value;
+  notificationFeedback.value = '';
+  notificationFeedbackIsError.value = false;
+  if (isNotificationPanelOpen.value) {
+    await loadNotifications();
+  }
+};
+
+const openBroadcastForm = () => {
+  isComposingBroadcast.value = true;
+  notificationFeedback.value = '';
+  broadcastForm.text = '';
+  broadcastForm.type = 'info';
+  broadcastForm.audienceType = 'all_clients';
+  broadcastForm.audienceIds = [];
+};
+
+const sendBroadcast = async () => {
+  const text = broadcastForm.text.trim();
+  if (!text) {
+    notificationFeedback.value = 'Enter a message before sending.';
+    notificationFeedbackIsError.value = true;
+    return;
+  }
+  if (broadcastForm.audienceType !== 'all_clients' && !broadcastForm.audienceIds.length) {
+    notificationFeedback.value = `Select at least one ${broadcastForm.audienceType.slice(0, -1)}.`;
+    notificationFeedbackIsError.value = true;
+    return;
+  }
+
+  isSendingBroadcast.value = true;
+  notificationFeedback.value = '';
+  notificationFeedbackIsError.value = false;
+  try {
+    const response = await axiosClient.post('/api/v1/notification/add', {
+      text,
+      type: broadcastForm.type,
+      audience: {
+        type: broadcastForm.audienceType,
+        ids: broadcastForm.audienceIds,
+      },
+    });
+    notificationFeedback.value = response.data.message || `Broadcast sent to ${response.data.recipientCount} account(s).`;
+    isComposingBroadcast.value = false;
+    broadcastForm.text = '';
+  } catch (error) {
+    notificationFeedback.value = error.response?.data?.message || 'Unable to send broadcast.';
+    notificationFeedbackIsError.value = true;
+  } finally {
+    isSendingBroadcast.value = false;
+  }
+};
+
+const dismissNotification = async (id) => {
+  try {
+    await axiosClient.put(`/api/v1/notification/dismiss/${id}`);
+    notifications.value = notifications.value.filter((notification) => notification._id !== id);
+  } catch (error) {
+    notificationFeedback.value = error.response?.data?.message || 'Unable to dismiss notification.';
+    notificationFeedbackIsError.value = true;
+  }
+};
+
+const formatNotificationDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? ''
+    : new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+};
+
 onMounted(() => {
   syncViewportState();
   window.addEventListener('resize', syncViewportState);
+  loadDashboardNotifications();
 });
 
 onBeforeUnmount(() => {

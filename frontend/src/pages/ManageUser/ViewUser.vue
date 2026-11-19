@@ -108,6 +108,26 @@
                                 v-model="user.email"
                               />
                             </div>
+                            <div class="mt-3">
+                              <label class="small mb-1" for="client">Client</label>
+                              <input
+                                disabled
+                                class="form-control"
+                                id="client"
+                                type="text"
+                                :value="user.client_id?.name || 'Not linked'"
+                              />
+                            </div>
+                            <div class="mt-3">
+                              <label class="small mb-1" for="designation">Job Title</label>
+                              <input
+                                disabled
+                                class="form-control"
+                                id="designation"
+                                type="text"
+                                v-model="user.designation"
+                              />
+                            </div>
                             <div>
                               <div class="mt-3">
                                 <label class="small mb-1" for="team">Team</label>
@@ -163,13 +183,19 @@
                       </div>
                     </div>
                   </div>
-                  <div class="d-flex justify-content-center align-items-center">
+                  <div class="d-flex justify-content-center align-items-center gap-2">
                     <router-link
                       :to="`/update/user/${userId}`"
                       type="button"
                       class="btn-submit text-decoration-none"
                     >
                       Update
+                    </router-link>
+                    <router-link
+                      :to="`/update/user/documents/${userId}`"
+                      class="btn-submit text-decoration-none"
+                    >
+                      Manage Documents
                     </router-link>
                   </div>
                 </div>

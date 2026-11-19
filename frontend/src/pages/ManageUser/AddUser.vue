@@ -81,6 +81,36 @@
               </div>
 
               <div class="form-group col-12 col-sm-6 col-md-4 col-lg-3">
+                <label for="client" class="mt-2 mt-sm-2 mt-md-0">Client</label>
+                <multiselect
+                  id="client"
+                  v-model="selected_client"
+                  :options="clients"
+                  :placeholder="clientPlaceholder"
+                  :disabled="clientsLoading || !clients.length"
+                  label="name"
+                  track-by="_id"
+                >
+                  <template #option="{ option }">
+                    <span>{{ option.name }}</span>
+                    <small v-if="option.client_code" class="ms-2 text-muted">{{ option.client_code }}</small>
+                  </template>
+                </multiselect>
+                <small v-if="clientLoadError" class="text-danger">{{ clientLoadError }}</small>
+              </div>
+
+              <div class="form-group col-12 col-sm-6 col-md-4 col-lg-3">
+                <label for="designation" class="mt-2 mt-sm-2 mt-md-0">Job Title</label>
+                <input
+                  v-model.trim="form.designation"
+                  type="text"
+                  class="form-control border"
+                  id="designation"
+                  placeholder="e.g. HR Manager"
+                />
+              </div>
+
+              <div class="form-group col-12 col-sm-6 col-md-4 col-lg-3">
                 <label for="adhar_card" class="mt-2 mt-sm-2 mt-md-0">Aadhaar Number</label>
                 <input
                   v-model.trim="form.adhar_card"
@@ -258,14 +288,28 @@ export default {
         country: '',
         address: '',
         pin_code: '',
+        client_id: '',
+        designation: '',
       },
       selected_roleType: '',
       selected_team: '',
       selected_department: '',
+      selected_client: '',
       departments: [],
       roles: [],
       teams: [],
+      clients: [],
+      clientsLoading: true,
+      clientLoadError: '',
     };
+  },
+
+  computed: {
+    clientPlaceholder() {
+      if (this.clientsLoading) return 'Loading clients...';
+      if (this.clientLoadError) return 'Unable to load clients';
+      return this.clients.length ? 'Select Client' : 'No active clients found';
+    },
   },
 
   async created() {
@@ -283,6 +327,16 @@ export default {
       console.log('roles : ', this.roles);
       console.log('teams : ', this.teams);
     } catch (err) {}
+
+    try {
+      const clients = await axiosClient.get(`/api/v1/client/get/all/clients`);
+      this.clients = clients.data.data.filter((client) => client.active !== false);
+    } catch (err) {
+      console.error('Unable to load clients for user creation', err);
+      this.clientLoadError = 'Could not load clients. Refresh the page and try again.';
+    } finally {
+      this.clientsLoading = false;
+    }
   },
 
   mounted() {
@@ -324,6 +378,7 @@ export default {
       this.form.roleType = this.selected_roleType._id;
       this.form.department = this.selected_department._id;
       this.form.team = this.selected_team._id;
+      this.form.client_id = this.selected_client._id;
 
       try {
         const res = await axiosClient.post(`api/v1/user/add`, this.form);
@@ -411,6 +466,14 @@ export default {
       }
       if (this.selected_team == '') {
         toast.info(`Select Team `, { autoClose: 1000 });
+        return false;
+      }
+      if (!this.selected_client) {
+        toast.info(`Select a client`, { autoClose: 1000 });
+        return false;
+      }
+      if (!this.form.designation.trim()) {
+        toast.info(`Enter a job title`, { autoClose: 1000 });
         return false;
       }
 

@@ -1145,6 +1145,10 @@ export default {
         let csv = "Emp Code,Name,CL Balance,SL Balance,PL Balance,CL Dates,SL Dates,PL Dates\n";
 
         const esc = (value) => String(value ?? '').replace(/"/g, '""');
+        const formatLeaveDate = (value) => {
+          const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          return match ? `${match[3]}/${match[2]}/${match[1]}` : value || '';
+        };
 
         leavesData.forEach(emp => {
           const empCode = emp.emp_no || '';
@@ -1154,9 +1158,9 @@ export default {
           const slBalance = emp?.leaves?.sl?.balance ?? '';
           const plBalance = emp?.leaves?.pl?.balance ?? '';
 
-          const clDates = Array.isArray(emp?.leaves?.cl?.absentDates) ? emp.leaves.cl.absentDates.join(';') : '';
-          const slDates = Array.isArray(emp?.leaves?.sl?.absentDates) ? emp.leaves.sl.absentDates.join(';') : '';
-          const plDates = Array.isArray(emp?.leaves?.pl?.absentDates) ? emp.leaves.pl.absentDates.join(';') : '';
+          const clDates = Array.isArray(emp?.leaves?.cl?.absentDates) ? emp.leaves.cl.absentDates.map(formatLeaveDate).join(';') : '';
+          const slDates = Array.isArray(emp?.leaves?.sl?.absentDates) ? emp.leaves.sl.absentDates.map(formatLeaveDate).join(';') : '';
+          const plDates = Array.isArray(emp?.leaves?.pl?.absentDates) ? emp.leaves.pl.absentDates.map(formatLeaveDate).join(';') : '';
 
           csv += `"${esc(empCode)}","${esc(name)}","${esc(clBalance)}","${esc(slBalance)}","${esc(plBalance)}","${esc(clDates)}","${esc(slDates)}","${esc(plDates)}"\n`;
         });

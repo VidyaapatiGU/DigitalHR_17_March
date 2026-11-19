@@ -98,6 +98,14 @@ const ClientSchema = new Schema({
   profile_url: {
     type: String,
   },
+  notificationDepartment: {
+    type: Schema.Types.ObjectId,
+    ref: Department,
+  },
+  notificationRole: {
+    type: Schema.Types.ObjectId,
+    ref: Role,
+  },
 
   /* /////////////Proofs//////////////// */
   adhar_proof: {

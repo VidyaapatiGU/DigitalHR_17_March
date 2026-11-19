@@ -223,8 +223,20 @@
         <div class="p-4 h-100">
           <div class="upload-toolbar">
             <el-tooltip content="Download Format" placement="bottom">
+              <button
+                v-if="role === 'client'"
+                type="button"
+                @click="downloadAttendanceFormat"
+                class="btn-action format-icon"
+                aria-label="Download format"
+              >
+                <i class="bi bi-download"></i>
+                <span>Input Format</span>
+              </button>
               <a
-                href="https://technirmitisoftwares.com/employeeAttendanceFormat.xlsx"
+                v-else
+                href="/reports/employeeAttendanceFormat.xlsx"
+                download
                 class="btn-action format-icon"
                 aria-label="Download format"
               >
@@ -237,6 +249,7 @@
                 type="file"
                 class="form-control"
                 id="inputGroupFile04"
+                accept=".csv,.xlsx,.xls"
                 aria-describedby="inputGroupFileAddon04"
                 aria-label="Upload"
                 @change="handleFileUpload"
@@ -261,7 +274,14 @@
               />
             </div> -->
             <div class="upload-field-month">
-              <VueDatePicker v-model="month_year" month-picker class="upload-month-picker" />
+              <VueDatePicker
+                v-model="month_year"
+                month-picker
+                :auto-apply="true"
+                class="upload-month-picker"
+                :teleport="true"
+                :alt-position="monthMenuAltPosition"
+              />
               <!-- <input type="date" class="form-control form-control-sm" v-model="form.month_year" /> -->
             </div>
 
@@ -371,7 +391,7 @@ export default {
       leaveDefaults: { cl: 0, sl: 0, pl: 0 },
 
       month_year: {
-        month: new Date().getMonth() - 1,
+        month: new Date().getMonth(),
         year: new Date().getFullYear(),
       },
       excelData: [],
@@ -450,6 +470,172 @@ export default {
   setup() {},
 
   methods: {
+    async downloadAttendanceFormat() {
+      const employees = Array.isArray(this.originalItems) ? this.originalItems : [];
+      if (employees.length === 0) {
+        toast.info('No active employees are available for this client.', { autoClose: 2500 });
+        return;
+      }
+
+      const selectedYear = Number(this.month_year?.year);
+      const selectedMonthIndex = Number(this.month_year?.month);
+      if (
+        !Number.isInteger(selectedYear) ||
+        !Number.isInteger(selectedMonthIndex) ||
+        selectedMonthIndex < 0 ||
+        selectedMonthIndex > 11
+      ) {
+        toast.info('Select an attendance month first.', { autoClose: 2000 });
+        return;
+      }
+
+      const selectedMonthDate = new Date(selectedYear, selectedMonthIndex, 1);
+      const selectedMonth = new Intl.DateTimeFormat('en', { month: 'long' }).format(selectedMonthDate);
+      const monthYear = `${selectedYear}-${String(selectedMonthIndex + 1).padStart(2, '0')}-01`;
+      let savedAttendanceByCode = new Map();
+      let savedAttendance = [];
+      let scheduledDays = [];
+      let totalWorkingDays = 0;
+      try {
+        const attendanceResponse = await axiosClient.get(
+          `/api/v1/attendance/get/${encodeURIComponent(this.user._id)}/${monthYear}`
+        );
+        savedAttendance = Array.isArray(attendanceResponse.data)
+          ? attendanceResponse.data
+          : [];
+        savedAttendance
+          .slice()
+          .sort((a, b) => new Date(a.createDate || 0) - new Date(b.createDate || 0))
+          .forEach((record) => {
+            savedAttendanceByCode.set(String(record.emp_no || '').trim(), record);
+          });
+
+        const weeklyOffFrequencies = new Map();
+        employees.forEach((employee) => {
+          const weeklyOff = Array.isArray(employee.weeklyOff) && employee.weeklyOff.length
+            ? employee.weeklyOff
+            : ['Sunday'];
+          const schedule = [...new Set(weeklyOff.map((day) => String(day).trim()))].sort();
+          const scheduleKey = schedule.join('|');
+          weeklyOffFrequencies.set(scheduleKey, (weeklyOffFrequencies.get(scheduleKey) || 0) + 1);
+        });
+        const commonWeeklyOff = [...weeklyOffFrequencies.entries()]
+          .sort((a, b) => b[1] - a[1])[0]?.[0]
+          ?.split('|') || ['Sunday'];
+        const dayIndexes = {
+          Sunday: 0,
+          Monday: 1,
+          Tuesday: 2,
+          Wednesday: 3,
+          Thursday: 4,
+          Friday: 5,
+          Saturday: 6,
+        };
+        const daysInMonth = new Date(selectedYear, selectedMonthIndex + 1, 0).getDate();
+        scheduledDays = Array.from({ length: daysInMonth }, (_, index) => index + 1)
+          .filter((day) => !commonWeeklyOff.some((dayName) =>
+            dayIndexes[dayName] === new Date(selectedYear, selectedMonthIndex, day).getDay()
+          ));
+        const savedWorkingDayValues = savedAttendance
+          .map((record) => Number(record.totalWorkingDays))
+          .filter((value) => Number.isFinite(value) && value > 0);
+        const savedWorkingDayFrequency = new Map();
+        savedWorkingDayValues.forEach((value) => {
+          savedWorkingDayFrequency.set(value, (savedWorkingDayFrequency.get(value) || 0) + 1);
+        });
+        const savedWorkingDays = [...savedWorkingDayFrequency.entries()]
+          .sort((a, b) => b[1] - a[1])[0]?.[0];
+        totalWorkingDays = savedWorkingDays || scheduledDays.length;
+
+        // Keep the selected upload period and total working days aligned with the workbook.
+        this.form.totalWorkingDays = String(totalWorkingDays);
+      } catch (err) {
+        console.error(`Unable to load saved attendance for ${selectedMonth} ${selectedYear}:`, err);
+        toast.error(`Could not load ${selectedMonth} ${selectedYear} attendance. Please try again.`, { autoClose: 3000 });
+        return;
+      }
+
+      const headers = [
+        'emp_code',
+        'email',
+        'name',
+        'present',
+        'remark',
+        'numberOfCL',
+        'CL Dates (DD/MM/YYYY)',
+        'numberOfSL',
+        'SL Dates (DD/MM/YYYY)',
+        'numberOfPL',
+        'PL Dates (DD/MM/YYYY)',
+        'numberOfLOP',
+        'LOP Dates (DD/MM/YYYY)',
+      ];
+      const formatWorkbookDates = (value) => this.parseAbsentDays(value)
+        .map((isoDate) => {
+          const [year, month, day] = isoDate.split('-');
+          return `${day}/${month}/${year}`;
+        })
+        .join(', ');
+      const sampleAttendance = () => {
+        const availableDays = scheduledDays.slice();
+        const absenceCount = Math.floor(Math.random() * Math.min(4, availableDays.length + 1));
+        const absentDays = { CL: [], SL: [], PL: [], LOP: [] };
+        const types = Object.keys(absentDays);
+        const formatDay = (day) =>
+          `${String(day).padStart(2, '0')}/${String(selectedMonthIndex + 1).padStart(2, '0')}/${selectedYear}`;
+
+        for (let index = 0; index < absenceCount; index += 1) {
+          const dayIndex = Math.floor(Math.random() * availableDays.length);
+          const [day] = availableDays.splice(dayIndex, 1);
+          const type = types[Math.floor(Math.random() * types.length)];
+          absentDays[type].push(day);
+        }
+
+        Object.values(absentDays).forEach((days) => days.sort((a, b) => a - b));
+        return {
+          present: totalWorkingDays - absenceCount,
+          remark: 'Sample data',
+          numberOfCL: absentDays.CL.length,
+          absentDaysCL: absentDays.CL.map(formatDay).join(', '),
+          numberOfSL: absentDays.SL.length,
+          absentDaysSL: absentDays.SL.map(formatDay).join(', '),
+          numberOfPL: absentDays.PL.length,
+          absentDaysPL: absentDays.PL.map(formatDay).join(', '),
+          numberOfLOP: absentDays.LOP.length,
+          absentDaysLOP: absentDays.LOP.map(formatDay).join(', '),
+        };
+      };
+      const rows = employees.map((employee) => {
+        const saved = savedAttendanceByCode.get(String(employee.emp_no || '').trim());
+        const attendance = saved || sampleAttendance();
+        return [
+          String(employee.emp_no || ''),
+          employee.email || '',
+          employee.name || '',
+          attendance.present ?? '',
+          attendance.remark ?? '',
+          attendance.numberOfCL ?? '',
+          formatWorkbookDates(attendance.absentDaysCL),
+          attendance.numberOfSL ?? '',
+          formatWorkbookDates(attendance.absentDaysSL),
+          attendance.numberOfPL ?? '',
+          formatWorkbookDates(attendance.absentDaysPL),
+          attendance.numberOfLOP ?? '',
+          formatWorkbookDates(attendance.absentDaysLOP),
+        ];
+      });
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      worksheet['!cols'] = [
+        { wch: 18 }, { wch: 30 }, { wch: 26 }, { wch: 12 }, { wch: 20 },
+        { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 14 },
+        { wch: 18 }, { wch: 14 }, { wch: 18 },
+      ];
+      worksheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance');
+      XLSX.writeFile(workbook, `${selectedMonth}_attendance.xlsx`);
+    },
     handleFileUpload(event) {
       this.file = event.target.files[0];
     },
@@ -508,6 +694,30 @@ export default {
 
       return { top, left, transform: '' };
     },
+    monthMenuAltPosition(inputEl) {
+      // Anchor the teleported month selector to the viewport so page headers,
+      // transforms, and scroll containers cannot shift or clip its menu.
+      if (!inputEl) return { top: 8, left: 8 };
+
+      const rect = inputEl.getBoundingClientRect();
+      const margin = 8;
+      const gap = 8;
+      const viewportW = window.innerWidth || document.documentElement.clientWidth || 0;
+      const viewportH = window.innerHeight || document.documentElement.clientHeight || 0;
+      const menuW = Math.min(320, Math.max(0, viewportW - margin * 2));
+      const menuH = Math.min(360, Math.max(0, viewportH - margin * 2));
+
+      let left = Math.min(rect.left, viewportW - menuW - margin);
+      left = Math.max(margin, left);
+
+      let top = rect.bottom + gap;
+      if (top + menuH > viewportH - margin && rect.top - menuH - gap >= margin) {
+        top = rect.top - menuH - gap;
+      }
+      top = Math.max(margin, Math.min(top, viewportH - menuH - margin));
+
+      return { top, left };
+    },
     requiresLastWorkingDay(code) {
       return [2, 3, 4, 5, 6, 10].includes(Number(code));
     },
@@ -524,6 +734,20 @@ export default {
           row['PRESENT'] ??
           0
       );
+    },
+    isFullAttendanceDateInput(value) {
+      if (value instanceof Date) return this.parseAbsentDays(value).length === 1;
+      if (typeof value === 'number') return value > 31 && this.parseAbsentDays(value).length === 1;
+      const tokens = String(value ?? '')
+        .trim()
+        .replace(/[;|]+/g, ',')
+        .split(',')
+        .map((token) => token.trim())
+        .filter(Boolean);
+      if (tokens.length === 0) return false;
+      const datePattern = /^(?:\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}\/\d{2,4})$/;
+      return tokens.every((token) => datePattern.test(token)) &&
+        this.parseAbsentDays(tokens.join(',')).length === tokens.length;
     },
     async uploadFile() {
       if (!this.file) {
@@ -553,27 +777,74 @@ export default {
       reader.onload = async (event) => {
         // Read and parse Excel data
         const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
+        const workbook = XLSX.read(data, { type: "array", cellDates: true });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         console.log("Excel Data:", jsonData);
 
+        const readField = (row, keys) => {
+          for (const key of keys) {
+            if (row[key] !== undefined && row[key] !== null && row[key] !== "") return row[key];
+          }
+          return "";
+        };
+        let invalidDateField = false;
+        const readDateField = (row, keys, countKeys) => {
+          const value = readField(row, keys);
+          const rawCount = readField(row, countKeys);
+          if (value === "" || value === 0) {
+            if (rawCount !== "" && Number(rawCount) !== 0) invalidDateField = true;
+            return "";
+          }
+          if (!this.isFullAttendanceDateInput(value)) invalidDateField = true;
+          const dates = this.parseAbsentDays(value);
+          if (dates.length === 0) invalidDateField = true;
+          if (rawCount !== "" && Number(rawCount) !== dates.length) invalidDateField = true;
+          return dates.join(',');
+        };
         // Map Excel data to extract leave records using employee code as key
-        const leaveRecords = jsonData.map((row) => ({
-          emp_code:
-            row["emp_code"] ||
-            row["Emp Code"] ||
-            row["Employee Code"] ||
-            "",
-          noofCL: Number(row["numberOfCL"] || row["NumberOfCL"] || row["NoOfCL"] || 0),
-          noofSL: Number(row["numberOfSL"] || row["NumberOfSL"] || row["NoOfSL"] || 0),
-          noofPL: Number(row["numberOfPL"] || row["NumberOfPL"] || row["NoOfPL"] || 0),
-
-          absentDaysCL: row["absentDaysCL"] || "",
-          absentDaysSL: row["absentDaysSL"] || "",
-          absentDaysPL: row["absentDaysPL"] || ""
-        }));
+        const leaveRecords = jsonData.map((row) => {
+          const absentDaysCL = readDateField(
+            row,
+            ["CL Dates (DD/MM/YYYY)", "absentDatesCL", "Absent Dates CL", "absentDaysCL", "AbsentDaysCL"],
+            ["numberOfCL", "NumberOfCL", "NoOfCL"]
+          );
+          const absentDaysSL = readDateField(
+            row,
+            ["SL Dates (DD/MM/YYYY)", "absentDatesSL", "Absent Dates SL", "absentDaysSL", "AbsentDaysSL"],
+            ["numberOfSL", "NumberOfSL", "NoOfSL"]
+          );
+          const absentDaysPL = readDateField(
+            row,
+            ["PL Dates (DD/MM/YYYY)", "absentDatesPL", "Absent Dates PL", "absentDaysPL", "AbsentDaysPL"],
+            ["numberOfPL", "NumberOfPL", "NoOfPL"]
+          );
+          const absentDaysLOP = readDateField(
+            row,
+            ["LOP Dates (DD/MM/YYYY)", "absentDatesLOP", "Absent Dates LOP", "absentDaysLOP", "AbsentDaysLOP"],
+            ["numberOfLOP", "NumberOfLOP", "NoOfLOP"]
+          );
+          const countFor = (keys, dates) => {
+            const count = readField(row, keys);
+            return count === "" ? dates.split(',').filter(Boolean).length : Number(count);
+          };
+          return {
+            emp_code: readField(row, ["emp_code", "Emp Code", "Employee Code"]),
+            noofCL: countFor(["numberOfCL", "NumberOfCL", "NoOfCL"], absentDaysCL),
+            noofSL: countFor(["numberOfSL", "NumberOfSL", "NoOfSL"], absentDaysSL),
+            noofPL: countFor(["numberOfPL", "NumberOfPL", "NoOfPL"], absentDaysPL),
+            noofLOP: countFor(["numberOfLOP", "NumberOfLOP", "NoOfLOP"], absentDaysLOP),
+            absentDaysCL,
+            absentDaysSL,
+            absentDaysPL,
+            absentDaysLOP,
+          };
+        });
+        if (invalidDateField) {
+          toast.error('Enter full dates as DD/MM/YYYY or YYYY-MM-DD, and make each date count match its leave count.', { autoClose: 4000 });
+          return;
+        }
         console.log("Leave Records from Excel:", leaveRecords);
 
         const employeeCodes = new Set(
@@ -631,21 +902,42 @@ export default {
           }
           return undefined;
         };
-        this.form.employeeData = jsonData.map((row) => ({
-          ...row,
-          emp_code: pickValue(row, ["emp_code", "Emp Code", "Employee Code"]),
-          name: pickValue(row, ["name", "Name"]),
-          email: pickValue(row, ["email", "Email"]),
-          present: this.presentValue(row),
-          numberOfLOP: Number(pickValue(row, ["numberOfLOP", "NumberOfLOP", "NoOfLOP"]) || 0),
-          absentDaysLOP: pickValue(row, ["absentDaysLOP", "AbsentDaysLOP"]),
-          numberOfCL: Number(pickValue(row, ["numberOfCL", "NumberOfCL", "NoOfCL"]) || 0),
-          absentDaysCL: pickValue(row, ["absentDaysCL", "AbsentDaysCL"]),
-          numberOfSL: Number(pickValue(row, ["numberOfSL", "NumberOfSL", "NoOfSL"]) || 0),
-          absentDaysSL: pickValue(row, ["absentDaysSL", "AbsentDaysSL"]),
-          numberOfPL: Number(pickValue(row, ["numberOfPL", "NumberOfPL", "NoOfPL"]) || 0),
-          absentDaysPL: pickValue(row, ["absentDaysPL", "AbsentDaysPL"]),
-        }));
+        const formatDateField = (row, keys) => this.parseAbsentDays(pickValue(row, keys)).join(',');
+        const getCount = (row, keys, dates) => {
+          const rawCount = pickValue(row, keys);
+          return rawCount === undefined || rawCount === ""
+            ? dates.split(',').filter(Boolean).length
+            : Number(rawCount || 0);
+        };
+        this.form.employeeData = jsonData.map((row) => {
+          const absentDaysLOP = formatDateField(row, [
+            "LOP Dates (DD/MM/YYYY)", "absentDatesLOP", "Absent Dates LOP", "absentDaysLOP", "AbsentDaysLOP",
+          ]);
+          const absentDaysCL = formatDateField(row, [
+            "CL Dates (DD/MM/YYYY)", "absentDatesCL", "Absent Dates CL", "absentDaysCL", "AbsentDaysCL",
+          ]);
+          const absentDaysSL = formatDateField(row, [
+            "SL Dates (DD/MM/YYYY)", "absentDatesSL", "Absent Dates SL", "absentDaysSL", "AbsentDaysSL",
+          ]);
+          const absentDaysPL = formatDateField(row, [
+            "PL Dates (DD/MM/YYYY)", "absentDatesPL", "Absent Dates PL", "absentDaysPL", "AbsentDaysPL",
+          ]);
+          return {
+            ...row,
+            emp_code: pickValue(row, ["emp_code", "Emp Code", "Employee Code"]),
+            name: pickValue(row, ["name", "Name"]),
+            email: pickValue(row, ["email", "Email"]),
+            present: this.presentValue(row),
+            numberOfLOP: getCount(row, ["numberOfLOP", "NumberOfLOP", "NoOfLOP"], absentDaysLOP),
+            absentDaysLOP,
+            numberOfCL: getCount(row, ["numberOfCL", "NumberOfCL", "NoOfCL"], absentDaysCL),
+            absentDaysCL,
+            numberOfSL: getCount(row, ["numberOfSL", "NumberOfSL", "NoOfSL"], absentDaysSL),
+            absentDaysSL,
+            numberOfPL: getCount(row, ["numberOfPL", "NumberOfPL", "NoOfPL"], absentDaysPL),
+            absentDaysPL,
+          };
+        });
 
         try {
           const res = await axiosClient.post(
@@ -677,8 +969,6 @@ export default {
         const selectedMonth = Number(this.month_year?.month) + 1; // month picker is 0-indexed
         const monthStr = String(selectedMonth).padStart(2, "0");
         const monthPrefix = `${selectedYear}-${monthStr}-`;
-        const daysInSelectedMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-
         const safeInt = (value) => {
           const parsed = parseInt(value, 10);
           return Number.isFinite(parsed) ? parsed : 0;
@@ -693,19 +983,6 @@ export default {
           return { inMonth, other };
         };
 
-        const buildFallbackDates = (neededCount, alreadyIncluded = []) => {
-          const set = new Set(alreadyIncluded);
-          const fallback = [];
-          for (let d = 1; d <= daysInSelectedMonth && fallback.length < neededCount; d++) {
-            const iso = `${selectedYear}-${monthStr}-${String(d).padStart(2, "0")}`;
-            if (!set.has(iso)) {
-              fallback.push(iso);
-              set.add(iso);
-            }
-          }
-          return fallback;
-        };
-
         const buildNextLeaveState = (type, parsedDates, countFromSheet, existingLeaves) => {
           const countInt = safeInt(countFromSheet);
           const existingBalance = safeInt(existingLeaves?.balance);
@@ -717,15 +994,6 @@ export default {
 
           const hasInput = parsedDates.length > 0 || countInt > 0;
 
-          let monthDates = parsedDates;
-          let usedFallback = false;
-
-          if (parsedDates.length === 0 && countInt > 0) {
-            // No parsable dates but a count exists; synthesize deterministic dates so balance + UI stay in sync.
-            monthDates = buildFallbackDates(countInt, []);
-            usedFallback = true;
-          }
-
           if (!hasInput) {
             // No data for this leave type in the sheet: keep existing month dates/balance unchanged.
             const inferredStart = existingBalance + existingDates.length;
@@ -733,12 +1001,10 @@ export default {
             return {
               balance: String(base - existingDates.length),
               absentDates: dedupe(existingDates),
-              usedFallback,
-              missingBecauseEmpty: false,
             };
           }
 
-          const combinedInMonth = monthDates;
+          const combinedInMonth = parsedDates;
           const combinedAllDates = dedupe([...oldOther, ...combinedInMonth]);
 
           // Infer the starting balance from current state (balance + total recorded dates), but never below defaults.
@@ -749,12 +1015,8 @@ export default {
           return {
             balance: String(nextBalance),
             absentDates: combinedAllDates,
-            usedFallback,
-            missingBecauseEmpty: parsedDates.length === 0 && countInt > 0,
           };
         };
-
-        const missingDatesWarnings = [];
 
         // For each employee in your stored leavesBalanceData, find the matching record from the Excel data
         const updatedLeaveData = this.leavesBalanceData.map((employee) => {
@@ -769,10 +1031,6 @@ export default {
             const clNext = buildNextLeaveState("cl", newCLDates, record.noofCL, employee?.leaves?.cl);
             const slNext = buildNextLeaveState("sl", newSLDates, record.noofSL, employee?.leaves?.sl);
             const plNext = buildNextLeaveState("pl", newPLDates, record.noofPL, employee?.leaves?.pl);
-
-            if (clNext.missingBecauseEmpty) missingDatesWarnings.push(`${empCode} (CL)`);
-            if (slNext.missingBecauseEmpty) missingDatesWarnings.push(`${empCode} (SL)`);
-            if (plNext.missingBecauseEmpty) missingDatesWarnings.push(`${empCode} (PL)`);
 
             return {
               emp_code: empCode,
@@ -812,13 +1070,6 @@ export default {
         console.log("Updated Leave Data:", updatedLeaveData);
 
         // Submit the updated leave data to your backend
-        if (missingDatesWarnings.length > 0) {
-          const preview = missingDatesWarnings.slice(0, 6).join(", ");
-          toast.info(
-            `Some leave rows had counts but no parsable absent days; we auto-filled day numbers so balance and dates stay aligned: ${preview}${missingDatesWarnings.length > 6 ? " ..." : ""}`,
-            { autoClose: 5000 }
-          );
-        }
         await this.submitLeaveDays(updatedLeaveData);
 
         const date = Date();
@@ -945,79 +1196,70 @@ export default {
 
       const month = monthIndex + 1; // month picker is 0-indexed
       const daysInMonth = new Date(year, month, 0).getDate();
-
       if (value == null) return [];
-
-      // Handle an actual Date value coming from Excel.
-      if (value instanceof Date && !Number.isNaN(value.getTime())) {
-        const yyyy = value.getFullYear();
-        const mm = value.getMonth() + 1;
-        const dd = value.getDate();
-        if (yyyy === year && mm === month && dd >= 1 && dd <= daysInMonth) {
-          return [`${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`];
+      const isoDates = new Set();
+      const addDate = (dateYear, dateMonth, dateDay) => {
+        if (dateYear < 100) dateYear += 2000;
+        if (dateYear !== year || dateMonth !== month || dateDay < 1 || dateDay > daysInMonth) return;
+        const date = new Date(dateYear, dateMonth - 1, dateDay);
+        if (
+          date.getFullYear() !== dateYear ||
+          date.getMonth() + 1 !== dateMonth ||
+          date.getDate() !== dateDay
+        ) return;
+        isoDates.add(`${dateYear}-${String(dateMonth).padStart(2, "0")}-${String(dateDay).padStart(2, "0")}`);
+      };
+      const addDay = (day) => addDate(year, month, Number(day));
+      const addExcelSerial = (serial) => {
+        const date = new Date(Date.UTC(1899, 11, 30) + Number(serial) * 86400000);
+        if (!Number.isNaN(date.getTime())) {
+          addDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
         }
-        return [];
-      }
-
-      const valueStr = String(value).trim();
-      if (!valueStr) return [];
-
-      const tokens = valueStr
-        .replace(/[;|]+/g, ",")
-        .split(/[\s,]+/)
-        .map((t) => t.trim())
-        .filter(Boolean);
-
-      const dayNumbers = [];
-      for (const token of tokens) {
-        // Support common list patterns:
-        // - "4,6" -> ["4","6"] (already split)
-        // - "4.6" (Excel numeric in some locales) -> [4, 6]
-        // - "4-6" -> range [4,5,6]
-        // - "YYYY-MM-DD" / "DD/MM/YYYY"
-        const pushDay = (n) => {
-          if (!Number.isFinite(n)) return;
-          if (n < 1 || n > daysInMonth) return;
-          dayNumbers.push(n);
-        };
-
+      };
+      const handleToken = (token) => {
         if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(token)) {
-          const parts = token.split("-");
-          const dd = parseInt(parts[2], 10);
-          pushDay(dd);
-          continue;
+          const [dateYear, dateMonth, dateDay] = token.split("-").map(Number);
+          addDate(dateYear, dateMonth, dateDay);
+          return;
         }
-
         if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(token)) {
-          const parts = token.split("/");
-          const dd = parseInt(parts[0], 10);
-          pushDay(dd);
-          continue;
+          const [dateDay, dateMonth, dateYear] = token.split("/").map(Number);
+          addDate(dateYear, dateMonth, dateDay);
+          return;
         }
-
         if (/^\d{1,2}-\d{1,2}$/.test(token)) {
-          const [a, b] = token.split("-").map((p) => parseInt(p, 10));
-          if (!Number.isFinite(a) || !Number.isFinite(b)) continue;
-          const start = Math.min(a, b);
-          const end = Math.max(a, b);
-          for (let d = start; d <= end; d++) pushDay(d);
-          continue;
+          const [start, end] = token.split("-").map(Number);
+          for (let day = Math.min(start, end); day <= Math.max(start, end); day += 1) addDay(day);
+          return;
         }
-
         if (/^\d{1,2}(\.\d{1,2})+$/.test(token)) {
-          // "4.6" or "4.06" etc -> treat each segment as a day number.
-          token.split(".").forEach((seg) => pushDay(parseInt(seg, 10)));
-          continue;
+          token.split(".").forEach(addDay);
+          return;
         }
+        if (/^\d+(\.\d+)?$/.test(token)) {
+          const numericValue = Number(token);
+          if (numericValue > 31) addExcelSerial(numericValue);
+          else addDay(numericValue);
+        }
+      };
 
-        if (/^\d{1,2}$/.test(token)) {
-          pushDay(parseInt(token, 10));
-        }
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        addDate(value.getFullYear(), value.getMonth() + 1, value.getDate());
+      } else if (typeof value === "number") {
+        if (value > 31) addExcelSerial(value);
+        else addDay(value);
+      } else if (Array.isArray(value)) {
+        value.forEach((entry) => this.parseAbsentDays(entry).forEach((date) => isoDates.add(date)));
+      } else {
+        String(value)
+          .trim()
+          .replace(/[;|]+/g, ",")
+          .split(/[\s,]+/)
+          .map((token) => token.trim())
+          .filter(Boolean)
+          .forEach(handleToken);
       }
-
-      const uniqueSorted = Array.from(new Set(dayNumbers)).sort((a, b) => a - b);
-      const monthStr = String(month).padStart(2, "0");
-      return uniqueSorted.map((d) => `${year}-${monthStr}-${String(d).padStart(2, "0")}`);
+      return Array.from(isoDates).sort();
     },
 
     async getCurrent() {

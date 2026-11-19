@@ -27,7 +27,6 @@
   padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border-color); background: #fff;
 }
 .page-header-bar h5 { font-weight: 600; color: var(--text-primary); margin: 0; font-size: 1.05rem; }
-.notification-badge { position: relative; cursor: pointer; padding: 0.25rem; }
 
 .table-container {
   background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
@@ -373,7 +372,7 @@
                 <td>
                   <ul class="list-unstyled mb-0">
                     <li class="leave-date-text" v-for="(date, index) in selectedEmployee?.leaves?.cl?.absentDates" :key="'cl-' + index">
-                      {{ date }}
+                      {{ formatLeaveDate(date) }}
                     </li>
                   </ul>
                 </td>
@@ -383,7 +382,7 @@
                 <td>
                   <ul class="list-unstyled mb-0">
                     <li class="leave-date-text" v-for="(date, index) in selectedEmployee?.leaves?.sl?.absentDates" :key="'sl-' + index">
-                      {{ date }}
+                      {{ formatLeaveDate(date) }}
                     </li>
                   </ul>
                 </td>
@@ -393,7 +392,7 @@
                 <td>
                   <ul class="list-unstyled mb-0">
                     <li class="leave-date-text" v-for="(date, index) in selectedEmployee?.leaves?.pl?.absentDates" :key="'pl-' + index">
-                      {{ date }}
+                      {{ formatLeaveDate(date) }}
                     </li>
                   </ul>
                 </td>
@@ -417,23 +416,6 @@
     <div class="page-header-bar">
       <div>
         <h5>Manage Attendance</h5>
-      </div>
-      <div class="">
-        <div class="position-relative" data-bs-toggle="modal" data-bs-target="#ModalNotification">
-          <i class="bi bi-bell-fill pointer text-danger" style="font-size: 1.2rem"></i>
-          <span
-            v-if="notifications.length > 0"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark"
-          >
-            {{ notifications.length }}
-          </span>
-          <span
-            v-if="notifications.length > 99"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark"
-          >
-            99+
-          </span>
-        </div>
       </div>
     </div>
 
@@ -556,7 +538,6 @@ export default {
       renderKey: 0,
       leavesBalanceData: [],
       attendance_id: '',
-      notifications: [],
       selectedEmployee: null,
       headers: [
         { text: 'month', value: 'month' },
@@ -650,6 +631,11 @@ export default {
   setup() {},
 
   methods: {
+    formatLeaveDate(value) {
+      const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!match) return value || '';
+      return `${match[3]}/${match[2]}/${match[1]}`;
+    },
     handleRedirect(monthYear) {
       console.log('monthYear: ', monthYear);
       this.$router.push(`/employee/attendance/${monthYear}`);
@@ -658,12 +644,13 @@ export default {
     async handleDeleteAttendance(item) {
       if (!confirm('Are you sure you want to delete this attendance record?')) return;
       try {
+        const attendancePeriod = String(item.month_year || '').match(/^(\d{4})-(\d{1,2})/);
         const res = await axiosClient.delete(`/api/v1/attendance/delete/${item._id}`, {
           params: {
             deleteScope: 'month',
             client_user_id: this.user._id,
-            month: item.month,
-            year: item.year,
+            month: attendancePeriod ? Number(attendancePeriod[2]) : item.month,
+            year: attendancePeriod ? Number(attendancePeriod[1]) : item.year,
             month_year: item.month_year,
           },
         });
@@ -785,6 +772,15 @@ export default {
 
     async retrieveLeavesBalance() {
     try {
+      const reconciliation = await axiosClient.post('/api/v1/attendance/reconcile-leaves');
+      const defaultsAvailable = reconciliation?.data?.leaveRestore?.defaultsAvailable || {};
+      const missingDefaults = ['cl', 'sl', 'pl'].filter((type) => defaultsAvailable[type] === false);
+      if (missingDefaults.length > 0) {
+        toast.warning(
+          `Default ${missingDefaults.map((type) => type.toUpperCase()).join(', ')} leave balances are missing in Settings, so those balances could not be fully restored.`,
+          { autoClose: 4000 }
+        );
+      }
       const res = await axiosClient.get(`/api/v1/employee/client/${this.user._id}`);
       console.log('Leaves Balance Data: ', res.data);
       this.leavesBalanceData = res.data.data;
@@ -818,9 +814,9 @@ export default {
       const slBalance = emp?.leaves?.sl?.balance ?? '';
       const plBalance = emp?.leaves?.pl?.balance ?? '';
 
-      const clDates = Array.isArray(emp?.leaves?.cl?.absentDates) ? emp.leaves.cl.absentDates.join(';') : '';
-      const slDates = Array.isArray(emp?.leaves?.sl?.absentDates) ? emp.leaves.sl.absentDates.join(';') : '';
-      const plDates = Array.isArray(emp?.leaves?.pl?.absentDates) ? emp.leaves.pl.absentDates.join(';') : '';
+      const clDates = Array.isArray(emp?.leaves?.cl?.absentDates) ? emp.leaves.cl.absentDates.map(this.formatLeaveDate).join(';') : '';
+      const slDates = Array.isArray(emp?.leaves?.sl?.absentDates) ? emp.leaves.sl.absentDates.map(this.formatLeaveDate).join(';') : '';
+      const plDates = Array.isArray(emp?.leaves?.pl?.absentDates) ? emp.leaves.pl.absentDates.map(this.formatLeaveDate).join(';') : '';
 
       csv += `"${esc(empCode)}","${esc(name)}","${esc(clBalance)}","${esc(slBalance)}","${esc(plBalance)}","${esc(clDates)}","${esc(slDates)}","${esc(plDates)}"\n`;
     });

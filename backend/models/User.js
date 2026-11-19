@@ -63,6 +63,15 @@ const UserSchema = new Schema({
     type: "ObjectId",
     ref: Role,
   },
+  client_id: {
+    type: Schema.Types.ObjectId,
+    ref: "Client",
+    required: true,
+  },
+  designation: {
+    type: String,
+    required: true,
+  },
   createDate: {
     type: Date,
     default: Date.now,
@@ -78,6 +87,15 @@ const UserSchema = new Schema({
   profile_url: {
     type: String,
   },
+  adhar_proof: { type: Boolean, default: false },
+  adhar_proof_url: { type: String, default: null },
+  adhar_proof_url_id: { type: String, default: null },
+  asci_proof: { type: Boolean, default: false },
+  asci_proof_url: { type: String, default: null },
+  asci_proof_url_id: { type: String, default: null },
+  bank_proof: { type: Boolean, default: false },
+  bank_proof_url: { type: String, default: null },
+  bank_proof_url_id: { type: String, default: null },
 });
 
 module.exports = mongoose.model("User", UserSchema);

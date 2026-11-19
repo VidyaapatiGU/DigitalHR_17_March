@@ -76,6 +76,22 @@
 .btn-action:hover { background: var(--bg-body); border-color: var(--primary); color: var(--primary); }
 .table-icon { cursor: pointer; font-size: 1rem; padding: 0.25rem; border-radius: 4px; transition: all 0.15s; }
 .table-icon:hover { background: #f1f5f9; }
+.employee-proof-pending-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: 0 0 0.55rem;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px #fff;
+}
+.employee-proof-button-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  z-index: 1;
+  pointer-events: none;
+}
 
 @media (max-width: 576px) {
   .form-container { padding: 1.25rem; }
@@ -284,93 +300,10 @@
     </div>
   </div>
 
-  <div
-    class="modal fade"
-    id="ModalNotification"
-    tabindex="-1"
-    aria-labelledby="ModalNotificationLabel"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title source-400" id="ModalNotificationLabel">Notification</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <div class="w-100" v-for="notification in notifications" :key="notification">
-            <div class="w-100 p-2">
-              <div
-                v-if="notification.type == 'success'"
-                class="w-100 rounded d-flex align-items-center"
-              >
-                <div class="w-100 border border-success rounded-4 py-1 px-2">
-                  {{ notification.text }}
-                </div>
-                <div class="p-2 pointer" @click="handleDismiss(notification._id)">
-                  <i class="bi bi-x-lg"></i>
-                </div>
-              </div>
-              <div
-                v-if="notification.type == 'warning'"
-                class="w-100 rounded d-flex align-items-center"
-              >
-                <div class="w-100 border border-warning rounded-4 py-1 px-2">
-                  {{ notification.text }}
-                </div>
-                <div class="p-2 pointer" @click="handleDismiss(notification._id)">
-                  <i class="bi bi-x-lg"></i>
-                </div>
-              </div>
-              <div
-                v-if="notification.type == 'danger'"
-                class="w-100 rounded d-flex align-items-center"
-              >
-                <div class="w-100 border border-danger rounded-4 py-1 px-2">
-                  {{ notification.text }}
-                </div>
-                <div class="p-2 pointer" @click="handleDismiss(notification._id)">
-                  <i class="bi bi-x-lg"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
   <div class="page-wrapper scroll">
     <div class="page-header-bar">
       <h5>Client : {{ client }}</h5>
-      <div class="">
-        <div class="position-relative" data-bs-toggle="modal" data-bs-target="#ModalNotification">
-          <i class="bi bi-bell-fill pointer" style="font-size: 1.2rem"></i>
-          <span
-            v-if="notifications.length > 0"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-          >
-            {{ notifications.length }}
-          </span>
-          <span
-            v-if="notifications.length > 99"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-          >
-            99+
-          </span>
-        </div>
-      </div>
     </div>
 
     <div class="overflow-y-hidden pb-5 h-100">
@@ -405,12 +338,21 @@
                 <template #item-actions="item">
                   <div class="d-flex justify-content-evenly">
                     <div
-                      class="table-icon action_icon_color"
+                      class="table-icon action_icon_color position-relative"
                       @click="handleEmployeeUpdate(item._id)"
                     >
-                      <el-tooltip content="Update " placement="bottom">
+                      <el-tooltip
+                        :content="pendingEmployeeProofLabels(item).length ? `Update — proof documents pending: ${pendingEmployeeProofLabels(item).join(', ')}` : 'Update'"
+                        placement="bottom"
+                      >
                         <i class="bi bi-pen-fill pointer" style="font-size"></i>
                       </el-tooltip>
+                      <span
+                        v-if="pendingEmployeeProofLabels(item).length"
+                        class="employee-proof-pending-dot employee-proof-button-dot"
+                        role="img"
+                        :aria-label="`Proof documents pending: ${pendingEmployeeProofLabels(item).join(', ')}`"
+                      ></span>
                     </div>
 
                     <div class="table-icon action_icon_color" @click="handleViewEmployee(item._id)">
@@ -533,7 +475,6 @@ export default {
     return {
       id: '',
       user: {},
-      notifications: [],
       headers: [
         { text: 'Name', value: 'name', sortable: true },
         { text: 'Email', value: 'email' },
@@ -573,9 +514,6 @@ export default {
       );
       console.log('res.data.data: ', res.data.data);
       this.originalItems = res.data.data;
-      const notifications = await axiosClient.get(`/api/v1/notification/getall/${this.user._id}`);
-      this.notifications = notifications.data.data;
-      console.log(' this.notifications: ', this.notifications);
     } catch (err) {
       console.log('error: ', err);
     }
@@ -603,17 +541,14 @@ export default {
   setup() {},
 
   methods: {
-    async handleDismiss(id) {
-      console.log(id);
-      try {
-        const res = await axiosClient.put(`/api/v1/notification/dismiss/${id}`);
-        if (res) {
-          this.notifications = this.notifications.filter((notification) => notification._id != id);
-        }
-      } catch (err) {
-        console.log('error: ', err);
-        toast.error(`Some Thing Went Wrong`);
-      }
+    pendingEmployeeProofLabels(employee) {
+      return [
+        { label: 'Aadhaar', field: 'adhar_proof' },
+        { label: 'ASCI document', field: 'asci_proof' },
+        { label: 'Bank proof', field: 'bank_proof' },
+      ]
+        .filter((document) => !employee?.[document.field])
+        .map((document) => document.label);
     },
 
     async handleSendMessage() {
