@@ -74,7 +74,7 @@
 }
 
 .btn-action {
-  background: var(--primary);
+  background: var(--theme-button-bg);
   color: #ffffff;
   border: none;
   padding: 0.45rem 1rem;
@@ -89,7 +89,7 @@
 }
 
 .btn-action:hover {
-  background: var(--primary-light);
+  background: var(--theme-button-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.2);
   color: #ffffff;

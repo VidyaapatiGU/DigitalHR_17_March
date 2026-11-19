@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 8460)
+Total output lines: 1054
+
 <style scoped>
 ::-webkit-scrollbar {
   width: 6px;
@@ -75,7 +78,7 @@
 }
 
 .btn-action {
-  background: var(--primary);
+  background: var(--theme-button-bg);
   color: #ffffff;
   border: none;
   padding: 0.45rem 1rem;
@@ -90,7 +93,7 @@
 }
 
 .btn-action:hover {
-  background: var(--primary-light);
+  background: var(--theme-button-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.2);
   color: #ffffff;
@@ -550,35 +553,7 @@
                     <div class="table-icon action_icon_color" @click="handleViewEmployee(item._id)">
                       <el-tooltip placement="bottom" popper-class="mini-card-tooltip">
                         <template #content>
-                          <div class="p-2" style="min-width:210px; font-size:12px; line-height:1.35;">
-                            <div class="fw-semibold text-capitalize">{{ item.name || '—' }}</div>
-                            <div class="text-muted">{{ item.designation || 'No designation' }}</div>
-                            <div class="mt-1">Code: <strong>{{ item.emp_no || '—' }}</strong></div>
-                            <div>Username: {{ item.username || '—' }}</div>
-                            <div>📧 {{ item.email || 'No email' }}</div>
-                            <div>📱 {{ item.whatsapp_no || 'No WhatsApp' }}</div>
-                            <div>Dept: {{ item.department?.name || '—' }}</div>
-                            <div>Team: {{ item.team?.name || '—' }}</div>
-                            <div>City: {{ item.city || '—' }}</div>
-                            <div class="text-wrap">Addr: {{ item.address || '—' }}</div>
-                          </div>
-                        </template>
-                        <i class="bi bi-eye-fill pointer" style="font-size"></i>
-                      </el-tooltip>
-                    </div>
-                    <div
-                      class="table-icon action_icon_color position-relative"
-                      @click="handleEmployeeUpdate(item._id)"
-                    >
-                      <el-tooltip
-                        :content="pendingEmployeeProofLabels(item).length ? `Update — proof documents pending: ${pendingEmployeeProofLabels(item).join(', ')}` : 'Update'"
-                        placement="bottom"
-                      >
-                        <i class="bi bi-pen-fill pointer" style="font-size"></i>
-                      </el-tooltip>
-                      <span
-                        v-if="pendingEmployeeProofLabels(item).length"
-                        class="employee-proof-pending-dot employee-proof-button-dot"
+             …460 tokens truncated…                      class="employee-proof-pending-dot employee-proof-button-dot"
                         role="img"
                         :aria-label="`Proof documents pending: ${pendingEmployeeProofLabels(item).join(', ')}`"
                       ></span>

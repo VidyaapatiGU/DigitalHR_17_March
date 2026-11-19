@@ -42,9 +42,9 @@
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.45rem 0.9rem; font-size: 0.82rem; font-weight: 500;
   border-radius: var(--radius-md); border: none;
-  background: var(--primary); color: #fff; cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
+  background: var(--theme-button-bg); color: #fff; cursor: pointer; transition: var(--transition-fast); white-space: nowrap;
 }
-.btn-action:hover { background: var(--primary-light); color: #fff; }
+.btn-action:hover { background: var(--theme-button-hover); color: #fff; }
 
 .form-container {
   width: 100%; max-width: 960px; padding: 2rem; margin: auto;
