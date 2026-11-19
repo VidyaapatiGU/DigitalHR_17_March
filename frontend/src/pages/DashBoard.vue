@@ -38,7 +38,7 @@
             <div class="chart-heading">
               <div>
                 <h2>Hiring momentum</h2>
-                <p>Employees added across the last six months</p>
+                <p>{{ monthlyJoiners.description }}</p>
               </div>
               <span class="chart-tag"><i class="bi bi-graph-up-arrow"></i> New joiners</span>
             </div>
@@ -179,13 +179,33 @@ export default {
     },
     monthlyJoiners() {
       const now = new Date();
-      const months = Array.from({ length: 6 }, (_, index) => new Date(now.getFullYear(), now.getMonth() - 5 + index, 1));
+      const currentMonths = Array.from({ length: 6 }, (_, index) => new Date(now.getFullYear(), now.getMonth() - 5 + index, 1));
+      const validJoinDates = this.activeEmployees
+        .map(employee => new Date(employee.date_of_joining))
+        .filter(date => !Number.isNaN(date.getTime()));
+      const countInMonths = months => months.map(month => validJoinDates.filter(joined =>
+        joined.getMonth() === month.getMonth() && joined.getFullYear() === month.getFullYear()
+      ).length);
+      const currentValues = countInMonths(currentMonths);
+      const latestJoinDate = validJoinDates.reduce((latest, date) => date > latest ? date : latest, null);
+      const useLatestRecordedPeriod = Boolean(
+        latestJoinDate &&
+        !currentValues.some(count => count > 0) &&
+        latestJoinDate < currentMonths[0]
+      );
+      const months = useLatestRecordedPeriod
+        ? Array.from({ length: 6 }, (_, index) => new Date(latestJoinDate.getFullYear(), latestJoinDate.getMonth() - 5 + index, 1))
+        : currentMonths;
+      const monthLabel = date => new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(date);
+      const description = validJoinDates.length === 0
+        ? 'Employee joining dates are needed to show hiring trends.'
+        : useLatestRecordedPeriod
+          ? `No hires in the last six months. Showing the latest hiring period: ${monthLabel(months[0])} – ${monthLabel(months[5])}.`
+          : 'Employees who joined in the last six months.';
       return {
-        labels: months.map(date => new Intl.DateTimeFormat('en', { month: 'short' }).format(date)),
-        values: months.map(month => this.activeEmployees.filter(employee => {
-          const joined = new Date(employee.date_of_joining);
-          return !Number.isNaN(joined.getTime()) && joined.getMonth() === month.getMonth() && joined.getFullYear() === month.getFullYear();
-        }).length),
+        labels: months.map(monthLabel),
+        values: useLatestRecordedPeriod ? countInMonths(months) : currentValues,
+        description,
       };
     },
     designationMix() {
@@ -274,7 +294,7 @@ export default {
             maintainAspectRatio: false,
             plugins: { legend: { display: false }, tooltip: { displayColors: false, callbacks: { label: context => `${context.parsed.y} ${context.parsed.y === 1 ? 'joiner' : 'joiners'}` } } },
             scales: {
-              x: { grid: { display: false }, border: { display: false }, ticks: { color: '#8791a5' } },
+              x: { grid: { display: false }, border: { display: false }, ticks: { color: '#8791a5', autoSkip: true, maxTicksLimit: 6 } },
               y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, color: '#8791a5' }, grid: { color: '#edf0f6' }, border: { display: false } },
             },
           },
