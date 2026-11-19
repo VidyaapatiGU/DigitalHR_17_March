@@ -67,6 +67,40 @@
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+:root[data-theme='forest'] {
+  --primary: #164e46;
+  --primary-light: #0f766e;
+  --primary-lighter: #14b8a6;
+  --primary-50: #ecfdf5;
+  --primary-100: #d1fae5;
+  --primary-200: #a7f3d0;
+  --sidebar-bg: #102724;
+  --sidebar-hover: #1c3d37;
+  --sidebar-active: #0f766e;
+  --bg-body: #f1f6f4;
+  --bg-muted: #f8fbf9;
+  --bg-hover: #edf5f1;
+  --border-color: #dce8e2;
+  --border-light: #eef4f0;
+}
+
+:root[data-theme='plum'] {
+  --primary: #49365f;
+  --primary-light: #7652a7;
+  --primary-lighter: #9272bf;
+  --primary-50: #f7f3fb;
+  --primary-100: #eee7f6;
+  --primary-200: #ded1ed;
+  --sidebar-bg: #201a2b;
+  --sidebar-hover: #30273f;
+  --sidebar-active: #7652a7;
+  --bg-body: #f5f2f7;
+  --bg-muted: #faf8fc;
+  --bg-hover: #f0ebf5;
+  --border-color: #e6deed;
+  --border-light: #f1edf5;
+}
+
 /* =============================================
    BASE RESET & TYPOGRAPHY
    ============================================= */

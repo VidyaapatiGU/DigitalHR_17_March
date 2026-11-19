@@ -6,6 +6,11 @@ const Role = require("../models/Role.js");
 const { Schema } = mongoose;
 
 const UserSchema = new Schema({
+  theme: {
+    type: String,
+    enum: ["ocean", "forest", "plum"],
+    default: "ocean",
+  },
   username: {
     type: String,
     required: true,

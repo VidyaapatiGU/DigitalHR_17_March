@@ -1027,6 +1027,48 @@ const changePass = async (req, res) => {
   }
 };
 
+// Persist a theme only for the account authenticated by this request.
+const updateTheme = async (req, res) => {
+  const accountId = req.user?._id;
+  const roleName = String(req.user?.roleType?.name || "").trim().toLowerCase();
+  const theme = String(req.body?.theme || "").trim().toLowerCase();
+  const supportedThemes = ["ocean", "forest", "plum"];
+
+  if (!accountId) {
+    return res.status(401).json({ message: "User is not authorized" });
+  }
+  if (!supportedThemes.includes(theme)) {
+    return res.status(400).json({ message: "Select a supported theme" });
+  }
+
+  try {
+    let account = null;
+    if (["admin", "super_admin"].includes(roleName)) {
+      account = await Admin.findById(accountId);
+      if (!account) account = await User.findById(accountId);
+    } else if (roleName === "client") {
+      account = await Client.findById(accountId);
+      if (!account) account = await User.findById(accountId);
+    } else if (roleName === "employee") {
+      account = await Employee.findById(accountId);
+      if (!account) account = await User.findById(accountId);
+    } else {
+      account = await User.findById(accountId);
+    }
+
+    if (!account) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    account.theme = theme;
+    await account.save();
+    return res.status(200).json({ theme: account.theme, message: "Theme saved" });
+  } catch (error) {
+    logger.error(`Failed to save account theme: ${error.message}`);
+    return res.status(500).json({ message: "Unable to save theme" });
+  }
+};
+
 module.exports = {
   testUserAPI,
   createUser,
@@ -1039,4 +1081,5 @@ module.exports = {
   getCurrent,
   AppDisUser,
   changePass,
+  updateTheme,
 };

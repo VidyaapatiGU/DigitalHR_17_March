@@ -132,6 +132,49 @@
   flex: 0 0 auto;
 }
 
+.theme-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.theme-switcher__swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.theme-switcher__swatch:hover {
+  transform: scale(1.12);
+}
+
+.theme-switcher__swatch:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 3px;
+}
+
+.theme-switcher__swatch:disabled {
+  cursor: wait;
+}
+
+.theme-switcher__swatch[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px var(--text-primary);
+}
+
+.theme-switcher__swatch--ocean { background: #2563eb; }
+.theme-switcher__swatch--forest { background: #0f766e; }
+.theme-switcher__swatch--plum { background: #7652a7; }
+
 .notification-menu {
   position: relative;
 }
@@ -533,6 +576,20 @@
           </div>
         </div>
         <div class="content-topbar__actions">
+          <div v-if="currentUser._id" class="theme-switcher" role="group" aria-label="Website color theme">
+            <button
+              v-for="theme in themes"
+              :key="theme.id"
+              class="theme-switcher__swatch"
+              :class="`theme-switcher__swatch--${theme.id}`"
+              type="button"
+              :aria-label="`${theme.name} theme`"
+              :aria-pressed="currentTheme === theme.id"
+              :title="theme.name"
+              :disabled="isSavingTheme"
+              @click="saveTheme(theme.id)"
+            ></button>
+          </div>
           <span class="content-topbar__status">Connected</span>
           <div v-if="currentUser._id" class="notification-menu">
             <button
@@ -669,6 +726,13 @@ const isSidebarCollapsed = ref(false);
 const isMobileSidebarOpen = ref(false);
 const route = useRoute();
 const currentUser = ref({});
+const themes = [
+  { id: 'ocean', name: 'Ocean blue' },
+  { id: 'forest', name: 'Evergreen' },
+  { id: 'plum', name: 'Soft plum' },
+];
+const currentTheme = ref('ocean');
+const isSavingTheme = ref(false);
 const notifications = ref([]);
 const roles = ref([]);
 const departments = ref([]);
@@ -711,6 +775,30 @@ const pageTitle = computed(() => {
 
   return titles.find(([pattern]) => pattern.test(path))?.[1] || 'Workspace';
 });
+
+const applyTheme = (theme) => {
+  const supportedTheme = themes.some((item) => item.id === theme) ? theme : 'ocean';
+  currentTheme.value = supportedTheme;
+  document.documentElement.dataset.theme = supportedTheme;
+};
+
+const saveTheme = async (theme) => {
+  if (theme === currentTheme.value || isSavingTheme.value) return;
+  const previousTheme = currentTheme.value;
+  isSavingTheme.value = true;
+  applyTheme(theme);
+  currentUser.value.theme = theme;
+  try {
+    const response = await axiosClient.put('/api/v1/user/theme', { theme });
+    applyTheme(response.data.theme || theme);
+    currentUser.value.theme = currentTheme.value;
+  } catch (error) {
+    applyTheme(previousTheme);
+    currentUser.value.theme = previousTheme;
+  } finally {
+    isSavingTheme.value = false;
+  }
+};
 
 const syncViewportState = () => {
   const desktopNow = window.innerWidth >= DESKTOP_BREAKPOINT;
@@ -768,6 +856,7 @@ const loadDashboardNotifications = async () => {
   try {
     const response = await axiosClient.get('/api/v1/user/getCurrent/');
     currentUser.value = response.data.user || {};
+    applyTheme(currentUser.value.theme);
     await loadNotifications();
     if (isAdminUser.value) {
       const [roleResponse, departmentResponse] = await Promise.all([

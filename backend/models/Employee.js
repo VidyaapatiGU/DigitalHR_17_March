@@ -4,6 +4,11 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const EmployeeSchema = new Schema({
+  theme: {
+    type: String,
+    enum: ["ocean", "forest", "plum"],
+    default: "ocean",
+  },
   user_id: {
     type: Schema.Types.ObjectId,
     ref: "User",

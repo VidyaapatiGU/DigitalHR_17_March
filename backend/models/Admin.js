@@ -5,6 +5,11 @@ const { Schema } = mongoose;
 
 const AdminSchema = new Schema(
   {
+    theme: {
+      type: String,
+      enum: ["ocean", "forest", "plum"],
+      default: "ocean",
+    },
     username: {
       type: String,
       required: true,

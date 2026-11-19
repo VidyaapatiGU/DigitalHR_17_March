@@ -13,6 +13,7 @@ const {
   getCurrent,
   AppDisUser,
   changePass,
+  updateTheme,
 } = require("../controllers/user");
 const validateToken = require("../middleware/validateTokenHandler");
 
@@ -81,6 +82,11 @@ router.post(
 //@route POST /api/v1/user/getCurrent/
 //@access Private: Needs Login
 router.get("/getCurrent/", validateToken, getCurrent);
+
+//@desc Save the signed-in account's theme
+//@route PUT /api/v1/user/theme
+//@access Private: Needs Login
+router.put("/theme", validateToken, updateTheme);
 
 //@desc Get all Users
 //@route GET /api/v1/user/getall

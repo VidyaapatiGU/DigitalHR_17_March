@@ -78,7 +78,7 @@ ul {
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, var(--sidebar-active), #2563eb);
+  background: linear-gradient(135deg, var(--sidebar-active), var(--primary-lighter));
   color: var(--sidebar-text-active);
   box-shadow: 0 2px 8px rgba(29, 78, 216, 0.35);
   font-weight: 500;

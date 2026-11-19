@@ -22,6 +22,11 @@ const ContactPersonSchema = new Schema({
 });
 
 const ClientSchema = new Schema({
+  theme: {
+    type: String,
+    enum: ["ocean", "forest", "plum"],
+    default: "ocean",
+  },
   user_id: {
     type: Schema.Types.ObjectId,
     ref: User,
