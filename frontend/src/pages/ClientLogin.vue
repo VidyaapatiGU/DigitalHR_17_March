@@ -206,6 +206,7 @@ import { toast } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { applyThemeBeforeNavigation } from '../themePreferences';
 export default {
   name: 'Login',
   data() {
@@ -277,6 +278,10 @@ export default {
         console.log(response.data);
 
         localStorage.setItem('token', response.data.token);
+        await applyThemeBeforeNavigation(response.data.data, async () => {
+          const current = await axiosClient.get('/api/v1/user/getCurrent/');
+          return current.data.user;
+        });
 
         toast.success(`Login successfull`, {
           autoClose: 1500,

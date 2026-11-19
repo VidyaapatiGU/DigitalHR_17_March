@@ -5,6 +5,36 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DigitalHR | Business Automation</title>
+    <script>
+      (() => {
+        const root = document.documentElement;
+        const themes = new Set(['ocean', 'forest', 'plum']);
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            root.dataset.themeReady = 'true';
+            return;
+          }
+
+          const encodedPayload = token.split('.')[1];
+          const normalizedPayload = encodedPayload.replace(/-/g, '+').replace(/_/g, '/');
+          const paddedPayload = normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, '=');
+          const payloadBytes = Uint8Array.from(atob(paddedPayload), (character) => character.charCodeAt(0));
+          const payload = JSON.parse(new TextDecoder().decode(payloadBytes));
+          const userId = payload?.user?._id;
+          const theme = userId ? localStorage.getItem(`digitalhr.theme:${userId}`) : null;
+
+          if (themes.has(theme)) {
+            root.dataset.cardTheme = theme;
+            root.dataset.themeReady = 'true';
+          } else {
+            root.dataset.themeReady = 'false';
+          }
+        } catch (error) {
+          root.dataset.themeReady = 'false';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

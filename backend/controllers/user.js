@@ -745,6 +745,7 @@ const logIn = async (req, res) => {
         username: admin.username,
         email: admin.email,
         name: admin.name,
+        theme: admin.theme || "ocean",
         roleType: { name: admin.role },
         active: admin.active,
         approved: true,

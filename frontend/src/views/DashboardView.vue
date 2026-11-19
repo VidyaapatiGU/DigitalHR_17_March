@@ -1,4 +1,28 @@
 <style scoped>
+.workspace-theme-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: #fff;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.workspace-theme-loading__spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #e2e8f0;
+  border-top-color: #64748b;
+  border-radius: 50%;
+  animation: workspace-theme-spin 0.7s linear infinite;
+}
+
+@keyframes workspace-theme-spin {
+  to { transform: rotate(360deg); }
+}
+
 .dashboard-shell {
   --sidebar-expanded-width: clamp(240px, 20vw, 280px);
   --sidebar-collapsed-width: 84px;
@@ -518,7 +542,11 @@
 </style>
 
 <template>
-  <div class="dashboard-shell" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
+  <div v-if="!isThemeReady" class="workspace-theme-loading" role="status" aria-live="polite">
+    <span class="workspace-theme-loading__spinner" aria-hidden="true"></span>
+    <span>Loading your workspace…</span>
+  </div>
+  <div v-else class="dashboard-shell" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <aside v-if="isDesktop" class="desktop-sidebar">
       <SideMenu :collapsed="isSidebarCollapsed" @navigate="handleMenuNavigation" />
     </aside>
@@ -718,6 +746,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import SideMenu from '../components/SideMenu.vue';
 import axiosClient from '../axiosClient';
+import { cacheThemeForUser, isSupportedTheme } from '../themePreferences';
 
 const DESKTOP_BREAKPOINT = 992;
 
@@ -726,12 +755,13 @@ const isSidebarCollapsed = ref(false);
 const isMobileSidebarOpen = ref(false);
 const route = useRoute();
 const currentUser = ref({});
+const isThemeReady = ref(document.documentElement.dataset.themeReady !== 'false');
 const themes = [
   { id: 'ocean', name: 'Ocean blue' },
   { id: 'forest', name: 'Evergreen' },
   { id: 'plum', name: 'Soft plum' },
 ];
-const currentTheme = ref('ocean');
+const currentTheme = ref(isSupportedTheme(document.documentElement.dataset.cardTheme) ? document.documentElement.dataset.cardTheme : 'ocean');
 const isSavingTheme = ref(false);
 const notifications = ref([]);
 const roles = ref([]);
@@ -780,6 +810,8 @@ const applyTheme = (theme) => {
   const supportedTheme = themes.some((item) => item.id === theme) ? theme : 'ocean';
   currentTheme.value = supportedTheme;
   document.documentElement.dataset.cardTheme = supportedTheme;
+  document.documentElement.dataset.themeReady = 'true';
+  isThemeReady.value = true;
 };
 
 const saveTheme = async (theme) => {
@@ -788,13 +820,16 @@ const saveTheme = async (theme) => {
   isSavingTheme.value = true;
   applyTheme(theme);
   currentUser.value.theme = theme;
+  cacheThemeForUser(currentUser.value._id, theme);
   try {
     const response = await axiosClient.put('/api/v1/user/theme', { theme });
     applyTheme(response.data.theme || theme);
     currentUser.value.theme = currentTheme.value;
+    cacheThemeForUser(currentUser.value._id, currentTheme.value);
   } catch (error) {
     applyTheme(previousTheme);
     currentUser.value.theme = previousTheme;
+    cacheThemeForUser(currentUser.value._id, previousTheme);
   } finally {
     isSavingTheme.value = false;
   }
@@ -857,6 +892,7 @@ const loadDashboardNotifications = async () => {
     const response = await axiosClient.get('/api/v1/user/getCurrent/');
     currentUser.value = response.data.user || {};
     applyTheme(currentUser.value.theme);
+    cacheThemeForUser(currentUser.value._id, currentTheme.value);
     await loadNotifications();
     if (isAdminUser.value) {
       const [roleResponse, departmentResponse] = await Promise.all([
@@ -867,6 +903,7 @@ const loadDashboardNotifications = async () => {
       departments.value = departmentResponse.data.data || [];
     }
   } catch (error) {
+    applyTheme(currentTheme.value);
     notificationFeedback.value = error.response?.data?.message || 'Unable to load dashboard notifications.';
     notificationFeedbackIsError.value = true;
   }
