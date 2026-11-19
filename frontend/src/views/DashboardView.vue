@@ -50,7 +50,7 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: color-mix(in srgb, var(--bg-body) 90%, transparent);
+  background: var(--bg-surface);
   border-bottom: 1px solid color-mix(in srgb, var(--border-color) 90%, transparent);
   backdrop-filter: blur(16px);
 }

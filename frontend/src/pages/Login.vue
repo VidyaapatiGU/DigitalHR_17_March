@@ -74,7 +74,7 @@
 .form-container {
   width: 100%;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.97);
+  background: var(--bg-surface);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);

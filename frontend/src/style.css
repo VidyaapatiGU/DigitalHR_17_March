@@ -27,7 +27,7 @@
   /* Backgrounds */
   --bg-body: #f1f5f9;
   --bg-surface: #ffffff;
-  --bg-muted: #f8fafc;
+  --bg-muted: #ffffff;
   --bg-hover: #f1f5f9;
 
   /* Text */
@@ -93,7 +93,7 @@
   --sidebar-active: #0f766e;
   --bg-body: #edf5f1;
   --bg-surface: #ffffff;
-  --bg-muted: #f3f8f5;
+  --bg-muted: #ffffff;
   --bg-hover: #eaf3ee;
   --text-primary: #17352e;
   --text-secondary: #4c655d;
@@ -123,7 +123,7 @@
   --sidebar-active: #7652a7;
   --bg-body: #f2edf6;
   --bg-surface: #ffffff;
-  --bg-muted: #f8f4fb;
+  --bg-muted: #ffffff;
   --bg-hover: #f0eaf6;
   --text-primary: #342a41;
   --text-secondary: #61566e;
@@ -806,8 +806,8 @@ html[data-theme='plum'] {
   --el-bg-color-overlay: var(--bg-surface);
   --el-fill-color-blank: var(--bg-surface);
   --el-fill-color-light: var(--bg-muted);
-  --el-fill-color-lighter: var(--bg-body);
-  --el-fill-color-extra-light: var(--bg-body);
+  --el-fill-color-lighter: var(--bg-surface);
+  --el-fill-color-extra-light: var(--bg-surface);
   --el-fill-color: var(--bg-hover);
   --el-border-color: var(--border-color);
   --el-border-color-light: var(--border-light);

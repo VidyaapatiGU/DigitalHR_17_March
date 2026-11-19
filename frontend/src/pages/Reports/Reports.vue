@@ -1316,13 +1316,13 @@ export default {
   padding: 22px 24px;
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  background: radial-gradient(circle at 92% 0%, rgba(var(--primary-rgb), .14), transparent 32%), var(--bg-surface);
+  background: var(--bg-surface);
   box-shadow: 0 5px 18px rgba(34, 49, 84, .035);
 }
 .reports-eyebrow { color: var(--text-muted); font-size: 10px; font-weight: 800; letter-spacing: .13em; }
 .reports-title {
   font-weight: 700;
-  color: #17243b;
+  color: var(--text-primary);
   letter-spacing: -.035em;
   font-size: clamp(23px, 3vw, 30px);
 }
@@ -1343,9 +1343,9 @@ export default {
 .overview-copy small { overflow: hidden; color: var(--text-muted); font-size: 10px; font-weight: 700; letter-spacing: .03em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .overview-copy strong { color: var(--text-primary); font-size: 21px; line-height: 1.15; }
 .overview-copy em { overflow: hidden; color: var(--text-muted); font-size: 10px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
-.report-no-results { display: flex; align-items: center; flex-direction: column; gap: 6px; padding: 48px 16px; border: 1px dashed var(--border-light); border-radius: 14px; color: var(--text-muted); background: rgba(255,255,255,.6); text-align: center; }
+.report-no-results { display: flex; align-items: center; flex-direction: column; gap: 6px; padding: 48px 16px; border: 1px dashed var(--border-light); border-radius: 14px; color: var(--text-muted); background: var(--bg-surface); text-align: center; }
 .report-no-results i { margin-bottom: 3px; color: var(--primary-lighter); font-size: 22px; }
-.report-no-results strong { color: #4b5972; font-size: 13px; }
+.report-no-results strong { color: var(--text-secondary); font-size: 13px; }
 .report-no-results span { font-size: 11px; }
 
 .reports-grid {
@@ -1356,7 +1356,7 @@ export default {
 
 .reports-card {
   background: var(--bg-surface);
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   box-shadow: 0 5px 18px rgba(34, 49, 84, .035);
   overflow: hidden;
